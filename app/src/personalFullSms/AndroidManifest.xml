@@ -9,6 +9,13 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
 
+    <!-- ENH-009 (2026-10-16 amendment to Master Brief §2.2 / ADR-002): install-time
+         INTERNET for the OPT-IN signed shared merchant catalog download only —
+         one fixed endpoint, no identifier headers, no telemetry, off by default.
+         personalFullSms flavor only; storeSafe stays verifiably offline, and the
+         catalog transport re-checks the permission at request time. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application>
         <receiver
             android:name="com.athar.ingestion.smslistener.SmsReceiver"

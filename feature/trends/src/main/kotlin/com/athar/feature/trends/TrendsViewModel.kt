@@ -9,12 +9,11 @@ import com.athar.core.common.time.previous
 import com.athar.core.designsystem.component.AtharBarItem
 import com.athar.core.designsystem.component.AtharMonthlyBar
 import com.athar.core.designsystem.component.AtharSplitSegment
+import com.athar.core.domain.calc.selectOperatingTransactions
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
-import com.athar.core.domain.model.TxType
-import com.athar.core.domain.model.isReconciliation
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
@@ -146,15 +145,16 @@ class TrendsViewModel @Inject constructor(
         twelveMonths: List<Transaction>,
         currency: String,
     ): TrendsState {
-        // Reconciliation adjustments never appear in trends — they're balance fixes, not spend.
-        val currentOp = current.filterNot { it.isReconciliation() }
-        val priorOp = prior.filterNot { it.isReconciliation() }
-        val expense = currentOp.filter { it.type == TxType.EXPENSE }
-        val income = currentOp.filter { it.type == TxType.INCOME }
+        // Shared operating selection: reconciliations are balance fixes, not spend;
+        // transfers are money movement, not consumption or income.
+        val currentOp = selectOperatingTransactions(current)
+        val priorOp = selectOperatingTransactions(prior)
+        val expense = currentOp.expenses
+        val income = currentOp.income
         val expenseSum = Money.sumAmounts(expense.map { it.amount }, currency)
         val incomeSum = Money.sumAmounts(income.map { it.amount }, currency)
-        val priorExpense = priorOp.filter { it.type == TxType.EXPENSE }
-        val priorIncome = priorOp.filter { it.type == TxType.INCOME }
+        val priorExpense = priorOp.expenses
+        val priorIncome = priorOp.income
         val priorExpenseSum = Money.sumAmounts(priorExpense.map { it.amount }, currency)
         val priorIncomeSum = Money.sumAmounts(priorIncome.map { it.amount }, currency)
 
@@ -234,14 +234,18 @@ class TrendsViewModel @Inject constructor(
         val months: List<YearMonth> = (11 downTo 0).map { o -> nowYm.minusMonths(o.toLong()) }
         val incomeByMonthAmt = mutableMapOf<YearMonth, BigDecimal>().apply { months.forEach { put(it, BigDecimal.ZERO) } }
         val expenseByMonthAmt = mutableMapOf<YearMonth, BigDecimal>().apply { months.forEach { put(it, BigDecimal.ZERO) } }
-        txs.filterNot { it.isReconciliation() }.forEach { tx ->
+        // Selector supplies only operating rows; per-month bucketing and every
+        // target/comparison formula below stay unchanged.
+        val operating = selectOperatingTransactions(txs)
+        operating.income.forEach { tx ->
             val ym = YearMonth.of(tx.date.year, tx.date.monthNumber)
             if (ym !in incomeByMonthAmt) return@forEach
-            when (tx.type) {
-                TxType.INCOME -> incomeByMonthAmt[ym] = incomeByMonthAmt.getValue(ym) + tx.amount.amount
-                TxType.EXPENSE -> expenseByMonthAmt[ym] = expenseByMonthAmt.getValue(ym) + tx.amount.amount
-                else -> Unit
-            }
+            incomeByMonthAmt[ym] = incomeByMonthAmt.getValue(ym) + tx.amount.amount
+        }
+        operating.expenses.forEach { tx ->
+            val ym = YearMonth.of(tx.date.year, tx.date.monthNumber)
+            if (ym !in expenseByMonthAmt) return@forEach
+            expenseByMonthAmt[ym] = expenseByMonthAmt.getValue(ym) + tx.amount.amount
         }
         val incomeBars = months.map { ym -> AtharMonthlyBar(month = ym, amount = Money.of(incomeByMonthAmt.getValue(ym), currency)) }
         val expenseBars = months.map { ym -> AtharMonthlyBar(month = ym, amount = Money.of(expenseByMonthAmt.getValue(ym), currency)) }

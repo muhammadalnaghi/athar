@@ -21,6 +21,8 @@ data class Transaction(
     val confidence: Float?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** Which provenance produced [categoryId]; null for legacy rows and UNKNOWN. */
+    val categorySource: CategorySource? = null,
 )
 
 const val RECONCILE_REF_PREFIX = "reconcile-"

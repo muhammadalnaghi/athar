@@ -5,16 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.athar.core.common.money.Money
 import com.athar.core.common.time.Period
 import com.athar.core.domain.calc.GoalCalc
+import com.athar.core.domain.calc.selectOperatingTransactions
 import com.athar.core.domain.model.AccountBalance
 import com.athar.core.domain.model.AccountType
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.NetWorth
 import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.model.TxType
-import com.athar.core.domain.model.isReconciliation
 import com.athar.core.domain.model.specificMerchantKey
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
@@ -132,7 +133,13 @@ class TodayViewModel @Inject constructor(
     fun updateTransaction(tx: Transaction, learnRule: Boolean) {
         viewModelScope.launch {
             val now = clock.now()
-            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now)
+            val existing = transactions.get(tx.id)
+            val provenance = when {
+                existing == null -> tx.categoryId?.let { CategorySource.USER }
+                existing.categoryId != tx.categoryId -> tx.categoryId?.let { CategorySource.USER }
+                else -> existing.categorySource
+            }
+            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now, categorySource = provenance)
             transactions.upsert(confirmed)
             val categoryId = confirmed.categoryId
             val merchantKey = specificMerchantKey(
@@ -181,6 +188,7 @@ class TodayViewModel @Inject constructor(
         transactions.upsert(
             tx.copy(
                 categoryId = category.id,
+                categorySource = CategorySource.USER,
                 status = TxStatus.CONFIRMED,
                 updatedAt = clock.now(),
             ),
@@ -222,17 +230,16 @@ class TodayViewModel @Inject constructor(
         categoryLabels: ImmutableMap<String, CategoryLabel>,
         goalNudge: TodayGoalNudge?,
     ): TodayState {
-        // Reconciliation adjustments only affect net worth; never count them as income/expense.
-        val operating = confirmed.filterNot { it.isReconciliation() }
-        val (income, expense) = operating.partition { it.type == TxType.INCOME }
-        val incomeSum = Money.sumAmounts(income.map { it.amount }, currency)
-        val expenseSum = Money.sumAmounts(expense.map { it.amount }, currency)
+        // Operating = confirmed, non-reconciliation rows via the shared domain
+        // selector; transfers are money movement, never operating expense.
+        val operating = selectOperatingTransactions(confirmed)
+        val incomeSum = Money.sumAmounts(operating.income.map { it.amount }, currency)
+        val expenseSum = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
         val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val (todayTxns, monthTxns) = confirmed.partition { it.date == today }
-        val todayOperating = todayTxns.filterNot { it.isReconciliation() }
-        val (todayIncome, todayExpense) = todayOperating.partition { it.type == TxType.INCOME }
-        val todayNet = Money.sumAmounts(todayIncome.map { it.amount }, currency) -
-            Money.sumAmounts(todayExpense.map { it.amount }, currency)
+        val todayOperating = selectOperatingTransactions(todayTxns)
+        val todayNet = Money.sumAmounts(todayOperating.income.map { it.amount }, currency) -
+            Money.sumAmounts(todayOperating.expenses.map { it.amount }, currency)
         val dismissedToday = dismissed.filter { it.date == today }
         val pendingCategorySuggestions = buildPendingCategorySuggestions(
             pending = pending,
@@ -268,15 +275,9 @@ class TodayViewModel @Inject constructor(
         savingsTarget: Int,
         emergencyMonths: Int,
     ): TodayGoalNudge {
-        val operating = transactions.filterNot { it.isReconciliation() }
-        val totalIncome = Money.sumAmounts(
-            operating.filter { it.type == TxType.INCOME }.map { it.amount },
-            currency,
-        )
-        val totalExpense = Money.sumAmounts(
-            operating.filter { it.type == TxType.EXPENSE }.map { it.amount },
-            currency,
-        )
+        val operating = selectOperatingTransactions(transactions)
+        val totalIncome = Money.sumAmounts(operating.income.map { it.amount }, currency)
+        val totalExpense = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
         val monthlyIncome = GoalCalc.averageMonthly(totalIncome, LOOKBACK_MONTHS)
         val monthlyExpense = GoalCalc.averageMonthly(totalExpense, LOOKBACK_MONTHS)
         val savingsRate = GoalCalc.savingsRatePercent(monthlyIncome, monthlyExpense)

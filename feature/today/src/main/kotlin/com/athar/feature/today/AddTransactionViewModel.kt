@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athar.core.common.money.Money
 import com.athar.core.domain.model.CategoryKind
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.MANUAL_ACCOUNT_ID
 import com.athar.core.domain.model.ReceiptAttachment
@@ -152,6 +153,7 @@ class AddTransactionViewModel @Inject constructor(
                 }
                 prefillFromReceiptImage(receipt.id, uri)
             }.onFailure { throwable ->
+                if (throwable is kotlinx.coroutines.CancellationException) throw throwable
                 _state.update {
                     it.copy(
                         isReceiptLoading = false,
@@ -183,7 +185,8 @@ class AddTransactionViewModel @Inject constructor(
                     )
                 }
             }
-        }.onFailure {
+        }.onFailure { throwable ->
+            if (throwable is kotlinx.coroutines.CancellationException) throw throwable
             _state.update { current ->
                 current.copy(
                     isReceiptOcrRunning = false,
@@ -216,6 +219,7 @@ class AddTransactionViewModel @Inject constructor(
                 merchant = s.merchant.trim(),
                 merchantNormalized = s.merchant.lowercase().trim(),
                 categoryId = s.selectedCategoryId,
+                categorySource = CategorySource.USER,
                 notes = s.notes.takeIf { it.isNotBlank() },
                 source = IngestSource.MANUAL,
                 sourceRefId = null,

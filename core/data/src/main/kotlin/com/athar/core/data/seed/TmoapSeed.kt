@@ -109,6 +109,7 @@ internal class TmoapSeed @Inject constructor(
                     confidence = null,
                     createdAt = now,
                     updatedAt = now,
+                    categorySource = null,
                 ),
             )
         }

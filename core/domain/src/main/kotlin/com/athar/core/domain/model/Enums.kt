@@ -23,7 +23,7 @@ enum class AccountType { CHECKING, SAVINGS, CREDIT_CARD, CASH, INVESTMENT, OTHER
 enum class PatternType { SUBSTRING, REGEX, EXACT }
 
 /** Source of an auto-categorization decision. Master Brief §4.7. */
-enum class CategorySource { RULE_EXACT, RULE_SUBSTRING, RULE_REGEX, CLASSIFIER, UNKNOWN }
+enum class CategorySource { RULE_EXACT, RULE_SUBSTRING, RULE_REGEX, CLASSIFIER, CATALOG, USER, UNKNOWN }
 
 /** SMS audit parse status. Master Brief §4.5. */
 enum class SmsParseStatus { PARSED, FAILED, IGNORED }

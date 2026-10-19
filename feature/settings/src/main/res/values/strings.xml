@@ -438,4 +438,25 @@
     <string name="settings_templates_type_transfer">تحويل</string>
     <string name="settings_templates_type_income">إيداع</string>
 
+    <!-- Shared merchant catalog (ENH-009) — opt-in, signed public download -->
+    <string name="settings_merchant_catalog_title">كتالوج التجار المشترك</string>
+    <string name="settings_merchant_catalog_body_off">مكتبة عامة موقّعة تساعد في اقتراح فئات التجار المعروفين ولا تغيّر قواعد تسجيل العمليات. موقوفة افتراضيًا؛ لا تُرفع بيانات مالية أو استعلامات عن التجار. عند التفعيل يُنزَّل ملف عام واحد فقط، ويرى المضيف عنوان IP ووقت الطلب فقط.</string>
+    <string name="settings_merchant_catalog_body_on">يُنزَّل ملف عام واحد فقط للتحقق من التحديثات؛ يرى المضيف عنوان IP ووقت الطلب فقط. لا تُرفع بيانات مالية أو استعلامات عن التجار. يساعد الكتالوج في اقتراح الفئات ولا يغيّر قواعد تسجيل العمليات.</string>
+    <string name="settings_merchant_catalog_toggle_on">مفعّل</string>
+    <string name="settings_merchant_catalog_toggle_off">موقوف</string>
+    <string name="settings_merchant_catalog_updates_label">تحديث الكتالوج تلقائيًا في المقدمة</string>
+    <string name="settings_merchant_catalog_version" formatted="true">الإصدار %1$d · %2$d تاجر</string>
+    <string name="settings_merchant_catalog_checked" formatted="true">آخر تحقق: %1$s</string>
+    <string name="settings_merchant_catalog_action_refresh">تحديث الآن</string>
+    <string name="settings_merchant_catalog_action_reset">إعادة الضبط إلى المعرفة المدمجة</string>
+    <string name="settings_merchant_catalog_status_checking">جارٍ التحقق…</string>
+    <string name="settings_merchant_catalog_status_current">الكتالوج محدَّث</string>
+    <string name="settings_merchant_catalog_status_updated">تم تحديث الكتالوج</string>
+    <string name="settings_merchant_catalog_status_failed">تعذّر إكمال الإجراء. أعد المحاولة.</string>
+    <string name="settings_merchant_catalog_status_unsaved_disable">التحديثات متوقفة الآن. تعذّر حفظ الإعداد؛ أعد المحاولة قبل إعادة تشغيل أثر.</string>
+    <string name="settings_merchant_catalog_action_retry_disable">إعادة المحاولة</string>
+    <string name="settings_merchant_catalog_status_unavailable">التحديث غير متاح الآن. تحقّق من الاتصال ثم أعد المحاولة.</string>
+    <string name="settings_merchant_catalog_status_unsupported">هذا الإصدار من أثر لا يدعم التنزيل (بلا اتصال).</string>
+    <string name="settings_merchant_catalog_offline_note">الكتالوج الذي حمّلته يبقى صالحًا للاستخدام دون اتصال حتى مع إيقاف التحديثات. إعادة الضبط تعيد قواعدك الشخصية وسجلّك كما هما.</string>
+
 </resources>

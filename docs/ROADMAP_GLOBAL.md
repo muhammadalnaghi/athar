@@ -8,7 +8,11 @@ Tier 1 — required to ship as a global app — is **complete**. Tiers 2–4 are
 
 > **For future AI / developers:** every shipped row below carries a *Why* and a *How* line so you can read this in 2 minutes and understand the entire design rationale without re-reading the diffs. When you ship something new, add `Why:` and `How:` to its row — the next person to touch this will thank you.
 
-## Release integration status — 2026-06-20
+## Release integration status — beta.25 candidate (2026-10-19)
+
+The accepted operating-selection correction, personal category provenance, signed opt-in merchant catalog and bundled offline English OCR are prepared for the next signed, unseeded Obtainium update. VersionCode advances from 9 to 10. Local unit/native/flavor/lint and English/Arabic/StoreSafe/real-offline UI gates passed; publication requires the release spec's certificate, upgrade and remote asset readbacks. No production merchant AI is claimed. See `specs/REL-beta25-catalog-ocr.md`.
+
+### Historical beta.24 recovery — 2026-06-20
 
 The recovered Codex product stack from PRs #11–#179 has been integrated on `release/codex-pr-stack-2026-06-20` for the beta.24 release. See [`docs/RECOVERY_2026-06-13.md`](RECOVERY_2026-06-13.md) for the original recovered goal and branch-by-branch audit trail.
 
@@ -157,7 +161,7 @@ The title-first merchant follow-up preserves first-line notification merchant ti
 
 ---
 
-## Post-Tier-1 user-testing patches (beta.11 → beta.23)
+## Post-Tier-1 user-testing patches (beta.11 → beta.25)
 
 Real-user testing on top of imported SMS history surfaced bugs and one architectural-policy regression that needed fixing before the app could be trusted as a daily-driver replacement for TMOAP. All of these are now in main; full rationale in the ADR list below.
 
@@ -165,6 +169,7 @@ Real-user testing on top of imported SMS history surfaced bugs and one architect
 
 | Build | What | Why | ADR |
 |---|---|---|---|
+| **beta.25** | Personal-first category provenance, signed opt-in FullSMS merchant catalog, offline English receipt OCR and consistent operating totals. | **Why:** reduce categorization work without exporting financial records or letting shared suggestions override personal choices or financial posting rules. **How:** independently signed bounded/versioned public cache, durable opt-out and rollback guards, USER correction provenance, bundled verified OCR data, additive Room migration and confirmed operating selection; versionCode10 preserves the in-place update path. | [ENH-009](specs/ENH-009-shared-merchant-catalog.md), [release acceptance](specs/REL-beta25-catalog-ocr.md) |
 | **beta.12** | H-01 history view — searchable, filterable, every transaction reachable from Settings → "All transactions" | User backfilled 3 months of SMS and had no way to scroll/edit historical transactions. The Today screen only shows current month + this month's recent. Without a history view, mis-categorized records were unreachable. | — |
 | **beta.13** | Ember "Pending awaiting review" banner on Today + stale-edit-sheet bug fix | The pending tray was below the fold on first load; users didn't see they had work. Banner is impossible to miss. Also fixed a Compose state bug where opening Tx2 after Tx1 showed Tx1's data because `EditTransactionViewModel.load(tx)` was preserving existing state. | — |
 | **beta.14** | Dust-color "%d dismissed today — review" banner + AI triage prompt | Parser false-negatives (auto-dismissed transactions) were invisible. Banner forces them above the fold. AI triage prompt unlocks user-driven bank-coverage expansion without code changes. | — |

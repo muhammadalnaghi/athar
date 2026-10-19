@@ -328,5 +328,6 @@ class SupportDiagnosticsExporterTest {
         confidence = 0.8f,
         createdAt = Instant.parse("2026-06-13T12:00:00Z"),
         updatedAt = Instant.parse("2026-06-13T12:00:00Z"),
+        categorySource = null,
     )
 }

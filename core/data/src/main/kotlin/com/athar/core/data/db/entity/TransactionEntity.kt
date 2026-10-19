@@ -49,4 +49,5 @@ internal data class TransactionEntity(
     val confidence: Float?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val categorySource: String? = null, // CategorySource.name; null = legacy/unknown
 )

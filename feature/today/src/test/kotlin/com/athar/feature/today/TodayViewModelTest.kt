@@ -8,6 +8,7 @@ import com.athar.core.domain.model.AccountType
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
 import com.athar.core.domain.model.CategoryRule
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.NetWorth
 import com.athar.core.domain.model.PatternType
@@ -87,6 +88,52 @@ class TodayViewModelTest {
         assertThat(nudge.emergencyMonthsCovered).isEqualTo(java.math.BigDecimal("2.5"))
         assertThat(nudge.emergencyFundTargetMonths).isEqualTo(6)
         assertThat(nudge.emergencyFundProgress).isWithin(0.0001f).of(0.4167f)
+    }
+
+    @Test
+    fun `explicit category corrections replace engine provenance with user`() = runTest(mainDispatcher) {
+        val originals = listOf(CategorySource.CATALOG, CategorySource.CLASSIFIER).map { source ->
+            transaction(id = "corrected-${source.name}", type = TxType.EXPENSE, amount = Money.of("42"))
+                .copy(categoryId = "cat-coffee", categorySource = source)
+        }
+        val transactions = FakeTransactionRepository(currentConfirmed = originals)
+        val viewModel = TodayViewModel(
+            transactions = transactions,
+            rules = RecordingCategoryRuleRepository(),
+            categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
+            clock = FixedClock,
+        )
+        originals.forEach { original ->
+            viewModel.updateTransaction(original.copy(categoryId = "cat-restaurant"), learnRule = false)
+        }
+        advanceUntilIdle()
+        assertThat(transactions.upserts).hasSize(originals.size)
+        transactions.upserts.forEach { corrected ->
+            assertThat(corrected.categorySource).isEqualTo(CategorySource.USER)
+            assertThat(corrected.categoryId).isEqualTo("cat-restaurant")
+            assertThat(corrected.status).isEqualTo(TxStatus.CONFIRMED)
+            assertThat(corrected.amount).isEqualTo(Money.of("42"))
+        }
+    }
+
+    @Test
+    fun `note-only edit keeps the original catalog provenance`() = runTest(mainDispatcher) {
+        val original = transaction(id = "note-only", type = TxType.EXPENSE, amount = Money.of("42"))
+            .copy(categoryId = "cat-coffee", categorySource = CategorySource.CATALOG)
+        val transactions = FakeTransactionRepository(currentConfirmed = listOf(original))
+        val viewModel = TodayViewModel(
+            transactions = transactions,
+            rules = RecordingCategoryRuleRepository(),
+            categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
+            clock = FixedClock,
+        )
+        viewModel.updateTransaction(original.copy(notes = "Synthetic note"), learnRule = false)
+        advanceUntilIdle()
+        assertThat(transactions.upserts.single().categorySource).isEqualTo(CategorySource.CATALOG)
     }
 
     @Test
@@ -482,6 +529,7 @@ class TodayViewModelTest {
                 merchantNormalized = "brew lab",
                 categoryId = "cat-cafe",
                 status = TxStatus.CONFIRMED,
+                categorySource = CategorySource.USER,
                 updatedAt = FixedClock.now(),
             ),
         )
@@ -573,6 +621,72 @@ class TodayViewModelTest {
         viewModel.clearPendingSuggestionApply()
 
         assertThat(viewModel.lastPendingSuggestionApply.value).isNull()
+    }
+
+    @Test
+    fun `confirmed same-day transfer never becomes operating expense`() = runTest(mainDispatcher) {
+        val viewModel = TodayViewModel(
+            transactions = FakeTransactionRepository(
+                currentConfirmed = listOf(
+                    transaction(id = "today-income", type = TxType.INCOME, amount = Money.of("1000")),
+                    transaction(id = "today-expense", type = TxType.EXPENSE, amount = Money.of("200")),
+                    transaction(id = "today-transfer", type = TxType.TRANSFER, amount = Money.of("500")),
+                ),
+            ),
+            rules = RecordingCategoryRuleRepository(),
+            categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
+            clock = FixedClock,
+        )
+
+        val state = viewModel.state.first { !it.isLoading }
+
+        assertThat(state.totalIncome.amount.toPlainString()).isEqualTo("1000")
+        assertThat(state.totalExpense.amount.toPlainString()).isEqualTo("200")
+        assertThat(state.netFlow.amount.toPlainString()).isEqualTo("800")
+        assertThat(state.todayNet.amount.toPlainString()).isEqualTo("800")
+        // The transfer is money movement, not consumption: it must stay out of the
+        // operating totals yet remain visible in the Today feed.
+        assertThat(state.today.map { it.id }).contains("today-transfer")
+    }
+
+    @Test
+    fun `manual reconciliation rows never change operating totals`() = runTest(mainDispatcher) {
+        val viewModel = TodayViewModel(
+            transactions = FakeTransactionRepository(
+                currentConfirmed = listOf(
+                    transaction(id = "today-income", type = TxType.INCOME, amount = Money.of("1000")),
+                    transaction(id = "today-expense", type = TxType.EXPENSE, amount = Money.of("200")),
+                    transaction(id = "today-transfer", type = TxType.TRANSFER, amount = Money.of("500")),
+                    transaction(id = "reconcile-income", type = TxType.INCOME, amount = Money.of("99000"))
+                        .copy(sourceRefId = "reconcile-2026-06-13"),
+                    transaction(id = "reconcile-expense", type = TxType.EXPENSE, amount = Money.of("43000"))
+                        .copy(sourceRefId = "reconcile-2026-06-13"),
+                ),
+            ),
+            rules = RecordingCategoryRuleRepository(),
+            categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
+            clock = FixedClock,
+        )
+
+        val state = viewModel.state.first { !it.isLoading }
+
+        // Reconciliation adjustments only true-up balances; they never become income/expense.
+        assertThat(state.totalIncome.amount.toPlainString()).isEqualTo("1000")
+        assertThat(state.totalExpense.amount.toPlainString()).isEqualTo("200")
+        assertThat(state.netFlow.amount.toPlainString()).isEqualTo("800")
+        assertThat(state.todayNet.amount.toPlainString()).isEqualTo("800")
+        // Feeds keep full confirmed rows: reconciliations stay visible evidence.
+        assertThat(state.today.map { it.id }).containsExactly(
+            "today-income",
+            "today-expense",
+            "today-transfer",
+            "reconcile-income",
+            "reconcile-expense",
+        ).inOrder()
     }
 }
 

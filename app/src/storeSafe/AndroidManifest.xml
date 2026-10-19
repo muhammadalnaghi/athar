@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Play-Store-eligible: no SMS perms. Path B in Master Brief §5.4. -->
     <!--
@@ -7,6 +9,12 @@
       declare it via <uses-permission> — only attach it to the service element below so
       the system enforces the bind contract.
     -->
+
+    <!-- MLKit dependencies contribute INTERNET to the merged manifest. StoreSafe is
+         required to remain offline; remove the inherited permission at the flavor edge. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
 
     <application>
         <service

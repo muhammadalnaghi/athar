@@ -20,7 +20,7 @@ Companion docs:
 
 Current version: **0.1.0-beta.23** (see `gradle.properties`). Tier 1 (G-1..G-14 from `docs/ROADMAP_GLOBAL.md`) is complete; the post-Tier-1 patch series (beta.11 → beta.23) is documented in the same roadmap and in `CHANGELOG.md`. Full multi-module Gradle project + signed APKs in GitHub releases.
 
-Update delivery: Athar has no `INTERNET` permission and never will (Master Brief §2.2). New releases are tagged on `main` via `gh release create`; users are notified via **Obtainium**, which they subscribe to once from Settings → "تابع التحديثات / Stay up to date" (shipped beta.23). When working on update-related logic, never reach for HTTP polling — extend the Obtainium delegation pattern instead.
+Update delivery: Athar has no blanket `INTERNET` commitment anymore — since 2026-10-16 the **personalFullSms flavor only** declares `INTERNET` for one scoped, opt-in (off by default) capability: downloading a signed, data-only shared merchant catalog from a fixed public endpoint (see `Athar_Master_Brief.md` §2.2 amendment and `docs/adr/ADR-002`). The storeSafe flavor remains fully offline. App-update delivery is unchanged: new releases are tagged on `main` via `gh release create`; users are notified via **Obtainium**, which they subscribe to once from Settings → "تابع التحديثات / Stay up to date" (shipped beta.23). When working on update-related logic, never reach for HTTP polling — extend the Obtainium delegation pattern instead.
 
 ## MANDATORY: load a KMP skill before writing code
 

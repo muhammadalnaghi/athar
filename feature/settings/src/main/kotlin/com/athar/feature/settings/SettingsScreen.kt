@@ -110,6 +110,7 @@ fun SettingsScreen(
     val hijriEnabled by viewModel.hijriEnabled.collectAsStateWithLifecycle()
     val rescanStatus by viewModel.rescanStatus.collectAsStateWithLifecycle()
     val recoverStatus by viewModel.recoverStatus.collectAsStateWithLifecycle()
+    val merchantCatalogState by viewModel.merchantCatalog.collectAsStateWithLifecycle()
     val ownAccounts by viewModel.ownAccountNumbers.collectAsStateWithLifecycle()
     val displayCurrency by viewModel.displayCurrency.collectAsStateWithLifecycle()
     val appLocale by viewModel.appLocale.collectAsStateWithLifecycle()
@@ -366,6 +367,13 @@ fun SettingsScreen(
                     }
                 },
                 onClear = viewModel::clearCommunityShareStatus,
+            )
+
+            MerchantCatalogCard(
+                state = merchantCatalogState,
+                onToggleUpdates = viewModel::setMerchantCatalogUpdates,
+                onRefresh = viewModel::refreshMerchantCatalog,
+                onReset = viewModel::resetMerchantCatalog,
             )
 
             SupportDiagnosticsCard(

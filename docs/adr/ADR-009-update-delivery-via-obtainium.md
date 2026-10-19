@@ -85,3 +85,7 @@ For users who already have Obtainium, the same tap dispatches directly into Obta
 - `Athar_Master_Brief.md` §2.2 — "Three things Athar will never do".
 - README "Privacy" section — externally-facing version of the same commitment.
 - `https://github.com/ImranR98/Obtainium/wiki` — Obtainium's deep-link scheme reference.
+
+## Amendment — 2026-10-16 — scoped catalog networking does not touch update delivery
+
+The 2026-10-16 merchant-catalog amendment (Master Brief §2.2, ADR-002) supersedes this ADR's blanket "no `INTERNET` ever" premise **only** for a personalFullSms opt-in download of a signed, data-only public merchant catalog from a fixed raw-GitHub endpoint on the separate `merchant-catalog` branch. This ADR's decision is otherwise fully preserved: Obtainium remains the only **app-update** channel; releases still tag `main`; the catalog branch is data-only and is never read as an update feed, never published as a release asset, and never polled on a schedule. The catalog endpoint is versioned public data fetched by explicit/stale-gated foreground checks while opted in — not app-update polling. `INTERNET` is declared only in `app/src/personalFullSms/AndroidManifest.xml`; the storeSafe flavor stays verifiably network-free, and signature/key rotation still requires a trusted Obtainium-delivered app update.

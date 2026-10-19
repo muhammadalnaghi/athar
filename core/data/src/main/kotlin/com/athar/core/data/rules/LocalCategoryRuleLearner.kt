@@ -4,6 +4,7 @@ import com.athar.core.data.db.dao.CategoryRuleDao
 import com.athar.core.data.db.dao.CategoryUsageCount
 import com.athar.core.data.db.dao.TransactionDao
 import com.athar.core.data.db.entity.CategoryRuleEntity
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
@@ -89,6 +90,8 @@ internal data class LearningCandidate(
             if (transaction.status != TxStatus.CONFIRMED) return null
             if (transaction.type == TxType.TRANSFER) return null
             if (transaction.isReconciliation()) return null
+            if (transaction.categorySource == CategorySource.CLASSIFIER) return null
+            if (transaction.categorySource == CategorySource.CATALOG) return null
             if (!merchant.isSpecificMerchantKey()) return null
             return LearningCandidate(merchantNormalized = merchant, categoryId = categoryId)
         }

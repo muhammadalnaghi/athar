@@ -71,6 +71,8 @@ internal data class BackupTransaction(
     val notes: String?, val source: String, val sourceRefId: String?,
     val status: String, val confidence: Float?,
     val createdAt: Instant, val updatedAt: Instant,
+    // Optional + backwards compatible: older payloads restore as null (unknown).
+    val categorySource: String? = null,
 )
 
 @Serializable
@@ -123,7 +125,7 @@ internal fun AccountEntity.toBackup(): BackupAccount = BackupAccount(
     notes = notes, sortOrder = sortOrder, archivedAt = archivedAt, updatedAt = updatedAt,
 )
 internal fun CategoryEntity.toBackup(): BackupCategory = BackupCategory(id, name, nameAr, kind, icon, monthlyTargetMinor, currency, archived, sortOrder)
-internal fun TransactionEntity.toBackup(): BackupTransaction = BackupTransaction(id, accountId, type, amountMinor, currency, date, occurredAt, merchant, merchantNormalized, categoryId, notes, source, sourceRefId, status, confidence, createdAt, updatedAt)
+internal fun TransactionEntity.toBackup(): BackupTransaction = BackupTransaction(id, accountId, type, amountMinor, currency, date, occurredAt, merchant, merchantNormalized, categoryId, notes, source, sourceRefId, status, confidence, createdAt, updatedAt, categorySource)
 internal fun CategoryRuleEntity.toBackup(): BackupCategoryRule = BackupCategoryRule(id, pattern, patternType, categoryId, priority, learnedFromUser, createdAt)
 internal fun WishlistEntity.toBackup(): BackupWishlistItem = BackupWishlistItem(id, name, costMinor, currentSavedMinor, currency, desiredMonths, startYear, startMonth, notes)
 internal fun InvestmentPoolEntity.toBackup(): BackupInvestmentPool = BackupInvestmentPool(id, name, period, totalReturnMinor, currency)
@@ -150,7 +152,7 @@ internal fun BackupAccount.toEntity(): AccountEntity = AccountEntity(
     updatedAt = updatedAt ?: createdAt,
 )
 internal fun BackupCategory.toEntity(): CategoryEntity = CategoryEntity(id, name, nameAr, kind, icon, monthlyTargetMinor, currency, archived, sortOrder)
-internal fun BackupTransaction.toEntity(): TransactionEntity = TransactionEntity(id, accountId, type, amountMinor, currency, date, occurredAt, merchant, merchantNormalized, categoryId, notes, source, sourceRefId, status, confidence, createdAt, updatedAt)
+internal fun BackupTransaction.toEntity(): TransactionEntity = TransactionEntity(id, accountId, type, amountMinor, currency, date, occurredAt, merchant, merchantNormalized, categoryId, notes, source, sourceRefId, status, confidence, createdAt, updatedAt, categorySource)
 internal fun BackupCategoryRule.toEntity(): CategoryRuleEntity = CategoryRuleEntity(id, pattern, patternType, categoryId, priority, learnedFromUser, createdAt)
 internal fun BackupWishlistItem.toEntity(): WishlistEntity = WishlistEntity(id, name, costMinor, currentSavedMinor, currency, desiredMonths, startYear, startMonth, notes)
 internal fun BackupInvestmentPool.toEntity(): InvestmentPoolEntity = InvestmentPoolEntity(id, name, period, totalReturnMinor, currency)

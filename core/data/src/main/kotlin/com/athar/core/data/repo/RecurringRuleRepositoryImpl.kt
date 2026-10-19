@@ -69,6 +69,7 @@ internal class RecurringRuleRepositoryImpl @Inject constructor(
                 confidence = 1.0f,
                 createdAt = now,
                 updatedAt = now,
+                categorySource = null,
             )
             transactionDao.upsert(tx)
             dao.upsert(

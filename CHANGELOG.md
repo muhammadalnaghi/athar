@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet.
 
+## [0.1.0-beta.25] — 2026-10-19
+
+- Personal category choices now take precedence over downloaded merchant knowledge, and explicit corrections retain USER provenance without training on catalog-only suggestions.
+- Added an off-by-default signed public merchant catalog for the FullSMS flavor, with version/digest rollback protection, durable opt-out, cancellation, offline cache, safe retry and reset. It downloads one fixed merchant-only file; no transactions or merchant queries are uploaded. StoreSafe remains without INTERNET or SMS permissions.
+- Replaced receipt-image ML Kit OCR with bundled offline English Tesseract assistance, including model integrity checks and notices. No runtime model downloads, Arabic OCR or real-photo accuracy claim.
+- Today, Trends and widgets use the same confirmed operating-transaction selection; transfers stay visible without inflating operating income or spending.
+- Verified English, Arabic RTL and StoreSafe Settings flows, plus real disconnected app restart/cache/reset. Component native checks cover API28 and API35.
+- Advanced Android versionCode to 10 for in-place updates from the previous public versionCode 9. Merchant AI remains research-only and is not included in this release.
+
 ## [0.1.0-beta.24] — 2026-06-20
 
 The recovered best-in-class application stack release: notification ingestion, TMOAP import depth, safer categorization, recurring/bills polish, support diagnostics, and manual-entry upgrades.

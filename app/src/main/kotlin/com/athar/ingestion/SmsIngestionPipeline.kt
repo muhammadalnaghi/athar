@@ -1,16 +1,12 @@
 package com.athar.ingestion
 
-import com.athar.core.domain.model.CategorySource
-import com.athar.core.domain.model.CategorySuggestion
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.MANUAL_ACCOUNT_ID
-import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.RawIngestEvent
 import com.athar.core.domain.model.SmsParseStatus
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.repo.AccountRepository
-import com.athar.core.domain.repo.CategoryRuleRepository
 import com.athar.core.domain.repo.SmsAuditRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
@@ -45,7 +41,7 @@ class SmsIngestionPipeline @Inject constructor(
     private val parser: SmsParser,
     private val transactions: TransactionRepository,
     private val accounts: AccountRepository,
-    private val rules: CategoryRuleRepository,
+    private val resolver: MerchantCategoryResolver,
     private val audit: SmsAuditRepository,
     private val prefs: UserPreferencesRepository,
     private val clock: Clock,
@@ -99,7 +95,8 @@ class SmsIngestionPipeline @Inject constructor(
             else -> parsed.merchant ?: parsed.counterparty ?: event.sender
         }
         val merchantNormalized = effectiveMerchant.lowercase().trim()
-        val suggestion = categorize(merchantNormalized)
+        val resolution = resolver.resolve(merchantNormalized, parsed.type)
+        val suggestion = resolution.suggestion
         val routedAccountId = accounts.resolveForIngest(
             sender = event.sender,
             body = event.body,
@@ -112,14 +109,16 @@ class SmsIngestionPipeline @Inject constructor(
 
         // Never auto-dismiss a successfully-parsed transaction. If the SMS got far enough
         // to extract amount + type, money moved — the user must be the one to discard it.
-        // CONFIRMED only when the categorizer matched a rule. Everything else (no category
-        // match, low confidence, self-transfer) lands in PENDING for explicit user review.
+        // CONFIRMED only when a trusted LOCAL rule matched (personal, auto-learned, or
+        // bundled seed) — ENH-009: a catalog suggestion alone can never flip a row into a
+        // financial posting, and it cannot change legacy eligibility for merchants already
+        // covered by local rules. Everything else lands in PENDING for explicit review.
         // Spam-shaped messages are filtered out earlier by IgnorePatterns and never reach
         // this point (they're tagged "ignored" in the SMS audit log instead).
         val confidence = suggestion.confidence
         val initialStatus = when {
             isSelfTransfer -> TxStatus.PENDING
-            suggestion.categoryId != null -> TxStatus.CONFIRMED
+            resolution.hadTrustedLocalRule && suggestion.categoryId != null -> TxStatus.CONFIRMED
             else -> TxStatus.PENDING
         }
 
@@ -140,6 +139,7 @@ class SmsIngestionPipeline @Inject constructor(
             confidence = confidence,
             createdAt = now,
             updatedAt = now,
+            categorySource = suggestion.categoryId?.let { suggestion.source },
         )
         transactions.upsert(tx)
         Timber.i(
@@ -152,23 +152,6 @@ class SmsIngestionPipeline @Inject constructor(
             parsed.templateId,
         )
         return txId
-    }
-
-    private suspend fun categorize(merchantNormalized: String): CategorySuggestion {
-        val matches = rules.findMatching(merchantNormalized)
-        val best = matches.firstOrNull()
-            ?: return CategorySuggestion(null, 0f, CategorySource.UNKNOWN, null)
-        val confidence = when (best.patternType) {
-            PatternType.EXACT -> 1.0f
-            PatternType.SUBSTRING -> 0.85f
-            PatternType.REGEX -> 0.80f
-        }
-        val sourceTier = when (best.patternType) {
-            PatternType.EXACT -> CategorySource.RULE_EXACT
-            PatternType.SUBSTRING -> CategorySource.RULE_SUBSTRING
-            PatternType.REGEX -> CategorySource.RULE_REGEX
-        }
-        return CategorySuggestion(best.categoryId, confidence, sourceTier, best.id)
     }
 
     private companion object {

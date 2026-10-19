@@ -438,4 +438,25 @@
     <string name="settings_templates_type_transfer">Transfer</string>
     <string name="settings_templates_type_income">Deposit</string>
 
+    <!-- Shared merchant catalog (ENH-009) — opt-in, signed public download -->
+    <string name="settings_merchant_catalog_title">Shared merchant catalog</string>
+    <string name="settings_merchant_catalog_body_off">A signed public library that helps suggest categories for well-known merchants and does not change transaction-recording rules. Off by default; no financial data or merchant queries are uploaded. When enabled it downloads a single public file — the host sees only your IP address and request timing.</string>
+    <string name="settings_merchant_catalog_body_on">One public file is downloaded to check for updates; the host sees only your IP address and request timing. No financial data or merchant queries are uploaded. The catalog helps suggest categories; it does not change transaction-recording rules.</string>
+    <string name="settings_merchant_catalog_toggle_on">On</string>
+    <string name="settings_merchant_catalog_toggle_off">Off</string>
+    <string name="settings_merchant_catalog_updates_label">Update the catalog in the foreground</string>
+    <string name="settings_merchant_catalog_version" formatted="true">Version %1$d · %2$d merchants</string>
+    <string name="settings_merchant_catalog_checked" formatted="true">Last checked: %1$s</string>
+    <string name="settings_merchant_catalog_action_refresh">Refresh now</string>
+    <string name="settings_merchant_catalog_action_reset">Reset to bundled knowledge</string>
+    <string name="settings_merchant_catalog_status_checking">Checking…</string>
+    <string name="settings_merchant_catalog_status_current">Catalog is current</string>
+    <string name="settings_merchant_catalog_status_updated">Catalog updated</string>
+    <string name="settings_merchant_catalog_status_failed">Could not complete the action. Try again.</string>
+    <string name="settings_merchant_catalog_status_unsaved_disable">Updates are off for this session. Could not save the setting; retry before restarting Athar.</string>
+    <string name="settings_merchant_catalog_action_retry_disable">Retry saving</string>
+    <string name="settings_merchant_catalog_status_unavailable">Updates are unavailable right now. Check your connection and retry.</string>
+    <string name="settings_merchant_catalog_status_unsupported">This build of Athar cannot download (no network capability).</string>
+    <string name="settings_merchant_catalog_offline_note">A downloaded catalog stays usable offline even with updates disabled. Reset keeps your personal rules and history exactly as they are.</string>
+
 </resources>

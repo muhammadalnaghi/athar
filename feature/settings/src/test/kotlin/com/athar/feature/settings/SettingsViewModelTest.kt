@@ -9,6 +9,8 @@ import com.athar.core.domain.model.NetWorth
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.model.TxType
+import com.athar.core.domain.model.CatalogRefreshPhase
+import com.athar.core.domain.model.MerchantCatalogState
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.BackfillProgress
 import com.athar.core.domain.repo.BackupRepository
@@ -41,6 +43,7 @@ import com.athar.core.domain.repo.MerchantBulkImportCategoryImpact
 import com.athar.core.domain.repo.MerchantBulkImportResult
 import com.athar.core.domain.repo.MerchantBulkImportSkipSummary
 import com.athar.core.domain.repo.MerchantBulkImportTrigger
+import com.athar.core.domain.repo.MerchantCatalogRepository
 import com.athar.core.domain.repo.SmsBackfillTrigger
 import com.athar.core.domain.repo.SupportDiagnosticsExportResult
 import com.athar.core.domain.repo.SupportDiagnosticsExportTrigger
@@ -419,6 +422,79 @@ class SettingsViewModelTest {
         assertThat(bulkImporter.importedBytes).isEmpty()
     }
 
+    @Test
+    fun `merchant catalog card mirrors repository state`() = runTest(mainDispatcher) {
+        val catalog = FakeMerchantCatalogRepository(
+            initial = MerchantCatalogState(
+                updatesEnabled = true,
+                networkSupported = true,
+                version = 1,
+                entryCount = 58,
+                checkedAt = null,
+                phase = CatalogRefreshPhase.CURRENT,
+            ),
+        )
+        val viewModel = settingsViewModel(catalog = catalog)
+
+        assertThat(viewModel.merchantCatalog.value.version).isEqualTo(1)
+        assertThat(viewModel.merchantCatalog.value.entryCount).isEqualTo(58)
+    }
+
+    @Test
+    fun `enabling updates persists opt-in and triggers a manual refresh`() = runTest(mainDispatcher) {
+        val catalog = FakeMerchantCatalogRepository()
+        val viewModel = settingsViewModel(catalog = catalog)
+
+        viewModel.setMerchantCatalogUpdates(true)
+        advanceUntilIdle()
+
+        assertThat(catalog.enabledCalls).containsExactly(true)
+        assertThat(catalog.refreshAttempts).isEqualTo(1)
+    }
+
+    @Test
+    fun `disable and reset reach the repository`() = runTest(mainDispatcher) {
+        val catalog = FakeMerchantCatalogRepository()
+        val viewModel = settingsViewModel(catalog = catalog)
+
+        viewModel.setMerchantCatalogUpdates(false)
+        viewModel.resetMerchantCatalog()
+        advanceUntilIdle()
+
+        assertThat(catalog.enabledCalls).contains(false)
+        assertThat(catalog.resetCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun `failed catalog consent write does not crash or trigger refresh`() = runTest(mainDispatcher) {
+        val catalog = FakeMerchantCatalogRepository().apply {
+            toggleFailure = java.io.IOException("synthetic metadata failure")
+        }
+        val viewModel = settingsViewModel(catalog = catalog)
+        viewModel.setMerchantCatalogUpdates(true)
+        advanceUntilIdle()
+        assertThat(catalog.refreshAttempts).isEqualTo(0)
+        assertThat(viewModel.merchantCatalog.value.updatesEnabled).isFalse()
+        assertThat(viewModel.merchantCatalog.value.phase).isEqualTo(CatalogRefreshPhase.FAILED)
+    }
+
+    @Test
+    fun `failed disable remains visible and a second action retries saving`() = runTest(mainDispatcher) {
+        val catalog = FakeMerchantCatalogRepository().apply {
+            toggleFailure = java.io.IOException("synthetic metadata failure")
+        }
+        val viewModel = settingsViewModel(catalog = catalog)
+        viewModel.setMerchantCatalogUpdates(false)
+        advanceUntilIdle()
+        assertThat(viewModel.merchantCatalog.value.disablePersistencePending).isTrue()
+        catalog.toggleFailure = null
+        viewModel.setMerchantCatalogUpdates(false)
+        advanceUntilIdle()
+        assertThat(catalog.enabledCalls).containsExactly(false, false).inOrder()
+        assertThat(viewModel.merchantCatalog.value.disablePersistencePending).isFalse()
+        assertThat(catalog.refreshAttempts).isEqualTo(0)
+    }
+
     private fun settingsViewModel(
         backfill: SmsBackfillTrigger = FakeSmsBackfillTrigger(),
         csvImporter: CsvImportTrigger = FakeCsvImportTrigger,
@@ -428,6 +504,7 @@ class SettingsViewModelTest {
         bulkImporter: MerchantBulkImportTrigger = FakeMerchantBulkImportTrigger,
         transactions: TransactionRepository = FakeTransactionRepository(),
         accounts: AccountRepository = FakeAccountRepository(),
+        catalog: MerchantCatalogRepository = FakeMerchantCatalogRepository(),
     ) = SettingsViewModel(
         backup = FakeBackupRepository,
         backfillTrigger = backfill,
@@ -444,6 +521,7 @@ class SettingsViewModelTest {
         prefs = FakeUserPreferencesRepository(),
         transactions = transactions,
         accounts = accounts,
+        merchantCatalogRepository = catalog,
     )
 }
 
@@ -807,4 +885,44 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun setBillRemindersEnabled(enabled: Boolean) = Unit
     override fun billReminderSentKeys(): Flow<Set<String>> = flowOf(emptySet())
     override suspend fun setBillReminderSentKeys(keys: Set<String>) = Unit
+}
+
+/** Honest in-memory fake of the domain catalog repository for Settings tests. */
+private class FakeMerchantCatalogRepository(
+    initial: MerchantCatalogState = MerchantCatalogState(),
+) : MerchantCatalogRepository {
+
+    val state_ = MutableStateFlow(initial)
+    val enabledCalls = mutableListOf<Boolean>()
+    var toggleFailure: Exception? = null
+    var refreshAttempts = 0
+        private set
+    var resetCalls = 0
+        private set
+
+    override val state = state_
+    override suspend fun initialize() = Unit
+    override suspend fun setUpdatesEnabled(enabled: Boolean) {
+        enabledCalls += enabled
+        toggleFailure?.let { failure ->
+            state_.value = state_.value.copy(
+                updatesEnabled = false,
+                disablePersistencePending = !enabled,
+                phase = CatalogRefreshPhase.FAILED,
+            )
+            throw failure
+        }
+        state_.value = state_.value.copy(updatesEnabled = enabled, disablePersistencePending = false)
+    }
+
+    override suspend fun refresh(force: Boolean) {
+        refreshAttempts += 1
+    }
+
+    override suspend fun resetToBundled() {
+        resetCalls += 1
+        state_.value = MerchantCatalogState()
+    }
+
+    override suspend fun snapshot(): com.athar.core.domain.model.MerchantCatalogSnapshot? = null
 }

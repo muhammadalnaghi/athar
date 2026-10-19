@@ -47,6 +47,7 @@ internal interface TransactionDao {
           AND categoryId != ''
           AND type != 'TRANSFER'
           AND (sourceRefId IS NULL OR sourceRefId NOT LIKE 'reconcile-%')
+          AND (categorySource IS NULL OR categorySource NOT IN ('CLASSIFIER', 'CATALOG'))
         GROUP BY categoryId
         ORDER BY count DESC, categoryId ASC
         """,
@@ -62,7 +63,13 @@ internal interface TransactionDao {
     @Query("DELETE FROM transactions WHERE status = 'PENDING'")
     suspend fun clearPending(): Int
 
-    @Query("UPDATE transactions SET status = 'CONFIRMED', updatedAt = :now WHERE status = 'PENDING' AND confidence >= :minConfidence")
+    @Query(
+        """
+        UPDATE transactions SET status = 'CONFIRMED', updatedAt = :now
+        WHERE status = 'PENDING' AND confidence >= :minConfidence
+          AND (categorySource IS NULL OR categorySource NOT IN ('CLASSIFIER', 'CATALOG'))
+        """
+    )
     suspend fun confirmAllConfident(minConfidence: Float, now: kotlinx.datetime.Instant): Int
 
     @Query("UPDATE transactions SET status = 'DISMISSED', updatedAt = :now WHERE status = 'PENDING' AND confidence < :maxConfidence")
@@ -88,6 +95,7 @@ internal interface TransactionDao {
         """
         UPDATE transactions
         SET categoryId = :categoryId,
+            categorySource = 'USER',
             status = 'CONFIRMED',
             updatedAt = :now
         WHERE status IN ('PENDING', 'DISMISSED')
@@ -127,3 +135,15 @@ internal data class CategoryUsageCount(
     val categoryId: String,
     val count: Int,
 )
+
+/**
+ * Single source of truth for "engine-derived" category provenance that must
+ * never feed local rule learning or confidence bulk-sweeps: the engine cannot
+ * teach itself through its own confirmed output. Kept as constants so the DAO
+ * queries above and the learner gate stay in lockstep (pinned by test).
+ */
+internal object EngineProvenanceExclusion {
+    val SOURCE_NAMES = listOf("CLASSIFIER", "CATALOG")
+    const val SQL_CONDITION =
+        "(categorySource IS NULL OR categorySource NOT IN ('CLASSIFIER', 'CATALOG'))"
+}

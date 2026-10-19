@@ -20,8 +20,10 @@ This is exactly how the 507 AI-extracted rules that landed in beta.17 got there.
      ]
    }
    ```
-   **What's in the file:** explicit specific-merchant substring pattern (lowercase merchant name), categoryId, confidence. **What's NOT:** transaction amounts, dates, raw SMS bodies, accountId references, your name, your phone number, exact bulk-import rules, repeated-history local rules, generic parser labels, or anything that could de-anonymize you. The exporter is at `core/data/csv/CommunityRulesShareExporter.kt` — read it to verify.
+   **What's in the file:** explicit specific-merchant substring pattern (lowercase merchant name), categoryId, confidence, app version and submission timestamp. **What's NOT:** transaction amounts or transaction dates, raw SMS bodies, accountId references, dedicated name/phone fields, exact bulk-import rules, repeated-history local rules or generic parser labels. Merchant text is user-provided and still needs a privacy review before sharing. The exporter is at `core/data/csv/CommunityRulesShareExporter.kt` — read it to verify.
 3. **Open the GitHub issue.** After export, tap *"Open GitHub issue"*. Athar launches the device browser to the public Athar repo with a pre-filled issue title and body. **Attach the JSON file** (GitHub doesn't accept attachments via URL params, so you'll do this as a comment after creating the issue).
+
+**Public-sharing caution:** the exported merchant pattern is user-provided text and can still contain a private person's or household's name. Review the JSON and remove private patterns before posting. GitHub stores the issue, its author username and attached file publicly; maintainer review cannot undo information already exposed by an initial public submission. Athar has no user-account/contribution database and does not upload the export automatically.
 
 ## What happens next (maintainer side)
 
@@ -59,3 +61,7 @@ After a month or two of use, when you've tagged 20+ merchants. Submitting one or
 ## Verification
 
 In a clean install of a newer beta that includes a merged submission, the new rule should auto-classify the merchant on first SMS arrival. Check `Settings → Activity log` to see the categorization source — it should read `RULE_SUBSTRING` with the new pattern.
+
+## Distribution channel — signed shared merchant catalog (2026-10-16)
+
+The maintainer-review gate above stays human and unchanged. Accepted, already-public merchant knowledge additionally ships through a **signed, opt-in catalog branch** (`merchant-catalog`) as versioned `catalog-v1.json` envelopes: ECDSA P-256 (`SHA256withECDSA`, DER) signed over `ATHAR-MERCHANT-CATALOG/v1\n` + exact payload bytes, keyId pinned in the app build. Entries are bounded EXACT/SUBSTRING patterns into the existing `cat-*` category namespace only — no remote regex, no priority field, no financial-event rules. The app treats this as a **separate layer below personal and locally-learned rules and above bundled seeds**: it can never overwrite your explicit "Always" rules, never auto-confirms a transaction, and its entries resolve only against categories that already exist and are active on the device. Contributions still arrive via the manual export → GitHub issue flow described above; the catalog is a distribution format, not a new submission path.

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.Transaction
@@ -218,7 +219,17 @@ class HistoryViewModel @Inject constructor(
     fun updateTransaction(tx: Transaction, learnRule: Boolean) {
         viewModelScope.launch {
             val now = clock.now()
-            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now)
+            // ENH-009: an actual category-changing edit is an explicit USER decision —
+            // it overwrites any engine-derived provenance (CATALOG/CLASSIFIER) so the
+            // learner never treats engine output as user intent. Edits that keep the
+            // same category preserve the original provenance.
+            val existing = transactions.get(tx.id)
+            val provenance = when {
+                existing == null -> tx.categoryId?.let { CategorySource.USER }
+                existing.categoryId != tx.categoryId -> tx.categoryId?.let { CategorySource.USER }
+                else -> existing.categorySource
+            }
+            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now, categorySource = provenance)
             transactions.upsert(confirmed)
             val categoryId = confirmed.categoryId
             val merchantKey = specificMerchantKey(
@@ -331,6 +342,7 @@ class HistoryViewModel @Inject constructor(
             if (tx != null && tx.categoryKind() == category.kind) {
                 val updated = tx.copy(
                     categoryId = category.id,
+                    categorySource = CategorySource.USER,
                     status = TxStatus.CONFIRMED,
                     updatedAt = now,
                 )

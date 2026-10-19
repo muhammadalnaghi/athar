@@ -49,6 +49,12 @@ Other tools force a trade-off:
 
 ## Features
 
+### beta.25 update
+
+- Personal category corrections win over shared knowledge. FullSMS users can opt in to a signed public merchant catalog with offline cache, cancellation and reset; no transaction data or merchant queries are uploaded.
+- Receipt-image assistance uses a bundled offline English OCR model. StoreSafe keeps no INTERNET/SMS permissions. Merchant AI and Arabic/real-photo OCR quality are not claimed.
+- Android versionCode advances to 10; app updates continue through the existing GitHub/Obtainium channel. Financial data remains local. Community contributions remain explicit exports for review, not automatic uploads.
+
 #### Today (اليوم)
 - ✅ One landmark net-flow number with **count-up animation**
 - ✅ **Income + Expense pills** (olive / ember) — see your monthly inflow and outflow at a glance
@@ -154,7 +160,8 @@ Other tools force a trade-off:
 - ✅ **Home-screen widgets (beta.21+)** — three localized Glance widgets: Month summary (net + Income/Expense/Net-worth pills), Today snapshot (today's net + pending count), and Pending list (top-3 pending transactions with Confirm / Dismiss / Categorize shortcuts). Widget body copy follows Athar's Arabic/English app-language preference, and widgets refresh after language or display-currency changes. Long-press home screen → Widgets → Athar
 - ✅ **Support diagnostics export** — Settings → "Support diagnostics" creates `athar-support-diagnostics.json`, a bounded redacted parser and categorization-backlog report for maintainers. It includes counts, sender hashes, body-shape fingerprints/flags, failed-template groups, redacted errors, coverage metrics, hashed specific uncategorized-merchant groups, and aggregate recommendation codes only. Generic labels still count in total backlog but not repeated-backlog recommendations. No raw SMS bodies, merchant names, transaction rows, notes, balances, amounts, or account/card numbers are included
 - ✅ **Reconciliation no longer inflates expenses (beta.22)** — manual adjustment transactions (`تسوية يدوية`) still move net worth but are excluded from monthly spend/income totals, Trends bars, Plan actuals, and widget snapshots
-- ✅ **Update-availability nudge via Obtainium (beta.23)** — Settings → "تابع التحديثات / Stay up to date" hands off update-tracking to Obtainium via a deep link. Athar stays fully offline (no INTERNET permission); Obtainium watches the GitHub releases page and notifies you when a new build ships
+- ✅ **Update-availability nudge via Obtainium (beta.23)** — Settings → "تابع التحديثات / Stay up to date" hands off update-tracking to Obtainium via a deep link. Obtainium watches the GitHub releases page and notifies you when a new build ships
+- ✅ **Opt-in signed shared merchant catalog** — Settings → "كتالوج التجار المشترك". Off by default; when enabled, Athar downloads one signed, data-only public merchant→category library from a fixed GitHub endpoint (ECDSA P-256 signature verified on device against a build-time public key). The request carries nothing about you or your money — the host only sees that an Athar instance fetched one public file (your IP and the request time, like any web fetch). Catalog suggestions never auto-record: only your own local rules confirm transactions; a catalog match pre-fills a PENDING suggestion for one-tap confirmation. Personal rules and local learning always outrank the catalog; disabling updates keeps your cached library usable offline, and Reset returns to bundled knowledge without touching your rules or history. StoreSafe builds stay fully offline. App updates still come only via Obtainium
 - ✅ **Recurring rules management** with auto-detected suggestions from repeated specific merchants only, safe account/category defaults from unanimous history, active-account selection for manual rules and suggestion confirmation, existing-rule account/category repair, manual "Run now", and WorkManager auto-run so due subscriptions land in Pending without visiting Settings
 - ✅ Categories management (rename, archive, reorder, custom adds)
 

@@ -30,7 +30,7 @@ import com.athar.core.data.db.entity.UserTemplateEntity
 import com.athar.core.data.db.entity.WishlistEntity
 
 @Database(
-    version = 7,
+    version = 8,
     exportSchema = true,
     entities = [
         AccountEntity::class,
@@ -224,6 +224,21 @@ internal abstract class AtharDatabase : RoomDatabase() {
                     ON transaction_receipt(transactionId)
                     """.trimIndent(),
                 )
+            }
+        }
+
+        /**
+         * v7 → v8: nullable categorization provenance on transactions (ENH-009).
+         *
+         * `categorySource` records which layer suggested the category
+         * (RULE_*, CLASSIFIER, CATALOG, USER) so catalog/model suggestions can
+         * never silently feed local learning or confidence sweeps. NULL for
+         * all legacy rows; the column is additive and never carries financial
+         * values.
+         */
+        internal val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN categorySource TEXT")
             }
         }
     }

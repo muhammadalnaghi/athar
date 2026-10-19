@@ -108,6 +108,7 @@ internal object DatabaseModule {
                     AtharDatabase.MIGRATION_4_5,
                     AtharDatabase.MIGRATION_5_6,
                     AtharDatabase.MIGRATION_6_7,
+                    AtharDatabase.MIGRATION_7_8,
                 )
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()

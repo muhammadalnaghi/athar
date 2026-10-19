@@ -1,8 +1,10 @@
 package com.athar.core.data.rules
 
 import com.athar.core.common.money.Money
+import com.athar.core.data.db.dao.EngineProvenanceExclusion
 import com.athar.core.data.db.dao.CategoryUsageCount
 import com.athar.core.data.db.entity.CategoryRuleEntity
+import com.athar.core.domain.model.CategorySource
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.RECONCILE_REF_PREFIX
@@ -100,6 +102,24 @@ class LocalCategoryRuleLearnerTest {
         assertThat(LearningCandidate.from(tx(status = TxStatus.PENDING))).isNull()
     }
 
+    @Test
+    fun `candidate refuses engine-derived provenance so the engine cannot teach itself`() {
+        assertThat(LearningCandidate.from(tx(categorySource = CategorySource.CATALOG))).isNull()
+        assertThat(LearningCandidate.from(tx(categorySource = CategorySource.CLASSIFIER))).isNull()
+        // Explicit user decisions and legacy rows remain learnable.
+        assertThat(LearningCandidate.from(tx(categorySource = CategorySource.USER))).isNotNull()
+        assertThat(LearningCandidate.from(tx(categorySource = null))).isNotNull()
+    }
+
+    @Test
+    fun `sql evidence query excludes engine-derived provenance rows`() {
+        // Guarded by the migrated SQL in TransactionDao (see TransactionDao provenance queries);
+        // this assertion pins the exclusion constants so an edit cannot silently drop them.
+        assertThat(EngineProvenanceExclusion.SOURCE_NAMES)
+            .containsExactly("CLASSIFIER", "CATALOG")
+            .inOrder()
+    }
+
     private fun autoRule(pattern: String, categoryId: String): CategoryRuleEntity =
         rule(
             id = LocalCategoryRuleLearner.AutoRuleIdPrefix + pattern,
@@ -154,6 +174,7 @@ class LocalCategoryRuleLearnerTest {
         status: TxStatus = TxStatus.CONFIRMED,
         merchantNormalized: String = "jarir bookstore",
         sourceRefId: String? = null,
+        categorySource: CategorySource? = null,
     ): Transaction = Transaction(
         id = "tx-1",
         accountId = "cash",
@@ -171,5 +192,6 @@ class LocalCategoryRuleLearnerTest {
         confidence = null,
         createdAt = Instant.parse("2026-06-13T00:00:00Z"),
         updatedAt = Instant.parse("2026-06-13T00:00:00Z"),
+        categorySource = categorySource,
     )
 }

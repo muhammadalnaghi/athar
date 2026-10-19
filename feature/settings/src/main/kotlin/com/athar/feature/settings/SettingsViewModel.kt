@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athar.core.domain.model.Account
 import com.athar.core.domain.model.MANUAL_ACCOUNT_ID
+import com.athar.core.domain.model.MerchantCatalogState
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.BackfillProgress
 import com.athar.core.domain.repo.BackupRepository
@@ -36,6 +37,7 @@ import com.athar.core.domain.repo.MerchantBulkImportCategoryImpact
 import com.athar.core.domain.repo.MerchantBulkImportResult
 import com.athar.core.domain.repo.MerchantBulkImportSkipSummary
 import com.athar.core.domain.repo.MerchantBulkImportTrigger
+import com.athar.core.domain.repo.MerchantCatalogRepository
 import com.athar.core.domain.repo.SmsBackfillTrigger
 import com.athar.core.domain.repo.SupportDiagnosticsExportResult
 import com.athar.core.domain.repo.SupportDiagnosticsExportTrigger
@@ -49,6 +51,7 @@ import com.athar.core.domain.repo.WishlistImportResult
 import com.athar.core.domain.repo.WishlistImportTrigger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -203,6 +206,7 @@ class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferencesRepository,
     private val transactions: TransactionRepository,
     accounts: AccountRepository,
+    private val merchantCatalogRepository: MerchantCatalogRepository,
 ) : ViewModel() {
 
     private val _rescan = MutableStateFlow<RescanStatus>(RescanStatus.Idle)
@@ -269,6 +273,9 @@ class SettingsViewModel @Inject constructor(
     val appLocale: StateFlow<String> = prefs.appLocale()
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    /** Shared merchant catalog (ENH-009): public, nonfinancial state only. */
+    val merchantCatalog: StateFlow<MerchantCatalogState> = merchantCatalogRepository.state
+
     init {
         viewModelScope.launch {
             statementImportAccounts.collectLatest { rows ->
@@ -282,6 +289,30 @@ class SettingsViewModel @Inject constructor(
 
     fun setHijriEnabled(enabled: Boolean) {
         viewModelScope.launch { prefs.setHijriEnabled(enabled) }
+    }
+
+    fun setMerchantCatalogUpdates(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                merchantCatalogRepository.setUpdatesEnabled(enabled)
+                if (enabled) {
+                    // A failed consent change must never trigger a forced download.
+                    merchantCatalogRepository.refresh(force = true)
+                }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                // Repository state retains the failure and any unsaved-disable retry.
+            }
+        }
+    }
+
+    fun refreshMerchantCatalog() {
+        viewModelScope.launch { merchantCatalogRepository.refresh(force = true) }
+    }
+
+    fun resetMerchantCatalog() {
+        viewModelScope.launch { merchantCatalogRepository.resetToBundled() }
     }
 
     fun setOwnAccountNumbers(csv: String) {

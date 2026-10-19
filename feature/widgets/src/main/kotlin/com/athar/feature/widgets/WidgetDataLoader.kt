@@ -3,11 +3,10 @@ package com.athar.feature.widgets
 import android.content.Context
 import com.athar.core.common.money.Money
 import com.athar.core.common.time.Period
+import com.athar.core.domain.calc.selectOperatingTransactions
 import com.athar.core.domain.model.NetWorth
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
-import com.athar.core.domain.model.TxType
-import com.athar.core.domain.model.isReconciliation
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
@@ -59,11 +58,11 @@ object WidgetDataLoader {
         val period = Period.Month(month)
         val confirmed = e.transactions()
             .observeByPeriod(period, status = TxStatus.CONFIRMED).first()
-        // Reconciliations only move net worth; never count them as income/expense.
-        val operating = confirmed.filterNot { it.isReconciliation() }
-        val (income, expense) = operating.partition { it.type == TxType.INCOME }
-        val incomeSum = Money.sumAmounts(income.map { it.amount }, currency)
-        val expenseSum = Money.sumAmounts(expense.map { it.amount }, currency)
+        // Shared operating selection: transfers are money movement, not consumption;
+        // reconciliations only move net worth and never count as income/expense.
+        val operating = selectOperatingTransactions(confirmed)
+        val incomeSum = Money.sumAmounts(operating.income.map { it.amount }, currency)
+        val expenseSum = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
         val netWorth: NetWorth = e.accounts().observeNetWorth(currency).first()
         return MonthlySnapshot(
             yearMonth = "${month.year}/${month.monthValue}",
@@ -85,10 +84,9 @@ object WidgetDataLoader {
             .observeByPeriod(period, status = TxStatus.CONFIRMED).first()
         val todayTxns = confirmed
             .filter { it.date == today }
-            .filterNot { it.isReconciliation() }
-        val (todayIncome, todayExpense) = todayTxns.partition { it.type == TxType.INCOME }
-        val todayNet = Money.sumAmounts(todayIncome.map { it.amount }, currency) -
-            Money.sumAmounts(todayExpense.map { it.amount }, currency)
+        val todayOperating = selectOperatingTransactions(todayTxns)
+        val todayNet = Money.sumAmounts(todayOperating.income.map { it.amount }, currency) -
+            Money.sumAmounts(todayOperating.expenses.map { it.amount }, currency)
         val pending = e.transactions().observePending().first()
         return TodaySnapshot(
             todayNet = todayNet,

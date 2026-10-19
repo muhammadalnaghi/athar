@@ -87,6 +87,9 @@ Build **Athar** — a native Android app, Kotlin + Jetpack Compose, that listens
 2. Show ads, "offers," cashback partnerships, or affiliate links.
 3. Make you feel bad. (No red bars that scream. No notifications that shame. No streak loss.)
 
+**Amendment — 2026-10-16 — signed shared merchant catalog (scoped no-network exception).**
+Supersedes the blanket no-network reading of "stays entirely on your device" for **one narrow capability only**: an opt-in (off by default), foreground-only, manual-or-stale-triggered whole-catalog download of a signed, merchant-only public library from one fixed HTTPS endpoint (`https://raw.githubusercontent.com/wa1939/athar/merchant-catalog/catalog-v1.json`, dedicated data-only branch). The download carries **no transactions, merchant queries, raw messages, account/card ids, dates, user identifiers, or telemetry of any kind** — the host sees only that an Athar instance requested one static public file (IP + request timing). Storage stays app-private (AtomicFile + nonfinancial DataStore metadata); financial data remains encrypted Room, never cached outside it. StoreSafe ships without `INTERNET` and without the capability. Obtainium remains the only app-update channel; key rotation happens only via a trusted app update. Already-shipped local rule auto-confirm behavior (a CONFIRMED-initial status when a valid local rule matches) is unchanged and is **not** extended to catalog or any model suggestions: a catalog category suggestion can never by itself flip an ingestion row into a financial posting.
+
 ### 2.3 Voice and tone
 
 **Editorial voice principles:**
@@ -223,12 +226,13 @@ The single most important screen. Opens to:
 4. **Be private.** No transaction data leaves the device unless the user explicitly exports.
 5. **Be Saudi-first.** Arabic-first UI, Al Rajhi SMS as the first-class input source, SAR as default, Hijri date display optional.
 
+**F09 receipt OCR boundary.** Receipt-image import already exists and remains a local-only English assistance path: the app uses bundled Tesseract4Android 4.9.0 and the official English tessdata_fast model on-device. No Arabic or real-photo accuracy is promised. The catalog-only network exception does not authorize receipt or financial uploads, runtime model downloads, diagnostic telemetry, or network/diagnostic ML Kit SDKs. Merchant/entity extraction, including the separately planned ML Kit Entity Extraction work, remains outside F09 and is not implemented or bundled here.
+
 ### 4.2 Non-goals (v1)
 
 - iOS app. (You said Android. Locked.)
 - Multi-user / family sharing. (One user, one device.)
 - Cloud sync. (Local-first; export-only.)
-- Receipt photo OCR. (Defer to v2.)
 - Investment performance tracking with live prices. (Family Investments table is static input; no market data.)
 - Bill reminders, due-date tracking. (Defer.)
 - Subscription detection. (Defer.)
