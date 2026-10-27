@@ -258,7 +258,7 @@ private class AsOfAccountRepository(
     private val liquidBalance: Money,
 ) : AccountRepository {
     private val account = Fixtures.account(
-        id = "checking",
+        id = "acc-1",
         type = AccountType.CHECKING,
         openingBalance = Money.zero(),
     )

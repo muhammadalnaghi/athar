@@ -29,7 +29,10 @@ data class AccountingRow(
 
 data class MonthlyAccountingConfig(
     val ownedAccountIds: Set<String>,
-    /** Account IDs whose purchases count as expenses (typically all owned). */
+    /**
+     * Owned accounts for expense breakdowns / future scoped views.
+     * Headline expense totals count every confirmed EXPENSE (see [summarize]).
+     */
     val expenseAccountIds: Set<String>,
     /**
      * Account IDs treated as income landing accounts (e.g. ANB).
@@ -169,11 +172,12 @@ object MonthlyAccounting {
                     income += row.amount
                 }
                 TxType.EXPENSE -> {
-                    if (row.accountId in config.expenseAccountIds) {
-                        expenses += row.amount
-                        byAccount[row.accountId] =
-                            (byAccount[row.accountId] ?: zero) + row.amount
-                    }
+                    // Count all confirmed expenses. expenseAccountIds is reserved for
+                    // scoped breakdowns; gating here zeroed Today/Trends when accounts
+                    // were empty or tx.accountId lagged the fake account id.
+                    expenses += row.amount
+                    byAccount[row.accountId] =
+                        (byAccount[row.accountId] ?: zero) + row.amount
                 }
                 TxType.TRANSFER -> needsReview += row.id
             }
