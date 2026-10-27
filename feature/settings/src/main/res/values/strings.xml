@@ -73,7 +73,7 @@
 
     <!-- Statement exchange card -->
     <string name="settings_csv_title">تبادل الكشوف</string>
-    <string name="settings_csv_body">استورد من جدول الاكسل القديم أو كشف بنك بصيغة XLSX أو CSV/TSV أو OFX/QFX أو MT940. راجع الحقول المكتشفة قبل الاستيراد، وصدّر حركاتك كملف CSV للمحاسب.</string>
+    <string name="settings_csv_body">استورد من جدول إكسل القديم أو كشف بنك بصيغة XLSX أو CSV/TSV أو OFX/QFX أو MT940. راجع الحقول المكتشفة قبل الاستيراد، وصدّر حركاتك كملف CSV للمحاسب.</string>
     <string name="settings_csv_done" formatted="true">تم استيراد %1$d حركة. (تم تخطّي %2$d صف.)</string>
     <string name="settings_csv_exported" formatted="true">تم تصدير %1$d حركة.</string>
     <string name="settings_csv_action_import">استيراد كشف</string>
@@ -220,7 +220,7 @@
 
     <!-- Language card -->
     <string name="settings_language_title">اللغة · Language</string>
-    <string name="settings_language_body">اختر لغة عرض التطبيق. سيتم إعادة تحميل الشاشة لتطبيق اللغة الجديدة.</string>
+    <string name="settings_language_body">اختر لغة عرض التطبيق. نعيد تحميل الشاشة تلقائيًا لتطبيق اللغة الجديدة.</string>
     <string name="settings_language_option_system_ar">نظام الجهاز</string>
     <string name="settings_language_option_system_en">Follow system</string>
     <string name="settings_language_option_arabic_ar">العربية</string>

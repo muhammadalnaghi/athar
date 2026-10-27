@@ -35,7 +35,7 @@ fun <T> AtharSegmentedControl(
             .clip(RoundedCornerShape(32.dp))
             .background(theme.colors.divider)
             .padding(2.dp)
-            .height(40.dp),
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         segments.forEach { segment ->
