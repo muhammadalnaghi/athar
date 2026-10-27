@@ -1,11 +1,13 @@
 # Builds the sideload personalFullSms debug APK (SMS permissions intact).
 # No keystore secrets required: AGP signs with the runner's debug keystore.
-# That key is NOT stable across fresh runners — see repo docs / PR notes for
-# the secure release-signing plan before putting real financial data on device.
+# That key is NOT stable across fresh runners — see release-signing plan before
+# putting real financial data on device.
 name: Build personal APK
 
 on:
   push:
+    branches: [main, "feat/**"]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -35,31 +37,33 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          # compileSdk / targetSdk are locked at 35 in gradle/libs.versions.toml
           packages: platforms;android-35 build-tools;35.0.0 platform-tools
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Run SMS parser unit tests
-        run: ./gradlew :ingestion:sms-parser:test --no-daemon --stacktrace
+      - name: Unit tests (accounting + SMS import + Trends/Today paths)
+        run: >
+          ./gradlew
+          :core:domain:test
+          :ingestion:sms-parser:test
+          :feature:trends:testDebugUnitTest
+          :feature:today:testDebugUnitTest
+          --no-daemon --stacktrace
 
       - name: Assemble personalFullSms debug APK
         run: ./gradlew :app:assemblePersonalFullSmsDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: athar-personalFullSms-debug
           path: app/build/outputs/apk/personalFullSms/debug/*.apk
           if-no-files-found: error
           retention-days: 14
 
-      # Publishes the same filename into the public Drive folder so the share link
-      # stays stable. Requires secret GDRIVE_SERVICE_ACCOUNT_JSON (raw JSON or
-      # base64). Share the folder with the service-account client_email as Editor.
-      # Folder: https://drive.google.com/drive/folders/1BQbIGFI0i9RXAnTOnkclyoFsblKXHxfv
       - name: Upload APK to Google Drive
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
           GDRIVE_FOLDER_ID: 1BQbIGFI0i9RXAnTOnkclyoFsblKXHxfv
@@ -69,17 +73,21 @@ jobs:
           NAME="app-personalFullSms-debug.apk"
           test -f "$APK"
           if [ -z "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
-            echo "::error::Missing secret GDRIVE_SERVICE_ACCOUNT_JSON. Add the Google service-account key (raw JSON or base64) under Settings → Secrets → Actions, and share folder $GDRIVE_FOLDER_ID with that account as Editor."
+            echo "::error::Missing secret GDRIVE_SERVICE_ACCOUNT_JSON."
             exit 1
           fi
 
           SA_FILE="$RUNNER_TEMP/gdrive-sa.json"
           printf '%s' "$GDRIVE_SERVICE_ACCOUNT_JSON" > "$SA_FILE"
           if ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SA_FILE" 2>/dev/null; then
-            base64 -d "$SA_FILE" > "$RUNNER_TEMP/gdrive-sa.decoded.json"
+            if ! base64 -d "$SA_FILE" > "$RUNNER_TEMP/gdrive-sa.decoded.json" 2>/dev/null \
+              || ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RUNNER_TEMP/gdrive-sa.decoded.json" 2>/dev/null; then
+              echo "::error::GDRIVE_SERVICE_ACCOUNT_JSON is not valid JSON (and not valid base64 JSON)."
+              exit 1
+            fi
             mv "$RUNNER_TEMP/gdrive-sa.decoded.json" "$SA_FILE"
-            python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SA_FILE"
           fi
+          python3 -c 'import json,sys; e=json.load(open(sys.argv[1]))["client_email"]; print(f"service account: {e}")' "$SA_FILE"
 
           sudo apt-get update -qq
           sudo apt-get install -y -qq rclone
@@ -88,8 +96,6 @@ jobs:
           export RCLONE_CONFIG_GDRIVE_SCOPE=drive
           export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$SA_FILE"
 
-          # Drive allows duplicate names; delete prior copies so the public folder
-          # keeps a single stable APK entry.
           rclone delete "gdrive:" \
             --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
             --include "$NAME" \
