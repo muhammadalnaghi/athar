@@ -104,8 +104,5 @@ hs_err_pid*
 # Memory/plan files from local agent tools
 memory/
 
-# GitHub Actions workflows — temporarily ignored on initial push because
-# the local gh OAuth token doesn't carry the `workflow` scope. Once you've run
-# `gh auth refresh -s workflow`, remove this block and commit the workflows.
-/.github/workflows/
+# Ad-hoc emulator dumps (never PR-able)
 test-screens-*/
