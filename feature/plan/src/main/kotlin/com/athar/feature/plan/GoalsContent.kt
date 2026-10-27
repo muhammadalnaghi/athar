@@ -35,6 +35,9 @@ import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.component.AtharTextField
 import com.athar.core.designsystem.theme.AtharTheme
 import com.athar.core.designsystem.theme.MinTouchTarget
+import com.athar.feature.plan.goals.GoalScenarioCard
+import com.athar.feature.plan.goals.SavedGoalCompareCard
+import com.athar.feature.plan.goals.SavedGoalsCard
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -53,6 +56,18 @@ fun GoalsContent(viewModel: GoalsViewModel = hiltViewModel()) {
             state = state,
             onClick = { editing = GoalTarget.EMERGENCY_FUND },
         )
+        // Scope disclosure: the card totals above are literal in the loaded display
+        // currency only; foreign-currency amounts are excluded, never converted.
+        if (!state.isLoading) {
+            CurrencyScopeNote(currency = state.currency, excluded = state.excludedCurrencies)
+        }
+        GoalScenarioCard(state = state, onEvent = viewModel::onEvent)
+        SavedGoalsCard(state = state, onEvent = viewModel::onEvent)
+        // Conditional side-by-side: only while a saved-vs-current comparison snapshot
+        // is open; any edit/reset/load/currency change discards it in the ViewModel.
+        state.savedGoalCompare?.let { compare ->
+            SavedGoalCompareCard(compare = compare, onEvent = viewModel::onEvent)
+        }
     }
 
     editing?.let { target ->
@@ -80,21 +95,29 @@ private fun SavingsRateCard(
     val percent = state.savingsRatePercent
     GoalCard(
         title = stringResource(R.string.plan_goals_savings_title),
-        headline = percent?.let {
-            stringResource(R.string.plan_goals_percent_value, it.formatOne())
-        } ?: stringResource(R.string.plan_goals_not_available),
+        headline = if (state.isLoading || percent == null) {
+            stringResource(R.string.plan_goals_not_available)
+        } else {
+            stringResource(R.string.plan_goals_percent_value, percent.formatOne())
+        },
         target = stringResource(R.string.plan_goals_savings_target, state.savingsRateTargetPercent),
         progress = state.savingsRateProgress,
         progressColor = if (state.savingsRateProgress >= 1f) theme.colors.olive else theme.colors.ember,
+        showProgress = !state.isLoading,
         onClick = onClick,
     ) {
-        MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_income), money = state.monthlyIncome)
-        MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_expense), money = state.monthlyExpense)
-        MoneyMetricRow(
-            label = stringResource(R.string.plan_goals_monthly_savings),
-            money = state.monthlySavings,
-            color = if (state.monthlySavings.isNegative()) theme.colors.ember else theme.colors.olive,
-        )
+        if (state.isLoading) {
+            // While loading, the zero-initialized amounts are not settled facts.
+            LoadingFiguresNote()
+        } else {
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_income), money = state.monthlyIncome)
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_expense), money = state.monthlyExpense)
+            MoneyMetricRow(
+                label = stringResource(R.string.plan_goals_monthly_savings),
+                money = state.monthlySavings,
+                color = if (state.monthlySavings.isNegative()) theme.colors.ember else theme.colors.olive,
+            )
+        }
     }
 }
 
@@ -106,17 +129,35 @@ private fun EmergencyFundCard(
     val theme = AtharTheme
     GoalCard(
         title = stringResource(R.string.plan_goals_emergency_title),
-        headline = state.emergencyMonthsCovered?.let {
-            stringResource(R.string.plan_goals_months_value, it.formatOne())
-        } ?: stringResource(R.string.plan_goals_no_monthly_burn),
+        headline = when {
+            state.isLoading -> stringResource(R.string.plan_goals_not_available)
+            // No dated certified balance: coverage is withheld, never a "0 months" claim.
+            !state.liquidityCertified -> stringResource(R.string.plan_goals_emergency_covered_withheld)
+            state.emergencyMonthsCovered != null ->
+                stringResource(R.string.plan_goals_months_value, state.emergencyMonthsCovered.formatOne())
+            else -> stringResource(R.string.plan_goals_no_monthly_burn)
+        },
         target = stringResource(R.string.plan_goals_emergency_target, state.emergencyFundTargetMonths),
         progress = state.emergencyFundProgress,
         progressColor = if (state.emergencyFundProgress >= 1f) theme.colors.olive else theme.colors.ember,
+        showProgress = !state.isLoading && state.liquidityCertified,
         onClick = onClick,
     ) {
-        MoneyMetricRow(label = stringResource(R.string.plan_goals_liquid_balance), money = state.liquidBalance)
-        MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_expense), money = state.monthlyExpense)
-        MoneyMetricRow(label = stringResource(R.string.plan_goals_emergency_target_amount), money = state.emergencyTargetAmount)
+        if (state.isLoading) {
+            LoadingFiguresNote()
+        } else if (!state.liquidityCertified) {
+            AtharText(
+                text = stringResource(R.string.plan_goals_liquidity_withheld),
+                style = theme.typography.caption,
+                color = theme.colors.muted,
+            )
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_expense), money = state.monthlyExpense)
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_emergency_target_amount), money = state.emergencyTargetAmount)
+        } else {
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_liquid_balance), money = state.liquidBalance)
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_monthly_expense), money = state.monthlyExpense)
+            MoneyMetricRow(label = stringResource(R.string.plan_goals_emergency_target_amount), money = state.emergencyTargetAmount)
+        }
     }
 }
 
@@ -127,6 +168,7 @@ private fun GoalCard(
     target: String,
     progress: Float,
     progressColor: androidx.compose.ui.graphics.Color,
+    showProgress: Boolean = true,
     onClick: () -> Unit,
     metrics: @Composable ColumnScope.() -> Unit,
 ) {
@@ -146,7 +188,9 @@ private fun GoalCard(
                 AtharText(text = headline, style = theme.typography.headline, color = theme.colors.ink)
                 AtharText(text = target, style = theme.typography.caption, color = theme.colors.muted)
             }
-            ProgressRail(progress = progress, color = progressColor)
+            if (showProgress) {
+                ProgressRail(progress = progress, color = progressColor)
+            }
             metrics()
         }
     }
@@ -179,10 +223,9 @@ private fun MoneyMetricRow(
     color: androidx.compose.ui.graphics.Color = AtharTheme.colors.ink,
 ) {
     val theme = AtharTheme
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
     ) {
         AtharText(text = label, style = theme.typography.caption, color = theme.colors.muted)
         AtharNumber(money = money, color = color)

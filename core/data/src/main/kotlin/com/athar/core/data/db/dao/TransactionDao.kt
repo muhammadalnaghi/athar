@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.athar.core.data.db.entity.AccountBalanceRow
 import com.athar.core.data.db.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
@@ -82,30 +84,47 @@ internal interface TransactionDao {
     suspend fun recoverDismissedToPending(now: kotlinx.datetime.Instant): Int
 
     /**
-     * Apply [categoryId] to every transaction whose merchantNormalized contains [pattern]
-     * (case-insensitive LIKE) AND whose current status is PENDING or DISMISSED — those are
-     * the rows the user hasn't explicitly approved yet. Status is moved to CONFIRMED because
-     * the user has just *just* explicitly chosen this category for this merchant; any future
-     * matches would auto-confirm under the same rule.
-     *
-     * CONFIRMED rows are NOT touched — the user may have intentionally chosen a different
-     * category for some of them earlier (e.g., a Hemmah charge that was actually a gift).
+     * Fill only unassigned, compatible categories for the explicit literal merchant
+     * substring. Classification never posts money, revives dismissed observations,
+     * overwrites personal categories, or assigns an archived/missing category.
      */
     @Query(
         """
         UPDATE transactions
         SET categoryId = :categoryId,
             categorySource = 'USER',
-            status = 'CONFIRMED',
             updatedAt = :now
-        WHERE status IN ('PENDING', 'DISMISSED')
-          AND merchantNormalized LIKE '%' || :pattern || '%'
+        WHERE status IN ('PENDING', 'CONFIRMED')
+          AND categoryId IS NULL
+          AND type = (SELECT kind FROM category WHERE id = :categoryId AND archived = 0)
+          AND instr(lower(merchantNormalized), lower(:pattern)) > 0
         """,
     )
     suspend fun applyCategoryToMatching(pattern: String, categoryId: String, now: kotlinx.datetime.Instant): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(entity: TransactionEntity)
+    @Query("SELECT * FROM transactions WHERE sourceRefId = :sourceRefId LIMIT 1")
+    suspend fun findBySourceRefId(sourceRefId: String): TransactionEntity?
+
+    /** The lookup and insert share one Room transaction, including concurrent arrivals. */
+    @Transaction
+    suspend fun insertIngestIfAbsent(entity: TransactionEntity): IngestTransactionWrite {
+        val existing = entity.sourceRefId?.let { findBySourceRefId(it) }
+        if (existing != null) return IngestTransactionWrite(existing, inserted = false)
+        insertNewForUpsert(entity)
+        return IngestTransactionWrite(entity, inserted = true)
+    }
+
+    /** Keep receipt children; reject collisions on another row's unique sourceRefId. */
+    @Transaction
+    suspend fun upsert(entity: TransactionEntity) {
+        if (updateExistingForUpsert(entity) == 0) insertNewForUpsert(entity)
+    }
+
+    @Update(onConflict = OnConflictStrategy.ABORT)
+    suspend fun updateExistingForUpsert(entity: TransactionEntity): Int
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertNewForUpsert(entity: TransactionEntity)
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun delete(id: String)
@@ -130,6 +149,8 @@ internal interface TransactionDao {
     )
     fun observeBalancesByAccount(): Flow<List<AccountBalanceRow>>
 }
+
+internal data class IngestTransactionWrite(val entity: TransactionEntity, val inserted: Boolean)
 
 internal data class CategoryUsageCount(
     val categoryId: String,

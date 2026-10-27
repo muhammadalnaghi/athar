@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_evidence_toggle">كيف تُحسب هذه النتائج؟</string>
+    <string name="plan_portfolio_evidence_hide">إخفاء الشرح</string>
+    <string name="plan_portfolio_evidence_recomputed">تُحسب النتائج من قيودك وأسعارك المحفوظة، دون جلب أسعار خارجية أو افتراض أسعار مفقودة.</string>
+    <string name="plan_portfolio_evidence_money_gain">يشمل المكسب أو الخسارة تقييمات غير محققة، وليس نقدًا مستلمًا أو عائدًا سنويًا.</string>
+    <string name="plan_portfolio_evidence_xirr_requires">يراعي العائد الداخلي مواعيد التدفقات الخارجية والتقييم الختامي، ولا يضمن الاحتساب تفرد المعدل.</string>
+    <string name="plan_portfolio_evidence_twr_requires">يتطلب العائد الموزون زمنيًا تقييمات قبل التدفقات وبعدها؛ أسعار الإغلاق وحدها لا تكفي.</string>
+    <string name="plan_portfolio_evidence_undefined_note">قد لا يتاح العائد لنقص المدخلات أو لتعذّر حساب نتيجة موثوقة. لا نفترض قيمًا بديلة.</string>
+    <string name="plan_portfolio_evidence_inputs_title">المدخلات المؤرخة المحفوظة</string>
+    <string name="plan_portfolio_evidence_counts">قيود: %1$d · أسعار مؤرخة: %2$d</string>
+    <string name="plan_portfolio_evidence_span">المدى: %1$s إلى %2$s</string>
+    <string name="plan_portfolio_evidence_empty">لا قيود أو أسعار مؤرخة محفوظة بعد.</string>
+    <string name="plan_portfolio_evidence_unpriced">أدوات بلا سعر صالح: %1$s</string>
+    <string name="plan_portfolio_evidence_gain_not_replayable">لم يُحسب الربح النقدي: المدخلات المحفوظة مرفوضة حاليًا.</string>
+    <string name="plan_portfolio_perf_scope">نتائج محسوبة حتى تاريخ %1$s</string>
+</resources>

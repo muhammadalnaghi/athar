@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -43,6 +46,7 @@ import com.athar.core.designsystem.component.AtharSegment
 import com.athar.core.designsystem.component.AtharSegmentedControl
 import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.component.AtharTextField
+import com.athar.core.designsystem.display.currentUiLocale
 import com.athar.core.designsystem.theme.AtharTheme
 import com.athar.core.designsystem.theme.MinTouchTarget
 import com.athar.core.domain.model.TxType
@@ -58,6 +62,7 @@ fun AddTransactionSheet(
     viewModel: AddTransactionViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val uiLocale = currentUiLocale()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val receiptLauncher = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
@@ -94,7 +99,7 @@ fun AddTransactionSheet(
             onVoiceClick = {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                     .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, uiLocale.toLanguageTag())
                     .putExtra(RecognizerIntent.EXTRA_PROMPT, "")
                 try {
                     voiceLauncher.launch(intent)
@@ -123,91 +128,97 @@ private fun AddTransactionForm(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 400.dp)
+            .imePadding()
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(theme.spacing.m),
     ) {
-        AtharText(text = stringResource(R.string.add_tx_title), style = theme.typography.headline)
-
-        AtharSegmentedControl(
-            segments = listOf(
-                AtharSegment(TxType.EXPENSE, stringResource(R.string.add_tx_segment_expense)),
-                AtharSegment(TxType.INCOME, stringResource(R.string.add_tx_segment_income)),
-            ),
-            selected = state.type,
-            onSelect = { onEvent(AddTransactionEvent.SetType(it)) },
-        )
-
-        QuickEntryRow(
-            value = state.quickEntry,
-            error = state.quickEntryError,
-            onValueChange = { onEvent(AddTransactionEvent.SetQuickEntry(it)) },
-            onApply = { onEvent(AddTransactionEvent.ApplyQuickEntry) },
-            onVoiceClick = onVoiceClick,
-        )
-
-        AtharAmountField(
-            value = state.amount,
-            onValueChange = { onEvent(AddTransactionEvent.SetAmount(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            isError = state.validationError == ValidationError.AMOUNT_REQUIRED ||
-                state.validationError == ValidationError.AMOUNT_INVALID,
-            supportingText = when (state.validationError) {
-                ValidationError.AMOUNT_REQUIRED -> stringResource(R.string.add_tx_error_amount_required)
-                ValidationError.AMOUNT_INVALID -> stringResource(R.string.add_tx_error_amount_invalid)
-                else -> null
-            },
-        )
-
-        AtharTextField(
-            value = state.merchant,
-            onValueChange = { onEvent(AddTransactionEvent.SetMerchant(it)) },
-            label = stringResource(R.string.add_tx_label_merchant),
-            placeholder = stringResource(R.string.add_tx_placeholder_merchant),
-            modifier = Modifier.fillMaxWidth(),
-            isError = state.validationError == ValidationError.MERCHANT_REQUIRED,
-            supportingText = if (state.validationError == ValidationError.MERCHANT_REQUIRED) stringResource(R.string.add_tx_error_merchant_required) else null,
-        )
-
-        SuggestionStrip(
-            suggestions = state.visibleMerchantSuggestions,
-            onSelect = { onEvent(AddTransactionEvent.ApplySuggestion(it)) },
-        )
-
-        AtharText(
-            text = if (state.validationError == ValidationError.CATEGORY_REQUIRED) stringResource(R.string.add_tx_error_category_required) else stringResource(R.string.add_tx_label_category),
-            style = theme.typography.caption,
-            color = if (state.validationError == ValidationError.CATEGORY_REQUIRED) theme.colors.crimson else theme.colors.muted,
-        )
-
-        AtharCategoryPicker(
-            items = state.categoriesForType.map {
-                AtharPickerItem(key = it.id, labelEn = it.name, labelAr = it.nameAr)
-            },
-            selectedKey = state.selectedCategoryId,
-            onSelect = { onEvent(AddTransactionEvent.SelectCategory(it)) },
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 200.dp, max = 320.dp),
-        )
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(theme.spacing.m),
+        ) {
+            AtharText(text = stringResource(R.string.add_tx_title), style = theme.typography.headline)
 
-        AtharTextField(
-            value = state.notes,
-            onValueChange = { onEvent(AddTransactionEvent.SetNotes(it)) },
-            label = stringResource(R.string.add_tx_label_notes),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = false,
-        )
+            AtharSegmentedControl(
+                segments = listOf(
+                    AtharSegment(TxType.EXPENSE, stringResource(R.string.add_tx_segment_expense)),
+                    AtharSegment(TxType.INCOME, stringResource(R.string.add_tx_segment_income)),
+                ),
+                selected = state.type,
+                onSelect = { onEvent(AddTransactionEvent.SetType(it)) },
+            )
 
-        ReceiptAttachmentRow(
-            receipts = state.receipts,
-            isLoading = state.isReceiptLoading,
-            error = state.receiptError,
-            isOcrRunning = state.isReceiptOcrRunning,
-            ocrStatus = state.receiptOcrStatus,
-            onAttachClick = onReceiptClick,
-            onRemoveClick = { onEvent(AddTransactionEvent.RemoveReceipt(it)) },
-        )
+            QuickEntryRow(
+                value = state.quickEntry,
+                error = state.quickEntryError,
+                onValueChange = { onEvent(AddTransactionEvent.SetQuickEntry(it)) },
+                onApply = { onEvent(AddTransactionEvent.ApplyQuickEntry) },
+                onVoiceClick = onVoiceClick,
+            )
+
+            AtharAmountField(
+                value = state.amount,
+                onValueChange = { onEvent(AddTransactionEvent.SetAmount(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.validationError == ValidationError.AMOUNT_REQUIRED ||
+                    state.validationError == ValidationError.AMOUNT_INVALID,
+                supportingText = when (state.validationError) {
+                    ValidationError.AMOUNT_REQUIRED -> stringResource(R.string.add_tx_error_amount_required)
+                    ValidationError.AMOUNT_INVALID -> stringResource(R.string.add_tx_error_amount_invalid)
+                    else -> null
+                },
+            )
+
+            AtharTextField(
+                value = state.merchant,
+                onValueChange = { onEvent(AddTransactionEvent.SetMerchant(it)) },
+                label = stringResource(R.string.add_tx_label_merchant),
+                placeholder = stringResource(R.string.add_tx_placeholder_merchant),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            SuggestionStrip(
+                suggestions = state.visibleMerchantSuggestions,
+                onSelect = { onEvent(AddTransactionEvent.ApplySuggestion(it)) },
+            )
+
+            AtharText(
+                text = stringResource(R.string.add_tx_label_category_optional),
+                style = theme.typography.caption,
+                color = theme.colors.muted,
+            )
+
+            AtharCategoryPicker(
+                items = state.categoriesForType.map {
+                    AtharPickerItem(key = it.id, labelEn = it.name, labelAr = it.nameAr)
+                },
+                selectedKey = state.selectedCategoryId,
+                onSelect = { onEvent(AddTransactionEvent.SelectCategory(it)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 320.dp),
+            )
+
+            AtharTextField(
+                value = state.notes,
+                onValueChange = { onEvent(AddTransactionEvent.SetNotes(it)) },
+                label = stringResource(R.string.add_tx_label_notes),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = false,
+            )
+
+            ReceiptAttachmentRow(
+                receipts = state.receipts,
+                isLoading = state.isReceiptLoading,
+                error = state.receiptError,
+                isOcrRunning = state.isReceiptOcrRunning,
+                ocrStatus = state.receiptOcrStatus,
+                onAttachClick = onReceiptClick,
+                onRemoveClick = { onEvent(AddTransactionEvent.RemoveReceipt(it)) },
+            )
+        }
 
         SaveButton(
             isSaving = state.isSaving,

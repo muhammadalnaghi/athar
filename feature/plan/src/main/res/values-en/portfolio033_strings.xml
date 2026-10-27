@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_event_edit">Edit entry</string>
+    <string name="plan_portfolio_edit_title">Edit dated entry</string>
+    <string name="plan_portfolio_edit_save">Review changes</string>
+    <string name="plan_portfolio_edit_hint">Review the impact before saving.</string>
+    <string name="plan_portfolio_preview_title">Review the correction before saving</string>
+    <string name="plan_portfolio_preview_hint">The portfolio changes only after you confirm saving.</string>
+    <string name="plan_portfolio_preview_before">Before</string>
+    <string name="plan_portfolio_preview_after">After</string>
+    <string name="plan_portfolio_preview_save">Confirm save</string>
+    <string name="plan_portfolio_preview_cancel">Back to editing</string>
+</resources>

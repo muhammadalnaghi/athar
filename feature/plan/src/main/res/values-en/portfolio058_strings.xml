@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_opening_date_edit">Edit opening capital date</string>
+    <string name="plan_portfolio_opening_date_edit_title">Edit opening capital date</string>
+    <string name="plan_portfolio_opening_date_none">No opening capital date</string>
+    <string name="plan_portfolio_opening_date_clear_note">Leave blank to remove the date. Annual return needs a dated opening balance.</string>
+    <string name="plan_portfolio_opening_date_unchanged">The date is unchanged. Edit it or close this sheet.</string>
+    <string name="plan_portfolio_opening_date_review">Review</string>
+    <string name="plan_portfolio_opening_date_preview_title">Review the date change before saving</string>
+    <string name="plan_portfolio_opening_date_preview_current">Current date: %1$s</string>
+    <string name="plan_portfolio_opening_date_preview_new">New date: %1$s</string>
+</resources>

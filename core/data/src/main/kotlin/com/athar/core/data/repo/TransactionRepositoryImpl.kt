@@ -60,6 +60,24 @@ internal class TransactionRepositoryImpl @Inject constructor(
         widgetRefresher.requestRefresh()
     }
 
+    override suspend fun upsertIngest(transaction: Transaction): String {
+        val written = dao.insertIngestIfAbsent(transaction.toEntity())
+        if (!written.inserted) return written.entity.id
+        // An ingest result must never teach the local rule learner, including on replay.
+        activityLog.record(
+            ActivityLogEntry(
+                id = UUID.randomUUID().toString(),
+                timestamp = clock.now(),
+                action = ActivityAction.CREATE,
+                entityType = ENTITY_TX,
+                entityId = written.entity.id,
+                summary = "${transaction.merchant} · ${transaction.amount.amount.toPlainString()} ${transaction.amount.currency}",
+            ),
+        )
+        widgetRefresher.requestRefresh()
+        return written.entity.id
+    }
+
     private fun shouldAttemptLocalLearning(existed: Boolean, transaction: Transaction): Boolean =
         existed || transaction.source == IngestSource.MANUAL || transaction.source == IngestSource.IMPORT
 

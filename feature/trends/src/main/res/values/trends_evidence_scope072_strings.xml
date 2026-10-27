@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM072: explicit category/bucket scope line in Trends evidence sheets. -->
+<resources>
+    <string name="trends_evidence_context_scope">الفئة: %1$s</string>
+</resources>

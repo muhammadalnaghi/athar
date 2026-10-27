@@ -50,8 +50,12 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            isMinifyEnabled = false  // alpha-phase: keep symbol names for debugging
-            isShrinkResources = false
+            // R8 enabled (WM076): smaller dex/APK (Obtainium download) + faster
+            // class-loading on cold start. Library consumer rules (Hilt, Room,
+            // WorkManager, kotlinx-serialization, SQLCipher) supply keeps; verified
+            // by on-device release smoke test before adoption.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -111,6 +115,9 @@ dependencies {
     "storeSafeImplementation"(project(":ingestion:notification-listener"))
 
     implementation(libs.androidx.core.ktx)
+    // Installs AGP-merged library baseline profiles (Compose) into ART at first
+    // run — the standard wiring for sideloaded release APKs (Obtainium path).
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -124,4 +131,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(project(":core:testing"))
+
+    // Debug-only private replay executes the existing production Hilt graph.
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.truth)
 }

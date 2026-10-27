@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English overrides for the cash-path result renderer (WM028-P). App defaults to
+  Arabic; this file is applied when the user picks English in Settings.
+  States render exactly as the model reports them: unknown is never zero, no FX,
+  no fabricated headlines, no live-balance promises.
+-->
+<resources>
+
+    <!-- Section -->
+    <string name="plan_cash_path_result_title">Cash path</string>
+
+    <!-- Rejected state -->
+    <string name="plan_cash_path_result_rejected_intro">The cash path could not be computed from the current inputs.</string>
+    <string name="plan_cash_path_result_rejected_none_applied">No path was produced and no amounts were applied.</string>
+    <string name="plan_cash_path_result_rejected_offending_ids">Affected input IDs: %1$s</string>
+
+    <!-- Partition status -->
+    <string name="plan_cash_path_result_status_confident">Conditional path</string>
+    <string name="plan_cash_path_result_status_partial">Partially known path</string>
+    <string name="plan_cash_path_result_status_withheld">Withheld path</string>
+
+    <!-- Opening context -->
+    <string name="plan_cash_path_result_opening_prefix">Opening point on %1$s</string>
+    <string name="plan_cash_path_result_figure_cash">Cash</string>
+    <string name="plan_cash_path_result_figure_reserved">Reserved</string>
+    <string name="plan_cash_path_result_figure_available">Available</string>
+    <string name="plan_cash_path_result_value_unknown">Unknown</string>
+
+    <!-- Confident headline -->
+    <string name="plan_cash_path_result_headline_minimum_on">Lowest available on %1$s</string>
+    <string name="plan_cash_path_result_headline_shortfall_on">Gap below zero starting %1$s</string>
+    <string name="plan_cash_path_result_headline_shortfall_plain">Gap below zero</string>
+    <string name="plan_cash_path_result_headline_final">Cash at end of horizon</string>
+    <string name="plan_cash_path_result_confident_note">End-of-day conditional estimate only; within-day minima are unknown.</string>
+
+    <!-- Partial known-only path -->
+    <string name="plan_cash_path_result_partial_known_end">Last known cash on %1$s</string>
+    <string name="plan_cash_path_result_partial_note">Only known facts are shown; unknown parts are withheld, never assumed zero, and no decision headline is issued.</string>
+
+    <!-- Withheld partition -->
+    <string name="plan_cash_path_result_withheld_body">No trustworthy path can be produced for this currency from the current inputs.</string>
+    <string name="plan_cash_path_result_withheld_note">Withholding reasons are detailed in the calculation notes.</string>
+
+    <!-- Known-path prefix points and the full-path action -->
+    <string name="plan_cash_path_result_path_points_label">First known path points</string>
+    <string name="plan_cash_path_result_path_points_count">Points shown: %1$d of %2$d</string>
+    <string name="plan_cash_path_result_action_open_full_path">Open full path</string>
+
+    <!-- Calculation notes (typed disclosures) -->
+    <string name="plan_cash_path_result_disclosures_header">Calculation notes</string>
+    <string name="plan_cash_path_result_decision_ready">Inputs support a conditional estimate for the displayed currencies.</string>
+    <string name="plan_cash_path_result_decision_not_ready">Knowledge is incomplete; no decision is issued on these figures.</string>
+    <string name="plan_cash_path_result_disc_intraday">Within-day minima are unknown; the computation is end-of-day only.</string>
+    <string name="plan_cash_path_result_disc_duplicate">Exact duplicate of ID %1$s (%2$s); occurrences merged: %3$d into one.</string>
+    <string name="plan_cash_path_result_disc_contradictory">Contradiction on ID %1$s (%2$s); all occurrences withheld and no amount applied. Occurrences: %3$d</string>
+    <string name="plan_cash_path_result_disc_verified">Expectation %1$s is settled by a confirmed posted effect (%2$s); the expectation is withheld to prevent double counting.</string>
+    <string name="plan_cash_path_result_disc_unresolved">Posted effect %1$s references an expectation that was not supplied (%2$s); the effect stays on the path with no settlement assumed.</string>
+    <string name="plan_cash_path_result_disc_incompatible">Incompatible settlement link between expectation %1$s and posted effect %2$s. Reason: %3$s. The expectation is withheld.</string>
+    <string name="plan_cash_path_result_disc_unknown_initial_reserves">Initial reserves unknown for %1$s; available is shown as unknown.</string>
+    <string name="plan_cash_path_result_disc_missing_anchor">No cash opening anchor for %1$s; its path is withheld.</string>
+    <string name="plan_cash_path_result_disc_unsupported_currency">Currency %1$s is unsupported in this computation; its path is withheld.</string>
+    <string name="plan_cash_path_result_disc_precision">Record %1$s exceeds the supported decimal precision for %2$s (digits: %3$d, limit: %4$d).</string>
+    <string name="plan_cash_path_result_disc_attestation_scope">Completeness attestation incomplete: input scope is not complete.</string>
+    <string name="plan_cash_path_result_disc_attestation_fresh">Completeness attestation incomplete: opening point is not fresh.</string>
+    <string name="plan_cash_path_result_disc_unavailable_amount">Amount unavailable for record %1$s (%2$s, currency %3$s); no amount was invented.</string>
+    <string name="plan_cash_path_result_disc_unavailable_date">Date unavailable for record %1$s (%2$s, currency %3$s); it was not placed on the path.</string>
+    <string name="plan_cash_path_result_disc_ambiguous">Multiple posted effects claim settlement of expectation %1$s (%2$s); claims were not aggregated.</string>
+    <string name="plan_cash_path_result_disc_reserve_underflow">Release of reservation %2$s exceeds known reserves for %1$s; reserved and available became unknown.</string>
+
+    <!-- Subject kinds -->
+    <string name="plan_cash_path_result_kind_cash">cash effect</string>
+    <string name="plan_cash_path_result_kind_reservation">reservation</string>
+
+    <!-- Settlement incompatibilities -->
+    <string name="plan_cash_path_result_incompat_currency_mismatch">settlement currency mismatch</string>
+    <string name="plan_cash_path_result_incompat_sign_mismatch">amount sign mismatch</string>
+    <string name="plan_cash_path_result_incompat_insufficient">amount below the expectation</string>
+    <string name="plan_cash_path_result_incompat_target_not_expected">target is not an expectation</string>
+    <string name="plan_cash_path_result_incompat_double_settlement">double settlement</string>
+    <string name="plan_cash_path_result_incompat_claimant_not_posted">claimant is not a posted effect</string>
+    <string name="plan_cash_path_result_incompat_amount_unavailable">claimant amount unavailable</string>
+    <string name="plan_cash_path_result_incompat_date_unavailable">claimant date unavailable</string>
+    <string name="plan_cash_path_result_incompat_conflicting_identity">conflicting identity</string>
+
+    <!-- Rejection reasons -->
+    <string name="plan_cash_path_result_rej_horizon_before_knowledge">Horizon end before the knowledge date.</string>
+    <string name="plan_cash_path_result_rej_horizon_exceeds_limit">Horizon exceeds the allowed limit.</string>
+    <string name="plan_cash_path_result_rej_effect_limit">Record count exceeds the allowed limit.</string>
+    <string name="plan_cash_path_result_rej_anchor_after_knowledge">Opening anchor after the knowledge date.</string>
+    <string name="plan_cash_path_result_rej_posted_beyond_knowledge">A posted effect lies beyond the knowledge date.</string>
+    <string name="plan_cash_path_result_rej_blank_identity">Blank record identity.</string>
+    <string name="plan_cash_path_result_rej_duplicate_anchor">Two opening anchors for one currency.</string>
+    <string name="plan_cash_path_result_rej_amount_without_currency">Unavailable amount without a literal currency.</string>
+    <string name="plan_cash_path_result_rej_unresolvable_hint">Unresolvable currency hint.</string>
+    <string name="plan_cash_path_result_rej_hint_contradiction">Currency hint contradicts the observed currency.</string>
+    <string name="plan_cash_path_result_rej_negative_reserve">Negative reserve magnitude.</string>
+    <string name="plan_cash_path_result_rej_reserve_currency_mismatch">Initial reserve currency does not match the anchor currency.</string>
+    <string name="plan_cash_path_result_rej_arithmetic">Unsupported arithmetic operation.</string>
+
+</resources>

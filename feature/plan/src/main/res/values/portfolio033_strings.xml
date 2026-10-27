@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_event_edit">تعديل القيد</string>
+    <string name="plan_portfolio_edit_title">تعديل قيد مؤرخ</string>
+    <string name="plan_portfolio_edit_save">مراجعة التعديل</string>
+    <string name="plan_portfolio_edit_hint">راجع أثر التعديل قبل حفظه.</string>
+    <string name="plan_portfolio_preview_title">مراجعة التعديل قبل الحفظ</string>
+    <string name="plan_portfolio_preview_hint">لن تتغير بيانات المحفظة قبل تأكيد الحفظ.</string>
+    <string name="plan_portfolio_preview_before">قبل</string>
+    <string name="plan_portfolio_preview_after">بعد</string>
+    <string name="plan_portfolio_preview_save">تأكيد الحفظ</string>
+    <string name="plan_portfolio_preview_cancel">رجوع إلى التعديل</string>
+</resources>

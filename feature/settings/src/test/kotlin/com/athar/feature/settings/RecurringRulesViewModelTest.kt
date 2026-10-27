@@ -191,6 +191,80 @@ class RecurringRulesViewModelTest {
     }
 
     @Test
+    fun `accept quarterly suggestion preserves cadence anchors`() = runTest(mainDispatcher) {
+        val rules = RecordingRecurringRuleRepository()
+        val suggestion = recurringSuggestion()
+            .copy(cadence = Cadence.QUARTERLY, dayOfWeek = null, monthOfYear = null)
+        val viewModel = recurringRulesViewModel(rules = rules, suggestions = listOf(suggestion))
+
+        viewModel.acceptSuggestion(
+            suggestion = suggestion,
+            notes = null,
+            cadence = Cadence.QUARTERLY,
+            dayOfMonth = 5,
+            accountId = null,
+            categoryId = null,
+        )
+        advanceUntilIdle()
+
+        val created = rules.upserts.single()
+        assertThat(created.cadence).isEqualTo(Cadence.QUARTERLY)
+        assertThat(created.dayOfMonth).isEqualTo(5)
+        assertThat(created.dayOfWeek).isNull()
+        assertThat(created.monthOfYear).isNull()
+        assertThat(created.nextRunDate).isEqualTo(LocalDate(2026, 4, 5))
+    }
+
+    @Test
+    fun `accept weekly suggestion carries weekday anchor and no day of month`() = runTest(mainDispatcher) {
+        val rules = RecordingRecurringRuleRepository()
+        val suggestion = recurringSuggestion().copy(cadence = Cadence.WEEKLY, dayOfWeek = 2)
+        val viewModel = recurringRulesViewModel(rules = rules, suggestions = listOf(suggestion))
+
+        viewModel.acceptSuggestion(
+            suggestion = suggestion,
+            notes = null,
+            cadence = Cadence.WEEKLY,
+            dayOfMonth = null,
+            dayOfWeek = 2,
+            accountId = null,
+            categoryId = null,
+        )
+        advanceUntilIdle()
+
+        val created = rules.upserts.single()
+        assertThat(created.cadence).isEqualTo(Cadence.WEEKLY)
+        assertThat(created.dayOfWeek).isEqualTo(2)
+        assertThat(created.dayOfMonth).isNull()
+    }
+
+    @Test
+    fun `cadence override at acceptance recomputes the next run anchor`() = runTest(mainDispatcher) {
+        val rules = RecordingRecurringRuleRepository()
+        val suggestion = recurringSuggestion()
+        val viewModel = recurringRulesViewModel(rules = rules, suggestions = listOf(suggestion))
+
+        viewModel.acceptSuggestion(
+            suggestion = suggestion,
+            notes = null,
+            cadence = Cadence.WEEKLY,
+            dayOfMonth = null,
+            dayOfWeek = 1,
+            accountId = null,
+            categoryId = null,
+        )
+        advanceUntilIdle()
+
+        val created = rules.upserts.single()
+        assertThat(created.cadence).isEqualTo(Cadence.WEEKLY)
+        // Recomputed from lastSeen (2026-03-05, a Thursday) onto the user's Monday
+        // anchor — never the stale suggestedNextRun (2026-04-05, a Sunday).
+        assertThat(created.nextRunDate).isGreaterThan(LocalDate(2026, 3, 5))
+        assertThat(created.nextRunDate.dayOfWeek.ordinal + 1).isEqualTo(1)
+        assertThat(created.nextRunDate).isNotEqualTo(LocalDate(2026, 4, 5))
+    }
+
+    @Test
     fun `update routing changes account and category on existing rule`() = runTest(mainDispatcher) {
         val existing = recurringRule(
             id = "rule-rent",

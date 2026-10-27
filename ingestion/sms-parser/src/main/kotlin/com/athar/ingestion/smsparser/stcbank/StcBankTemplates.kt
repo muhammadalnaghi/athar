@@ -49,7 +49,7 @@ class StcBankIncomingTransferTemplate : BankTemplate {
             merchant = from,
             counterparty = from,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (from != null) 0.95f else 0.75f,
             templateId = id,
         )
@@ -76,7 +76,7 @@ class StcBankOutgoingTransferTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (to != null) 0.95f else 0.75f,
             templateId = id,
         )
@@ -104,7 +104,7 @@ class StcBankSarieOutwardTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.88f,
             templateId = id,
         )
@@ -116,23 +116,25 @@ class StcBankOnlinePurchaseTemplate : BankTemplate {
     override val id: String = "stc-bank-online-purchase"
     override val senderMatcher: SenderMatcher = STC_BANK_SENDERS
 
-    private val header = Regex("""Online\s+Purchase\s+Transaction""", RegexOption.IGNORE_CASE)
-    private val amountLine = Regex("""Amount\s+(${NUM_RE.pattern})""", RegexOption.IGNORE_CASE)
+    private val header = Regex("""Online\s+Purchase(?:\s+Transaction)?\b""", RegexOption.IGNORE_CASE)
+    private val amountLine = Regex("""\bAmount(?:\s*:\s*|\s+)([^\n\r]+)""", setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private val fromLine = Regex("""From\s*:\s*([^\n\r]+)""", RegexOption.IGNORE_CASE)
 
     override fun tryParse(body: String, receivedAt: Instant): ParseResult {
         val n = Normalize.digits(body)
         if (!header.containsMatchIn(n)) return ParseResult.Failed("not Online Purchase", listOf(id))
-        val amount = amountLine.find(n)?.groupValues?.get(1)?.let(::parseAmount)
+        val declared = amountLine.find(n)?.groupValues?.get(1)
             ?: return ParseResult.Failed("amount not found", listOf(id))
+        val amount = com.athar.ingestion.smsparser.alrajhi.AlRajhiPurchaseAmounts.read(n, declared)
+            ?: return ParseResult.Failed("purchase amount unavailable", listOf(id))
         val merchant = fromLine.find(n)?.groupValues?.get(1)?.trim()
         return ParseResult.Success(
             type = TxType.EXPENSE,
-            amount = Money.of(amount),
+            amount = amount,
             merchant = merchant,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.93f else 0.7f,
             templateId = id,
         )
@@ -160,7 +162,7 @@ class StcBankPayQattahTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.90f,
             templateId = id,
         )

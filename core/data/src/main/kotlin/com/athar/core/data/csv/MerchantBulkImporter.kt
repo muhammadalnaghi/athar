@@ -329,7 +329,7 @@ internal class MerchantBulkImporter @Inject constructor(
             transactions.upsert(
                 tx.copy(
                     categoryId = categoryId,
-                    status = TxStatus.CONFIRMED,
+                    // A category-only CSV does not certify or revive a payment.
                     updatedAt = clock.now(),
                 ),
             )

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="allocation037_edit">التوزيع المستهدف</string>
+    <string name="allocation037_hint">أدخل النسب بمجموع 100٪. لا تنشئ هذه الخطة صفقات.</string>
+    <string name="allocation037_range_retained">نطاق %1$s محفوظ كما هو.</string>
+    <string name="allocation037_percent_label">%1$s (٪)</string>
+    <string name="allocation037_total_error">اجعل مجموع النسب 100٪ ثم احفظ.</string>
+    <string name="allocation037_empty_error">أدخل النسب، أو اختر مسح التوزيع لحذفه.</string>
+    <string name="allocation037_conflict">تغيّرت المحفظة. ألغِ وافتحها من جديد قبل الحفظ.</string>
+    <string name="allocation037_storage">تعذّر الحفظ. مدخلاتك باقية، حاول مرة أخرى.</string>
+    <string name="allocation037_unsupported">هذا التوزيع غير مدعوم. لم تتغير البيانات.</string>
+    <string name="allocation037_invalid">أدخل نسبًا بين صفر و100، بدقة ست منازل كحد أقصى.</string>
+    <string name="allocation037_saving">جارٍ حفظ التوزيع</string>
+    <string name="allocation037_save">حفظ التوزيع</string>
+    <string name="allocation037_clear">مسح التوزيع</string>
+    <string name="allocation037_cancel">إلغاء</string>
+    <string name="allocation037_result">توزيع هذه المحفظة</string>
+    <string name="allocation037_partial">بعض الأدوات بلا سعر. التوزيع جزئي حتى تكتمل القيم.</string>
+    <string name="allocation037_actual">الفعلي %1$s٪</string>
+    <string name="allocation037_actual_target">الفعلي %1$s٪ · المستهدف %2$s٪</string>
+    <string name="allocation037_gap">الفارق %1$s نقطة مئوية</string>
+    <string name="allocation037_unknown">غير مصنّف: %1$s</string>
+    <string name="allocation037_equity">أسهم</string>
+    <string name="allocation037_sukuk">صكوك</string>
+    <string name="allocation037_cash">نقد</string>
+    <string name="allocation037_other">أصول أخرى</string>
+</resources>

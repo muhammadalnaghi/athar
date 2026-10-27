@@ -28,6 +28,32 @@ private val STC_PAY_SENDERS = SenderMatcher.AnyOf(
  *   تم إرسال 100 ر.س إلى أحمد
  *   You paid SAR 50.00 to STARBUCKS
  */
+/** A card receipt is distinct from the wallet's outgoing-transfer sentence forms. */
+class StcPayOnlinePurchaseTemplate : BankTemplate {
+    override val id: String = "stcpay-online-purchase"
+    override val senderMatcher: SenderMatcher = STC_PAY_SENDERS
+    private val options = setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
+    private val header = Regex("""^Online\s+Purchase\s*$""", options)
+    private val amount = Regex("""^Amount\s*:\s*([^\n\r]+)""", options)
+    private val merchant = Regex("""^At\s*:\s*([^\n\r]+)""", options)
+
+    override fun tryParse(body: String, receivedAt: Instant): ParseResult {
+        val normalized = Normalize.digits(body)
+        if (!header.containsMatchIn(normalized)) return ParseResult.Failed("not wallet card receipt", listOf(id))
+        val declared = amount.find(normalized)?.groupValues?.get(1)
+            ?: return ParseResult.Failed("amount unavailable", listOf(id))
+        val money = com.athar.ingestion.smsparser.alrajhi.AlRajhiPurchaseAmounts.read(normalized, declared)
+            ?: return ParseResult.Failed("purchase amount unavailable", listOf(id))
+        val party = merchant.find(normalized)?.groupValues?.get(1)?.trim()
+        return ParseResult.Success(
+            type = TxType.EXPENSE, amount = money, merchant = party, counterparty = null,
+            balanceAfter = null,
+            occurredAt = com.athar.ingestion.smsparser.parseSmsDate(body, receivedAt) ?: receivedAt,
+            confidence = if (party != null) .94f else .7f, templateId = id,
+        )
+    }
+}
+
 class StcPayOutgoingTemplate : BankTemplate {
     override val id: String = "stcpay-outgoing"
     override val senderMatcher: SenderMatcher = STC_PAY_SENDERS

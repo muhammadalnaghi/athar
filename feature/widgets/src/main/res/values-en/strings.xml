@@ -3,14 +3,14 @@
     <string name="widget_loading">…</string>
 
     <string name="widget_monthly_label">Athar · Month</string>
-    <string name="widget_monthly_description">Net flow, income, expenses, and net worth at a glance.</string>
+    <string name="widget_monthly_description">Confirmed monthly flow and your dated declared position. Tap to open.</string>
     <string name="widget_monthly_title" formatted="true">Athar · %1$s</string>
     <string name="widget_monthly_income">Income</string>
     <string name="widget_monthly_expense">Expense</string>
     <string name="widget_monthly_net_worth">Net worth</string>
 
     <string name="widget_today_label">Athar · Today</string>
-    <string name="widget_today_description">Today\'s net and how many transactions await confirmation.</string>
+    <string name="widget_today_description">Today’s confirmed flow and your dated declared position. Tap to open.</string>
     <string name="widget_today_title">Athar · Today</string>
     <string name="widget_today_pending_count" formatted="true">%1$d pending</string>
 
@@ -22,4 +22,6 @@
     <string name="widget_pending_confirm">Confirm</string>
     <string name="widget_pending_dismiss">Dismiss</string>
     <string name="widget_pending_categorize">Categorize</string>
+    <string name="widget_unavailable">Data unavailable. Open Athar to retry.</string>
+    <string name="widget_declared_position">Declared position · %1$s</string>
 </resources>

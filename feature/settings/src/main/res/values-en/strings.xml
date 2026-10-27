@@ -235,6 +235,12 @@
     <string name="settings_hijri_pill_on">On</string>
     <string name="settings_hijri_pill_off">Off</string>
 
+    <string name="settings_recording_title">Automatic purchase recording</string>
+    <string name="settings_recording_body_on">New clearly evidenced purchases only. Your existing history is unchanged.</string>
+    <string name="settings_recording_body_off">Off for new messages. Your existing history is unchanged.</string>
+    <string name="settings_recording_pill_on">On</string>
+    <string name="settings_recording_pill_off">Off</string>
+
     <!-- Own accounts card -->
     <string name="settings_own_accounts_title">Your own accounts</string>
     <string name="settings_own_accounts_body">Enter the last 4 digits of each account you own (comma-separated, e.g. 0930, 4268). Transfers to these numbers are treated as "internal transfer · possible savings" instead of expenses.</string>
@@ -349,6 +355,7 @@
     <string name="settings_recurring_type_income">Income</string>
     <string name="settings_recurring_cadence_monthly">Monthly</string>
     <string name="settings_recurring_cadence_weekly">Weekly</string>
+    <string name="settings_recurring_cadence_quarterly">Quarterly</string>
     <string name="settings_recurring_cadence_yearly">Yearly</string>
     <string name="settings_recurring_save">Save rule</string>
     <string name="settings_recurring_create_rule">Create rule</string>

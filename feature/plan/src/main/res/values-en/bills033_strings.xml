@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM033 — Bills manual commitment + evidence drilldown (English). -->
+<resources>
+    <string name="plan_bills033_add_commitment">Add commitment</string>
+    <string name="plan_bills033_editor_title">New commitment</string>
+    <string name="plan_bills033_field_name">Name</string>
+    <string name="plan_bills033_field_amount">Amount</string>
+    <string name="plan_bills033_field_currency">Currency</string>
+    <string name="plan_bills033_field_next_date">Next due date</string>
+    <string name="plan_bills033_field_notes">Optional details</string>
+    <string name="plan_bills033_cadence_title">Cadence</string>
+    <string name="plan_bills033_save">Save</string>
+    <string name="plan_bills033_cancel">Cancel</string>
+    <string name="plan_bills033_error_name">Enter a name.</string>
+    <string name="plan_bills033_error_amount">Enter a valid amount.</string>
+    <string name="plan_bills033_error_amount_positive">The amount must be above zero.</string>
+    <string name="plan_bills033_error_precision">Amounts beyond two decimals can\'t be saved. Adjust the amount.</string>
+    <string name="plan_bills033_error_currency">Use a 3-letter currency code, like SAR.</string>
+    <string name="plan_bills033_error_date">Enter a date as 2026-12-01.</string>
+    <string name="plan_bills033_error_save">Couldn\'t save. Retry or cancel.</string>
+    <string name="plan_bills033_evidence_charged">Charged</string>
+    <string name="plan_bills033_evidence_account" formatted="true">Account: %1$s</string>
+    <string name="plan_bills033_evidence_merchant" formatted="true">Merchant: %1$s</string>
+</resources>

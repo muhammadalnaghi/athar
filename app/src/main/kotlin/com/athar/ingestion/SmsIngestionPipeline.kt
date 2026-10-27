@@ -11,6 +11,7 @@ import com.athar.core.domain.repo.SmsAuditRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
 import kotlinx.coroutines.flow.first
+import com.athar.ingestion.smsparser.DeclinedAttemptNotice055
 import com.athar.ingestion.smsparser.ParseResult
 import com.athar.ingestion.smsparser.SmsParser
 import kotlinx.datetime.Clock
@@ -31,8 +32,9 @@ import javax.inject.Singleton
  *      and link `parsedTransactionId` on the audit entry.
  *
  * Idempotency:
- *   - `transactions.sourceRefId` is unique-indexed; re-delivery of the same SMS collapses
- *     into a single row via OnConflictStrategy.REPLACE.
+ *   - A source-bound replay returns its unchanged stored transaction inside a Room
+ *     lookup/insert transaction; generic edits retain strict collision refusal.
+ *   - Audit entries link the returned stable row id, never a fresh replay UUID.
  *   - The audit table uses OnConflictStrategy.IGNORE on insert; duplicate-event records
  *     keep the first row instead of duplicating.
  */
@@ -45,9 +47,11 @@ class SmsIngestionPipeline @Inject constructor(
     private val audit: SmsAuditRepository,
     private val prefs: UserPreferencesRepository,
     private val clock: Clock,
+    private val recording: FinancialRecordingAdapter? = null,
 ) {
 
     suspend fun process(event: RawIngestEvent) {
+        val recordingSession = recording?.beginSessionIfEnabled()
         val auditId = audit.record(event)
         when (val result = parser.parse(event)) {
             ParseResult.Ignored -> {
@@ -64,7 +68,15 @@ class SmsIngestionPipeline @Inject constructor(
                 Timber.w("[ingest] parse failed: %s (tried %s)", result.reason, result.templateAttempts)
             }
             is ParseResult.Success -> {
-                val txId = persist(event, result)
+                // A proposed amount on a positively evidenced refused attempt is not
+                // money. Retain its raw audit without a financial row or history repair.
+                if (result.posting.state == com.athar.core.domain.model.financial.PostingState.DECLINED &&
+                    DeclinedAttemptNotice055.matches(event.body)
+                ) {
+                    audit.updateParseResult(auditId, SmsParseStatus.IGNORED, parsedTransactionId = null, error = null)
+                    return
+                }
+                val txId = persist(event, result, recordingSession)
                 audit.updateParseResult(
                     auditId,
                     SmsParseStatus.PARSED,
@@ -75,13 +87,21 @@ class SmsIngestionPipeline @Inject constructor(
         }
     }
 
-    private suspend fun persist(event: RawIngestEvent, parsed: ParseResult.Success): String {
+    private suspend fun persist(
+        event: RawIngestEvent,
+        parsed: ParseResult.Success,
+        recordingSession: com.athar.core.data.ledger.api.FinancialRecordingSession?,
+    ): String {
         // Self-transfer detection: if the parsed transfer's body or counterparty mentions
         // one of the user's own account-number snippets (e.g. "0930", "4268"), tag the
         // merchant as a self-move so it shows up as a "Possible savings — confirm" item
         // rather than getting filed away as a generic outgoing transfer.
         val ownAccounts = runCatching { prefs.ownAccountNumbers().first() }.getOrDefault(emptyList())
-        val isSelfTransfer = parsed.type.name == "TRANSFER" && ownAccounts.isNotEmpty() && (
+        // A bank-evidenced card repayment is not a possible savings contribution.
+        // Only the enabled fresh-ingestion path gains this treatment; legacy rows
+        // and unresolved transfers are never reinterpreted here.
+        val isSupportedRepayment = recordingSession != null && supportedCardRepaymentDraft(event, parsed) != null
+        val isSelfTransfer = !isSupportedRepayment && parsed.type.name == "TRANSFER" && ownAccounts.isNotEmpty() && (
             ownAccounts.any { acct ->
                 acct.isNotBlank() && (
                     parsed.counterparty?.contains(acct, ignoreCase = true) == true ||
@@ -107,8 +127,8 @@ class SmsIngestionPipeline @Inject constructor(
         val date = occurredAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
         val txId = UUID.randomUUID().toString()
 
-        // Never auto-dismiss a successfully-parsed transaction. If the SMS got far enough
-        // to extract amount + type, money moved — the user must be the one to discard it.
+        // A matched amount/type alone is not proof that funds posted. Keep contradictory
+        // lifecycle evidence in review; categorization cannot grant financial authority.
         // CONFIRMED only when a trusted LOCAL rule matched (personal, auto-learned, or
         // bundled seed) — ENH-009: a catalog suggestion alone can never flip a row into a
         // financial posting, and it cannot change legacy eligibility for merchants already
@@ -117,6 +137,8 @@ class SmsIngestionPipeline @Inject constructor(
         // this point (they're tagged "ignored" in the SMS audit log instead).
         val confidence = suggestion.confidence
         val initialStatus = when {
+            recordingSession != null || parsed.posting.state != com.athar.core.domain.model.financial.PostingState.POSTED ->
+                TxStatus.PENDING // Category cannot override hold, decline or other contradictory evidence.
             isSelfTransfer -> TxStatus.PENDING
             resolution.hadTrustedLocalRule && suggestion.categoryId != null -> TxStatus.CONFIRMED
             else -> TxStatus.PENDING
@@ -141,7 +163,11 @@ class SmsIngestionPipeline @Inject constructor(
             updatedAt = now,
             categorySource = suggestion.categoryId?.let { suggestion.source },
         )
-        transactions.upsert(tx)
+        val storedId = transactions.upsertIngest(tx)
+        // A returned older owner is replay: never reinterpret or mass-confirm history.
+        if (recordingSession != null && storedId == txId && !isSelfTransfer) {
+            recording?.recordNewPurchase(event, parsed, storedId, now, recordingSession)
+        }
         Timber.i(
             "[ingest] OK %s %s %s → cat=%s (%s, conf=%.2f) template=%s",
             parsed.type, parsed.amount.amount.toPlainString(),
@@ -151,7 +177,7 @@ class SmsIngestionPipeline @Inject constructor(
             suggestion.confidence,
             parsed.templateId,
         )
-        return txId
+        return storedId
     }
 
     private companion object {

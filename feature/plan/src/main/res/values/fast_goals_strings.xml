@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM028-fast-goals lane-only strings. Do not merge into common resource files. -->
+<resources>
+    <string name="plan_goals_saved_title">الأهداف المحفوظة</string>
+    <string name="plan_goals_saved_inputs_only">تُحفظ المدخلات فقط، وتُعاد النتيجة بالحساب عند التحميل</string>
+    <string name="plan_goals_saved_title_label">اسم الهدف</string>
+    <string name="plan_goals_saved_save">حفظ كهدف</string>
+    <string name="plan_goals_saved_update" formatted="true">تحديث «%1$s»</string>
+    <string name="plan_goals_saved_editing" formatted="true">الهدف المفتوح: «%1$s»</string>
+    <string name="plan_goals_saved_row_loadable" formatted="true">محفوظ بعملة %1$s</string>
+    <string name="plan_goals_saved_row_other_currency" formatted="true">محفوظ بعملة %1$s، وبقي كما هو دون تحويل</string>
+    <string name="plan_goals_saved_row_unsupported">مستند من إصدار غير مدعوم هنا، وبقي محفوظًا كما هو</string>
+    <string name="plan_goals_saved_load">فتح</string>
+    <string name="plan_goals_saved_delete">حذف</string>
+    <string name="plan_goals_saved_notice_saved">حُفظ الهدف.</string>
+    <string name="plan_goals_saved_notice_updated">حُدّث الهدف.</string>
+    <string name="plan_goals_saved_notice_loaded">حُمّلت المدخلات. أعد الحساب لعرض النتيجة.</string>
+    <string name="plan_goals_saved_notice_deleted">حُذف المستند.</string>
+    <string name="plan_goals_saved_notice_needs_title">اكتب اسمًا للهدف أولًا</string>
+    <string name="plan_goals_saved_notice_conflict">تغيّر المستند في مكان آخر. أعد تحميله قبل الكتابة عليه</string>
+    <string name="plan_goals_saved_notice_unsupported">تعذّر تحميل مستند غير مدعوم، وبقي محفوظًا</string>
+    <string name="plan_goals_saved_notice_currency_mismatch">المستند محفوظ بعملة أخرى، ولم يُحمّل حتى لا تُخلط العملات</string>
+    <string name="plan_goals_saved_notice_load_failed">تعذّر العثور على المستند، وقد يكون حُذف</string>
+    <string name="plan_goals_saved_notice_save_failed">تعذّر الحفظ. حاول مرة أخرى</string>
+    <string name="plan_goals_saved_notice_delete_failed">تعذّر الحذف. حاول مرة أخرى</string>
+    <string name="plan_goals_saved_notice_dismiss">حسنًا</string>
+</resources>

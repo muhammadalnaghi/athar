@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.athar.core.domain.repo.CsvImportResult
 import com.athar.core.domain.repo.CsvImportTrigger
 import com.athar.core.domain.repo.UserPreferencesRepository
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,14 +33,21 @@ data class OnboardingState(
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val prefs: UserPreferencesRepository,
-    private val csvImporter: CsvImportTrigger,
+    private val csvImporter: Lazy<CsvImportTrigger>,
 ) : ViewModel() {
+
+    // Preserve existing direct-construction callers; Hilt uses only the lazy primary constructor.
+    constructor(prefs: UserPreferencesRepository, csvImporter: CsvImportTrigger) : this(
+        prefs,
+        Lazy { csvImporter },
+    )
 
     private val _state = MutableStateFlow(OnboardingState())
     val state: StateFlow<OnboardingState> = _state.asStateFlow()
 
-    val onboardingComplete: StateFlow<Boolean> = prefs.onboardingComplete()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    // Unread preferences are not a decision to show onboarding.
+    val onboardingComplete: StateFlow<Boolean?> = prefs.onboardingComplete()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun next() {
         _state.value = _state.value.copy(
@@ -60,14 +68,9 @@ class OnboardingViewModel @Inject constructor(
     fun importCsv(resolver: ContentResolver, uri: Uri) {
         viewModelScope.launch {
             _state.value = _state.value.copy(importStatus = OnboardingImportStatus.Working)
-            val input = resolver.openInputStream(uri)
-            if (input == null) {
-                _state.value = _state.value.copy(
-                    importStatus = OnboardingImportStatus.Failed("Couldn't open CSV file."),
-                )
-                return@launch
-            }
-            val status = when (val result = csvImporter.import(input)) {
+            val status = when (val result = runDeferredOnboardingImport(csvImporter) {
+                resolver.openInputStream(uri)
+            }) {
                 is CsvImportResult.Done -> OnboardingImportStatus.Done(
                     imported = result.imported,
                     skipped = result.skipped,

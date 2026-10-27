@@ -4,10 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringResource
 import com.athar.core.domain.model.Category
+import com.athar.core.designsystem.display.currentUiLocale
 import com.athar.core.domain.model.Transaction
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
-import java.util.Locale
+
 
 @Immutable
 data class CategoryLabel(
@@ -18,8 +19,9 @@ data class CategoryLabel(
 internal fun List<Category>.toCategoryLabels(): ImmutableMap<String, CategoryLabel> =
     associate { it.id to CategoryLabel(name = it.name, nameAr = it.nameAr) }.toPersistentMap()
 
+@Composable
 internal fun Category.localizedName(): String {
-    val isArabic = Locale.getDefault().language == "ar"
+    val isArabic = currentUiLocale().language == "ar"
     return if (isArabic) {
         nameAr.ifBlank { name }
     } else {
@@ -35,7 +37,7 @@ internal fun transactionCategoryLabel(
     val categoryId = tx.categoryId?.trim().takeUnless { it.isNullOrEmpty() }
         ?: return stringResource(R.string.today_uncategorized)
     val label = labels[categoryId] ?: return categoryId
-    val isArabic = Locale.getDefault().language == "ar"
+    val isArabic = currentUiLocale().language == "ar"
     return if (isArabic) {
         label.nameAr.ifBlank { label.name }
     } else {

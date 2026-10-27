@@ -176,7 +176,13 @@ class GlobalBankIgnoreTemplate : BankTemplate {
     )
 
     override fun tryParse(body: String, receivedAt: Instant): ParseResult {
-        return if (ignorePatterns.any { it.containsMatchIn(body) }) {
+        when (NumericServiceNotices049.classify(body)) {
+            NumericServiceNotices049.Disposition.NON_FINANCIAL -> return ParseResult.Ignored
+            NumericServiceNotices049.Disposition.MIXED_FINANCIAL ->
+                return ParseResult.Failed("service wording with financial evidence", listOf(id))
+            NumericServiceNotices049.Disposition.NOT_NOTICE -> Unit
+        }
+        return if (ignorePatterns.any { it.containsMatchIn(body) } || AmountlessServiceNotices.matches(body) || PaymentServiceNotices.matches(body) || SingleDeclinedNotice053.matches(body)) {
             ParseResult.Ignored
         } else {
             ParseResult.Failed("not an ignorable message", listOf(id))

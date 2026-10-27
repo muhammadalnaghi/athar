@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic (default) strings for the cash-path result renderer (WM028-P), kept in a
+  dedicated file so this lane's additions never collide with the shared Plan file.
+  English overrides live in values-en/cash_path_result_strings.xml.
+
+  Copy rules: states are rendered exactly as the model reports them. Unknown facts
+  render as unknown, never as zeros; no FX, no fabricated headlines, no live-balance
+  promises, and no invented scope or freshness claims. Numbers lead; the tone stays
+  dry and executive. No emoji, no exclamation points.
+-->
+<resources>
+
+    <!-- Section -->
+    <string name="plan_cash_path_result_title">مسار السيولة</string>
+
+    <!-- Rejected state -->
+    <string name="plan_cash_path_result_rejected_intro">تعذّر حساب مسار السيولة من المدخلات الحالية.</string>
+    <string name="plan_cash_path_result_rejected_none_applied">لم يُنتج أي مسار ولم تُطبَّق أي مبالغ.</string>
+    <string name="plan_cash_path_result_rejected_offending_ids">معرفات المدخلات المتأثرة: %1$s</string>
+
+    <!-- Partition status -->
+    <string name="plan_cash_path_result_status_confident">مسار مشروط</string>
+    <string name="plan_cash_path_result_status_partial">مسار معروف جزئيًا</string>
+    <string name="plan_cash_path_result_status_withheld">مسار محجوب</string>
+
+    <!-- Opening context -->
+    <string name="plan_cash_path_result_opening_prefix">نقطة البداية في %1$s</string>
+    <string name="plan_cash_path_result_figure_cash">النقدية</string>
+    <string name="plan_cash_path_result_figure_reserved">المحجوز</string>
+    <string name="plan_cash_path_result_figure_available">المتاح</string>
+    <string name="plan_cash_path_result_value_unknown">غير معروف</string>
+
+    <!-- Confident headline -->
+    <string name="plan_cash_path_result_headline_minimum_on">أدنى مبلغ متاح في %1$s</string>
+    <string name="plan_cash_path_result_headline_shortfall_on">فجوة تحت الصفر تبدأ في %1$s</string>
+    <string name="plan_cash_path_result_headline_shortfall_plain">فجوة تحت الصفر</string>
+    <string name="plan_cash_path_result_headline_final">النقدية في نهاية المدة</string>
+    <string name="plan_cash_path_result_confident_note">تقدير شرطي بنهاية اليوم فقط؛ أدنى القيم داخل اليوم الواحد غير معروفة.</string>
+
+    <!-- Partial known-only path -->
+    <string name="plan_cash_path_result_partial_known_end">آخر نقدية معروفة في %1$s</string>
+    <string name="plan_cash_path_result_partial_note">يعرض المعلوم فقط. المبالغ الناقصة ليست صفرًا، ولا تكفي لتقدير موثوق.</string>
+
+    <!-- Withheld partition -->
+    <string name="plan_cash_path_result_withheld_body">لا يمكن إنتاج مسار موثوق لهذه العملة من المدخلات الحالية.</string>
+    <string name="plan_cash_path_result_withheld_note">أسباب الحجب مفصلة في ملاحظات الحساب.</string>
+
+    <!-- Known-path prefix points and the full-path action -->
+    <string name="plan_cash_path_result_path_points_label">أول نقاط المسار المعروف</string>
+    <string name="plan_cash_path_result_path_points_count">النقاط المعروضة: %1$d من %2$d</string>
+    <string name="plan_cash_path_result_action_open_full_path">عرض المسار الكامل</string>
+
+    <!-- Calculation notes (typed disclosures) -->
+    <string name="plan_cash_path_result_disclosures_header">ملاحظات الحساب</string>
+    <string name="plan_cash_path_result_decision_ready">المدخلات كافية لتقدير مشروط لكل العملات المعروضة.</string>
+    <string name="plan_cash_path_result_decision_not_ready">المعلومات ناقصة؛ لا يكفي هذا المسار لاتخاذ قرار.</string>
+    <string name="plan_cash_path_result_disc_intraday">أدنى القيم داخل اليوم الواحد غير معروفة؛ الحساب نهاية اليوم فقط.</string>
+    <string name="plan_cash_path_result_disc_duplicate">تكرار مطابق للمعرف %1$s (%2$s)؛ الظهورات المدموجة: %3$d في ظهور واحد.</string>
+    <string name="plan_cash_path_result_disc_contradictory">تعارض في المعرف %1$s (%2$s)؛ حُجبت الظهورات كلها ولم يُطبَّق أي مبلغ. الظهورات: %3$d</string>
+    <string name="plan_cash_path_result_disc_verified">التوقع %1$s مسدَّد بأثر منشور مؤكد (%2$s)؛ حُجب التوقع منعًا للعد المزدوج.</string>
+    <string name="plan_cash_path_result_disc_unresolved">الأثر المنشور %1$s يشير إلى توقع غير مقدَّم (%2$s)؛ بقي الأثر على المسار دون افتراض سداد.</string>
+    <string name="plan_cash_path_result_disc_incompatible">رابط تسوية غير متوافق بين التوقع %1$s والأثر المنشور %2$s. السبب: %3$s. حُجب التوقع.</string>
+    <string name="plan_cash_path_result_disc_unknown_initial_reserves">المحجوز الابتدائي غير معروف لعملة %1$s؛ يُعرض المتاح كغير معروف.</string>
+    <string name="plan_cash_path_result_disc_missing_anchor">لا توجد نقطة بداية نقدية لعملة %1$s؛ حُجب مسارها.</string>
+    <string name="plan_cash_path_result_disc_unsupported_currency">العملة %1$s غير مدعومة في هذا الحساب؛ حُجب مسارها.</string>
+    <string name="plan_cash_path_result_disc_precision">دقة السجل %1$s تتجاوز الدقة المدعومة لعملة %2$s (الخانات: %3$d، الحد: %4$d).</string>
+    <string name="plan_cash_path_result_disc_attestation_scope">إقرار الاكتمال ناقص: نطاق المدخلات غير مكتمل.</string>
+    <string name="plan_cash_path_result_disc_attestation_fresh">إقرار الاكتمال ناقص: نقطة البداية غير حديثة.</string>
+    <string name="plan_cash_path_result_disc_unavailable_amount">مبلغ السجل %1$s (%2$s، عملة %3$s) غير متوفر؛ لم يُخترع مبلغ.</string>
+    <string name="plan_cash_path_result_disc_unavailable_date">تاريخ السجل %1$s (%2$s، عملة %3$s) غير متوفر؛ لم يوضع على المسار.</string>
+    <string name="plan_cash_path_result_disc_ambiguous">حركات مسجلة متعددة تطالب بسداد التوقع %1$s (%2$s)؛ لم تُجمَع المطالبات.</string>
+    <string name="plan_cash_path_result_disc_reserve_underflow">إفراج الحجز %2$s يتجاوز المحجوز المعروف لعملة %1$s؛ صار المحجوز والمتاح غير معروفين.</string>
+
+    <!-- Subject kinds -->
+    <string name="plan_cash_path_result_kind_cash">حركة نقدية</string>
+    <string name="plan_cash_path_result_kind_reservation">حجز</string>
+
+    <!-- Settlement incompatibilities -->
+    <string name="plan_cash_path_result_incompat_currency_mismatch">عملة السداد مختلفة</string>
+    <string name="plan_cash_path_result_incompat_sign_mismatch">إشارة المبلغ معكوسة</string>
+    <string name="plan_cash_path_result_incompat_insufficient">مبلغ أقل من التوقع</string>
+    <string name="plan_cash_path_result_incompat_target_not_expected">الهدف ليس توقعًا</string>
+    <string name="plan_cash_path_result_incompat_double_settlement">سداد مزدوج</string>
+    <string name="plan_cash_path_result_incompat_claimant_not_posted">الطالب ليس أثرًا منشورًا</string>
+    <string name="plan_cash_path_result_incompat_amount_unavailable">مبلغ الطالب غير متوفر</string>
+    <string name="plan_cash_path_result_incompat_date_unavailable">تاريخ الطالب غير متوفر</string>
+    <string name="plan_cash_path_result_incompat_conflicting_identity">هوية متعارضة</string>
+
+    <!-- Rejection reasons -->
+    <string name="plan_cash_path_result_rej_horizon_before_knowledge">نهاية الأفق قبل تاريخ المعرفة.</string>
+    <string name="plan_cash_path_result_rej_horizon_exceeds_limit">الأفق الزمني يتجاوز الحد المسموح.</string>
+    <string name="plan_cash_path_result_rej_effect_limit">عدد السجلات يتجاوز الحد المسموح.</string>
+    <string name="plan_cash_path_result_rej_anchor_after_knowledge">نقطة البداية بعد تاريخ المعرفة.</string>
+    <string name="plan_cash_path_result_rej_posted_beyond_knowledge">أثر منشور بعد تاريخ المعرفة.</string>
+    <string name="plan_cash_path_result_rej_blank_identity">معرف سجل فارغ.</string>
+    <string name="plan_cash_path_result_rej_duplicate_anchor">نقطتا بداية لعملة واحدة.</string>
+    <string name="plan_cash_path_result_rej_amount_without_currency">مبلغ غير متوفر دون عملة حرفية.</string>
+    <string name="plan_cash_path_result_rej_unresolvable_hint">تلميح عملة غير قابل للحسم.</string>
+    <string name="plan_cash_path_result_rej_hint_contradiction">تلميح العملة يعارض العملة المرصودة.</string>
+    <string name="plan_cash_path_result_rej_negative_reserve">قيمة محجوز سالبة.</string>
+    <string name="plan_cash_path_result_rej_reserve_currency_mismatch">عملة المحجوز الابتدائي لا تطابق عملة نقطة البداية.</string>
+    <string name="plan_cash_path_result_rej_arithmetic">عملية حسابية غير مدعومة.</string>
+
+</resources>

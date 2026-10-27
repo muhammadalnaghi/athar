@@ -10,6 +10,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UserTemplateDao {
     @Query("SELECT * FROM user_template ORDER BY createdAt DESC")
+    suspend fun all(): List<UserTemplateEntity>
+
+    @Query("SELECT COUNT(*) FROM user_template")
+    suspend fun count(): Long
+
+    @Query("DELETE FROM user_template")
+    suspend fun clear()
+
+    @Query("SELECT * FROM user_template ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<UserTemplateEntity>>
 
     @Query("SELECT * FROM user_template WHERE id = :id LIMIT 1")

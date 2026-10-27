@@ -1,8 +1,8 @@
 package com.athar.core.data.di
 
 import android.content.Context
-import androidx.room.Room
 import com.athar.core.data.db.AtharDatabase
+import com.athar.core.data.db.atharDatabaseBuilder
 import com.athar.core.data.db.crypto.DbKeyManager
 import com.athar.core.data.db.dao.AccountDao
 import com.athar.core.data.db.dao.ActivityLogDao
@@ -14,7 +14,7 @@ import com.athar.core.data.db.dao.TransactionDao
 import com.athar.core.data.db.dao.TransactionReceiptDao
 import com.athar.core.data.db.dao.UserTemplateDao
 import com.athar.core.data.db.dao.WishlistDao
-import com.athar.core.data.backup.BackupService
+import com.athar.core.data.backup.WidgetRefreshingBackupRepository
 import com.athar.core.data.csv.BudgetTargetImporter
 import com.athar.core.data.csv.CommunityRulesShareExporter
 import com.athar.core.data.csv.CsvExporter
@@ -35,6 +35,12 @@ import com.athar.core.data.repo.TransactionRepositoryImpl
 import com.athar.core.data.repo.ReceiptAttachmentRepositoryImpl
 import com.athar.core.data.repo.UserTemplateRepositoryImpl
 import com.athar.core.data.repo.WishlistRepositoryImpl
+import com.athar.core.data.planning.JsonReaderSavedFinancialPlanPayloadGuard
+import com.athar.core.data.planning.RoomSavedFinancialPlanTransactionRunner
+import com.athar.core.data.planning.SavedFinancialPlanDao
+import com.athar.core.data.planning.SavedFinancialPlanPayloadGuard
+import com.athar.core.data.planning.WidgetRefreshingSavedPlanRepository
+import com.athar.core.data.planning.SavedFinancialPlanTransactionRunner
 import com.athar.core.data.support.SupportDiagnosticsExporter
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.ActivityLogRepository
@@ -49,6 +55,7 @@ import com.athar.core.domain.repo.InvestmentImportTrigger
 import com.athar.core.domain.repo.MerchantBulkExportTrigger
 import com.athar.core.domain.repo.MerchantBulkImportTrigger
 import com.athar.core.domain.repo.InvestmentRepository
+import com.athar.core.domain.repo.SavedFinancialPlanRepository
 import com.athar.core.domain.repo.SmsAuditRepository
 import com.athar.core.domain.repo.SupportDiagnosticsExportTrigger
 import com.athar.core.domain.repo.TaxExportTrigger
@@ -87,30 +94,15 @@ internal object DatabaseModule {
         // the older `android-database-sqlcipher` artifact had.)
         return runCatching {
             System.loadLibrary("sqlcipher")
-            // Pre-encryption dev installs ship a plain-SQLite file with the same name. SQLCipher
-            // cannot open it; rather than a confusing crash, delete it on first encrypted launch.
-            // ADR-003 documents the trade-off.
-            val dbFile = File(context.getDatabasePath(AtharDatabase.NAME).path)
-            val keyFileMarker = File(context.filesDir, "db_key.bin")
-            if (dbFile.exists() && !keyFileMarker.exists()) {
-                Timber.w("Deleting pre-encryption DB at %s (alpha-phase migration)", dbFile.path)
-                context.deleteDatabase(AtharDatabase.NAME)
-            }
-
+            // WM028-13B0: no startup deletion and no destructive migration fallback.
+            // A retained database without key material fails closed inside
+            // getOrCreateDbKey before anything is generated or written; an
+            // unsupported open (e.g. a downgrade) fails in Room and leaves every
+            // artifact in place for explicit recovery. Master Brief §5.3.
             val key = dbKeyManager.getOrCreateDbKey()
             val factory = SupportOpenHelperFactory(key)
-            Room.databaseBuilder(context, AtharDatabase::class.java, AtharDatabase.NAME)
+            atharDatabaseBuilder(context, AtharDatabase.NAME)
                 .openHelperFactory(factory)
-                .addMigrations(
-                    AtharDatabase.MIGRATION_1_2,
-                    AtharDatabase.MIGRATION_2_3,
-                    AtharDatabase.MIGRATION_3_4,
-                    AtharDatabase.MIGRATION_4_5,
-                    AtharDatabase.MIGRATION_5_6,
-                    AtharDatabase.MIGRATION_6_7,
-                    AtharDatabase.MIGRATION_7_8,
-                )
-                .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
         }.onFailure { t ->
             Timber.e(t, "Failed to open Athar database")
@@ -136,6 +128,20 @@ internal object DatabaseModule {
     @Provides fun provideSmsMessageDao(db: AtharDatabase): SmsMessageDao = db.smsMessageDao()
     @Provides fun provideActivityLogDao(db: AtharDatabase): ActivityLogDao = db.activityLogDao()
     @Provides fun provideRecurringRuleDao(db: AtharDatabase): com.athar.core.data.db.dao.RecurringRuleDao = db.recurringRuleDao()
+    @Provides fun provideSavedFinancialPlanDao(db: AtharDatabase): SavedFinancialPlanDao = db.savedFinancialPlanDao()
+
+    /** Saved-plan writes are atomic via Room's real suspend transaction. */
+    @Provides
+    @Singleton
+    fun provideSavedFinancialPlanTransactionRunner(
+        db: AtharDatabase,
+    ): SavedFinancialPlanTransactionRunner = RoomSavedFinancialPlanTransactionRunner(db)
+
+    /** Saved-plan payloads are guarded by the real platform JsonReader walk. */
+    @Provides
+    @Singleton
+    fun provideSavedFinancialPlanPayloadGuard(): SavedFinancialPlanPayloadGuard =
+        JsonReaderSavedFinancialPlanPayloadGuard
 
     @Provides @Singleton fun provideClock(): Clock = Clock.System
 }
@@ -160,7 +166,7 @@ internal abstract class RepositoryModule {
     abstract fun bindCategoryRuleRepository(impl: CategoryRuleRepositoryImpl): CategoryRuleRepository
 
     @Binds @Singleton
-    abstract fun bindBackupRepository(impl: BackupService): BackupRepository
+    abstract fun bindBackupRepository(impl: WidgetRefreshingBackupRepository): BackupRepository
 
     @Binds @Singleton
     abstract fun bindWishlistRepository(impl: WishlistRepositoryImpl): WishlistRepository
@@ -219,4 +225,9 @@ internal abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindUserTemplateRepository(impl: UserTemplateRepositoryImpl): UserTemplateRepository
+
+    @Binds @Singleton
+    abstract fun bindSavedFinancialPlanRepository(
+        impl: WidgetRefreshingSavedPlanRepository,
+    ): SavedFinancialPlanRepository
 }

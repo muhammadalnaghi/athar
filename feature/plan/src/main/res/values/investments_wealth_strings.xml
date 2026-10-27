@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_investments_records_evidence">المساهمات: %1$d · العملات: %2$s</string>
+    <string name="plan_investments_corpus_in_currency">مساهمات %1$s</string>
+    <string name="plan_investments_declared_return">العائد المدخل</string>
+    <string name="plan_investments_edit_return_percent">تعديل نسبة العائد</string>
+    <string name="plan_investments_rounding_remainder">فرق التقريب غير الموزع</string>
+    <string name="plan_investments_allocation_unavailable">توزيع العائد غير متاح لهذه المساهمات. تُعرض العملات منفصلة دون تحويل.</string>
+    <string name="plan_investments_record_limits">ما الذي توضحه هذه السجلات؟</string>
+    <string name="plan_investments_unavailable_body">هذه سجلات مساهمات وعائد مدخل، وليست تقييمًا سوقيًا. يلزم سجل مؤرخ وأسعار لحساب العائد السنوي وتوزيع الأصول؛ الرسوم غير مسجلة.</string>
+    <string name="plan_investments_contribution_amount">المساهمة</string>
+    <string name="plan_investments_currency_composition">%2$s٪ من مساهمات %1$s</string>
+    <string name="plan_investments_contribution_plus_return">المساهمة مع العائد الموزع</string>
+    <string name="plan_investments_remove_contribution_title">حذف المساهمة؟</string>
+    <string name="plan_investments_remove_contribution_body">ستُحذف المساهمة من هذه المجموعة.</string>
+    <string name="plan_investments_entry_currency">عملة المبلغ: %1$s</string>
+    <string name="plan_investments_declared_percent_hint">نسبة من المساهمات المسجلة بعملة واحدة، وليست عائدًا سنويًا.</string>
+    <string name="plan_investments_invalid_input">أكمل الحقول وأدخل رقمًا صالحًا.</string>
+    <string name="plan_investments_unsupported_amount">استخدم مبلغًا أصغر وبحد أقصى منزلتين عشريتين.</string>
+    <string name="plan_investments_storage_error">تعذر الحفظ. أعد المحاولة.</string>
+</resources>

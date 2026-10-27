@@ -46,6 +46,27 @@ class MerchantSpecificityTest {
     }
 
     @Test
+    fun `held processor descriptors are never a specific merchant identity`() {
+        for (descriptor in listOf("public*pend", "public* pend", "PUBLIC*PENDING")) {
+            assertThat(descriptor.isSpecificMerchantKey()).isFalse()
+            assertThat(specificMerchantKey(descriptor, descriptor)).isNull()
+        }
+    }
+
+    @Test
+    fun `display hold evidence cannot disappear behind a normalized merchant label`() {
+        assertThat(specificMerchantKey("public ride", "PUBLIC* PEND")).isNull()
+        assertThat(specificMerchantKey("PUBLIC*PENDING", "Public Ride")).isNull()
+    }
+
+    @Test
+    fun `ordinary PEND merchant spellings are not broad substring rejected`() {
+        for (merchant in listOf("pend*books", "public*pendulum", "suspend*shop")) {
+            assertThat(specificMerchantKey(merchant, merchant)).isEqualTo(merchant)
+        }
+    }
+
+    @Test
     fun `digit only keys are not specific`() {
         assertThat("1234".isSpecificMerchantKey()).isFalse()
         assertThat("+966-123".isSpecificMerchantKey()).isFalse()

@@ -1,10 +1,9 @@
 package com.athar.core.data.db.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.athar.core.data.db.entity.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -33,10 +32,10 @@ internal interface CategoryDao {
     @Query("DELETE FROM category")
     suspend fun clear()
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(category: CategoryEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertAll(categories: List<CategoryEntity>)
 
     @Update

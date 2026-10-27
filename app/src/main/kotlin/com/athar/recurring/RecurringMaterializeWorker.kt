@@ -6,9 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.athar.core.domain.calc.BillReminderPlanner
 import com.athar.core.domain.repo.RecurringRuleRepository
-import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
-import com.athar.feature.widgets.AtharWidgets
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -22,7 +20,6 @@ class RecurringMaterializeWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
     private val recurringRules: RecurringRuleRepository,
-    private val transactions: TransactionRepository,
     private val prefs: UserPreferencesRepository,
     private val billReminderNotifier: BillReminderNotifier,
     private val clock: Clock,
@@ -32,19 +29,17 @@ class RecurringMaterializeWorker @AssistedInject constructor(
         runCatching {
             val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val remindersSent = sendBillReminders(today)
-            val created = recurringRules.materializeDue(today)
-            if (created > 0) {
-                AtharWidgets.updateAll(applicationContext)
-            }
+            // A scheduled amount is an expectation, not evidence of a payment.
+            // Keep the legacy worker identity for queued jobs, but never create
+            // approval-tray transactions merely because a due date arrived.
             Timber.i(
-                "[recurring] sent %d bill reminder(s), materialized %d due rule(s) for %s",
+                "[recurring] sent %d schedule reminder(s) for %s",
                 remindersSent,
-                created,
                 today,
             )
             Result.success()
         }.getOrElse { error ->
-            Timber.e(error, "[recurring] materialization failed")
+            Timber.e(error, "[recurring] schedule reminders failed")
             Result.retry()
         }
 
@@ -53,7 +48,7 @@ class RecurringMaterializeWorker @AssistedInject constructor(
 
         val planned = BillReminderPlanner.plan(
             rules = recurringRules.observeAll().first(),
-            pending = transactions.observePending().first(),
+            pending = emptyList(), // Legacy generated rows are not proof of a missed payment.
             today = today,
         )
         val plannedKeys = planned.mapTo(mutableSetOf()) { it.key }

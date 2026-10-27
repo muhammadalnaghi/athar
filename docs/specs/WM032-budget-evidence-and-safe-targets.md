@@ -1,0 +1,17 @@
+# WM032: Budget comparison, evidence and safe targets
+
+## Product outcome
+
+Mode: Operate. Keep the default Plan budget calm and preserve Thmanyah, parchment/ink, one ember accent, existing navigation and Plan001. An optional comparison exposes an independent second period rather than replacing the current budget or forcing a setup task. A headline, category or uncategorized/remainder amount opens the same read-only supporting records. Closing evidence or cancelling date input preserves both periods. Keep inactive zero/no-limit categories behind one optional affordance, make comparison reachable without a long zero-list, and preserve scroll position when secondary inputs load. Evidence rows always have a neutral title. Successful balance saves return the saved row/result to view; copy describes entered values, not database documents or verified whole wealth.
+
+## Scope and ownership
+
+The existing encrypted transaction and category repositories remain the only source of truth. Extend the current Plan ViewModel/state/events; no module, dependency, database schema or new top-level destination. A pure feature-owned derivation prepares each panel and its evidence from identical literal date, display-currency, confirmed operating-expense and reconciliation filters. Unknown category IDs belong to the remainder. No recent-N cap and no 1:1 currency relabelling. Foreign-currency actuals and targets are excluded from the displayed-currency scalar with visible scope. Empty and loading are distinct. Use the same bounds-based target scaling for both panels: complete calendar months count exactly (including twelve for a full year); partial/rolling ranges retain the documented Gregorian mean-month convention. A selector name must never give identical date bounds different targets. Disclose each range rather than silently changing period semantics.
+
+## Target write boundary
+
+Editing always starts from the original monthly category target, not its scaled period projection. Save exact nonnegative supported-currency minor units. The current category mapper stores fixed two-decimal minor units, so refuse a target it cannot represent exactly with an inline precision message; never silently truncate it. Retain this limitation until an explicitly migrated decimal storage contract exists; reject malformed, fractional-minor-unit and overflowing input without clearing or changing the old target. Clearing is a distinct explicit action. A currency change must not reinterpret an existing target's numeric amount. Keep arithmetic and limit classification exact; floating-point drawing fractions cannot decide whether a monetary limit has been crossed.
+
+## Acceptance
+
+Reproduce the current mixed-currency and exact-limit counterexamples before correction. Preserve all prior Plan testcase identities; add independent-period, remainder, empty/zero, unknown-category, full-history and evidence-population fixtures. Test the ViewModel's event→state path as well as the pure derivation. Walk the actual Arabic native form→apply→evidence→close/back→reopen paths, including open-keyboard target save, invalid/cancel recovery, independent A/B bounds and scaled money readability. Check actual source-data budget populations without altering historical records. A compiled DTO or calculator alone is not the completed feature. Existing recording, financial-position, portfolio, goals, debt and cash-scenario behavior stays outside this patch's writes.

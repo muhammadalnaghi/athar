@@ -5,12 +5,14 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.athar.core.data.AppDataInitializer
 import com.athar.recurring.RecurringWorkScheduler
+import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.PrintWriter
@@ -23,7 +25,8 @@ import javax.inject.Inject
 @HiltAndroidApp
 class AtharApplication : Application(), Configuration.Provider {
 
-    @Inject lateinit var dataInitializer: AppDataInitializer
+    // Do not construct the seed -> DAO -> encrypted-database graph at field injection.
+    @Inject lateinit var dataInitializer: Lazy<AppDataInitializer>
     @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
@@ -47,8 +50,9 @@ class AtharApplication : Application(), Configuration.Provider {
         Timber.i("Athar starting · versionName=%s", BuildConfig.VERSION_NAME)
 
         scope.launch {
-            dataInitializer.initialize(seedTmoap = BuildConfig.SEED_ON_FIRST_LAUNCH)
-            RecurringWorkScheduler.schedule(this@AtharApplication)
+            runDeferredStartupJobs(dataInitializer, BuildConfig.SEED_ON_FIRST_LAUNCH) {
+                RecurringWorkScheduler.schedule(this@AtharApplication)
+            }
         }
     }
 
@@ -75,4 +79,14 @@ class AtharApplication : Application(), Configuration.Provider {
             )
         }
     }
+}
+
+/** Defer this dependency request and initialization to IO; preserve failure/cancellation. */
+internal suspend fun runDeferredStartupJobs(
+    dataInitializer: Lazy<AppDataInitializer>,
+    seedTmoap: Boolean,
+    scheduleRecurringWork: () -> Unit,
+) = withContext(Dispatchers.IO) {
+    dataInitializer.get().initialize(seedTmoap = seedTmoap)
+    scheduleRecurringWork()
 }

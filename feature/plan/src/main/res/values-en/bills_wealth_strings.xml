@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English overrides for the Bills/commitments lane (WM028-02). -->
+<resources>
+
+    <string name="plan_bills_cadence_quarterly">Quarterly</string>
+    <string name="plan_bills_status_paid">Paid</string>
+    <!-- Neutral review state: Athar never asserts that a charge was missed or left unpaid. -->
+    <string name="plan_bills_status_unconfirmed">Awaiting confirmation</string>
+    <string name="plan_bills_suggestions_title">Possible commitments</string>
+    <string name="plan_bills_suggestions_subtitle">We noticed a repeating pattern in your history. On your confirmation it becomes a commitment with an expected date.</string>
+    <string name="plan_bills_suggestions_create">Create commitment</string>
+    <string name="plan_bills_detail_due">Due date: %1$s</string>
+    <string name="plan_bills_detail_evidence_title">Matching charge</string>
+    <string name="plan_bills_detail_evidence_date">Charge date: %1$s</string>
+    <string name="plan_bills_detail_evidence_ref">Transaction ref: %1$s</string>
+    <string name="plan_bills_detail_evidence_missing">No matching charge yet. When a matching payment is confirmed, its details appear here.</string>
+    <string name="plan_bills_detail_pause">Pause commitment</string>
+    <string name="plan_bills_detail_delete">Delete commitment</string>
+    <string name="plan_bills_detail_confirm_delete">Confirm permanent delete</string>
+    <!-- Bounded-view disclosure only: it never claims a bill was missed or left unpaid. -->
+    <string name="plan_bills_coverage_bounded">Commitments are shown within a bounded window around today; older commitments are not listed here.</string>
+
+</resources>

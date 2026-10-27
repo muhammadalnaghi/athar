@@ -3,14 +3,14 @@
     <string name="widget_loading">…</string>
 
     <string name="widget_monthly_label">أثر · ملخّص الشهر</string>
-    <string name="widget_monthly_description">صافي الشهر، الدخل، المصاريف، صافي الثروة في لمحة واحدة.</string>
+    <string name="widget_monthly_description">حركات الشهر ومركزك المالي المعلن بتاريخه.</string>
     <string name="widget_monthly_title" formatted="true">أثر · %1$s</string>
     <string name="widget_monthly_income">الدخل</string>
     <string name="widget_monthly_expense">المصاريف</string>
     <string name="widget_monthly_net_worth">صافي الثروة</string>
 
     <string name="widget_today_label">أثر · اليوم</string>
-    <string name="widget_today_description">صافي حركاتك اليوم وعدد البنود بانتظار التأكيد.</string>
+    <string name="widget_today_description">صافي حركات اليوم المؤكدة ومركزك المعلن بتاريخه.</string>
     <string name="widget_today_title">أثر · اليوم</string>
     <string name="widget_today_pending_count" formatted="true">%1$d بانتظار التأكيد</string>
 
@@ -22,4 +22,6 @@
     <string name="widget_pending_confirm">تأكيد</string>
     <string name="widget_pending_dismiss">تجاهل</string>
     <string name="widget_pending_categorize">تصنيف</string>
+    <string name="widget_unavailable">تعذّر تحميل البيانات. افتح أثر للمحاولة.</string>
+    <string name="widget_declared_position">مركز معلن · %1$s</string>
 </resources>

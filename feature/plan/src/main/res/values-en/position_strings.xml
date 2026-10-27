@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_position_section_title">Your balances and liabilities</string>
+    <string name="plan_position_section_hint">Balances and liabilities you enter with their date. Not a bank connection.</string>
+    <string name="plan_position_add">Add balances</string>
+    <string name="plan_position_empty">No saved balances yet.</string>
+    <string name="plan_position_row_hint">Entries: %1$d · %3$s · version %2$d</string>
+    <string name="plan_position_state_unavailable">Saved balances could not be read</string>
+    <string name="plan_position_open">Open</string>
+    <string name="plan_position_close">Close</string>
+    <string name="plan_position_update">Update</string>
+    <string name="plan_position_delete">Delete</string>
+    <string name="plan_position_delete_title">Delete balances?</string>
+    <string name="plan_position_delete_body">Only these balances will be deleted. Recorded transactions stay unchanged.</string>
+    <string name="plan_position_edit_create_title">New balances</string>
+    <string name="plan_position_edit_update_title">Edit balances</string>
+    <string name="plan_position_edit_doc_title">Name</string>
+    <string name="plan_position_edit_asof">Balance date (YYYY-MM-DD)</string>
+    <string name="plan_position_edit_note">Note (optional)</string>
+    <string name="plan_position_entry_add">Add entry</string>
+    <string name="plan_position_entry_remove">Remove entry</string>
+    <string name="plan_position_entry_label">Description</string>
+    <string name="plan_position_entry_side">Side: %1$s (tap to switch)</string>
+    <string name="plan_position_entry_side_asset">Asset</string>
+    <string name="plan_position_entry_side_liability">Liability</string>
+    <string name="plan_position_entry_currency">Currency</string>
+    <string name="plan_position_entry_amount">Amount</string>
+    <string name="plan_position_entry_scope">Ownership scope (optional)</string>
+    <string name="plan_position_save">Save</string>
+    <string name="plan_position_cancel">Cancel</string>
+    <string name="plan_position_totals_title">Values you entered</string>
+    <string name="plan_position_currency_line">%1$s — assets %2$s · liabilities %3$s · net %4$s</string>
+    <string name="plan_position_disclosure_today">Balances as declared today, %1$s.</string>
+    <string name="plan_position_disclosure_freshness">Balances as declared on %1$s (%2$d days ago).</string>
+    <string name="plan_position_disclosure_declared">Only the values you entered. Other accounts are not included automatically.</string>
+    <string name="plan_position_disclosure_no_fx">Each currency separately. No conversion.</string>
+    <string name="plan_position_problem_invalid">Complete the name, date, description and amount for each entry.</string>
+    <string name="plan_position_problem_unsupported">Could not save these values. Saved balances are unchanged.</string>
+    <string name="plan_position_problem_conflict">The document changed in storage during the operation. Refresh and try again.</string>
+    <string name="plan_position_problem_storage">Saving failed. Try again.</string>
+    <string name="plan_position_assets">Entered assets</string>
+    <string name="plan_position_liabilities">Entered liabilities</string>
+    <string name="plan_position_net">Net of entered values</string>
+    <string name="plan_position_saving">Saving</string>
+</resources>

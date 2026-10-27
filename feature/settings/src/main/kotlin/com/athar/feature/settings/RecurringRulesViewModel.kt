@@ -3,6 +3,7 @@ package com.athar.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athar.core.common.money.Money
+import com.athar.core.domain.calc.RecurringSchedule
 import com.athar.core.domain.model.Cadence
 import com.athar.core.domain.model.MANUAL_ACCOUNT_ID
 import com.athar.core.domain.model.RecurringRule
@@ -130,17 +131,49 @@ class RecurringRulesViewModel @Inject constructor(
 
     /**
      * Create a rule from a suggestion using user-confirmed overrides from the confirm sheet.
-     * Falls back to auto-detected values when the user accepts the defaults.
+     * Falls back to auto-detected values when the user accepts the defaults. The detected
+     * cadence and its anchors (day-of-week / day-of-month / month) are preserved so real
+     * weekly, quarterly, and yearly patterns materialize on their true schedule.
      */
     fun acceptSuggestion(
         suggestion: RecurringSuggestion,
         notes: String?,
         cadence: Cadence,
         dayOfMonth: Int?,
+        dayOfWeek: Int? = null,
+        monthOfYear: Int? = null,
         accountId: String?,
         categoryId: String?,
     ) {
         val now = clock.now()
+        val acceptedDayOfMonth = if (cadence != Cadence.WEEKLY) dayOfMonth else null
+        val acceptedDayOfWeek = if (cadence == Cadence.WEEKLY) dayOfWeek else null
+        val acceptedMonthOfYear = if (cadence == Cadence.YEARLY) monthOfYear else null
+        val anchorsChanged = cadence != suggestion.cadence ||
+            acceptedDayOfMonth != suggestion.typicalDayOfMonth ||
+            acceptedDayOfWeek != suggestion.dayOfWeek ||
+            acceptedMonthOfYear != suggestion.monthOfYear
+        val nextRunDate = if (anchorsChanged) {
+            // suggestedNextRun encodes the DETECTED cadence and anchors. When the user
+            // overrides them at acceptance, recompute the next run from the suggestion's
+            // lastSeen with the accepted anchors instead of trusting the stale estimate.
+            val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+            var cursor = suggestion.lastSeen
+            var steps = 0
+            while (cursor <= today && steps < ACCEPTED_NEXT_RUN_CATCH_UP_STEPS) {
+                cursor = RecurringSchedule.nextRunAfter(
+                    fromDate = cursor,
+                    cadence = cadence,
+                    dayOfMonth = acceptedDayOfMonth,
+                    dayOfWeek = acceptedDayOfWeek,
+                    monthOfYear = acceptedMonthOfYear,
+                )
+                steps++
+            }
+            cursor
+        } else {
+            suggestion.suggestedNextRun
+        }
         val rule = RecurringRule(
             id = UUID.randomUUID().toString(),
             displayName = suggestion.merchant,
@@ -150,10 +183,10 @@ class RecurringRulesViewModel @Inject constructor(
             accountId = accountId.orManualAccount(suggestion.suggestedAccountId),
             categoryId = categoryId ?: suggestion.suggestedCategoryId,
             cadence = cadence,
-            dayOfMonth = if (cadence == Cadence.MONTHLY) dayOfMonth else null,
-            dayOfWeek = null,
-            monthOfYear = null,
-            nextRunDate = suggestion.suggestedNextRun,
+            dayOfMonth = acceptedDayOfMonth,
+            dayOfWeek = acceptedDayOfWeek,
+            monthOfYear = acceptedMonthOfYear,
+            nextRunDate = nextRunDate,
             lastRunDate = null,
             isActive = true,
             notes = notes,
@@ -171,3 +204,6 @@ class RecurringRulesViewModel @Inject constructor(
             ?: fallback?.takeIf { it.isNotBlank() }
             ?: MANUAL_ACCOUNT_ID
 }
+
+/** Upper bound for walking a re-anchored schedule from lastSeen to the next future run. */
+private const val ACCEPTED_NEXT_RUN_CATCH_UP_STEPS = 40

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM032 — comparison, evidence drilldown, and safe target editor strings (English). -->
+<resources>
+
+    <!-- Optional two-independent-period comparison -->
+    <string name="plan_compare_toggle_off">Compare with another period</string>
+    <string name="plan_compare_toggle_on">Turn off comparison</string>
+    <string name="plan_compare_panel_a">Current period: %1$s → %2$s</string>
+    <string name="plan_compare_panel_b">Comparison period: %1$s → %2$s</string>
+    <string name="plan_compare_edit_b">Edit comparison range</string>
+    <string name="plan_compare_total">Total</string>
+    <string name="plan_compare_uncategorized_count">Other and uncategorized (%1$d)</string>
+
+    <!-- Read-only supporting-record sheet -->
+    <string name="plan_evidence_title">Supporting records</string>
+    <string name="plan_evidence_scope">%1$s → %2$s · %3$s · confirmed expenses only</string>
+    <string name="plan_evidence_empty">No records in this range</string>
+    <string name="plan_evidence_close">Close</string>
+
+    <!-- Safe target editor -->
+    <string name="plan_target_editor_currency_label">Currency: %1$s</string>
+    <string name="plan_target_error_invalid">Enter a valid amount</string>
+    <string name="plan_target_error_fractional">More precision than this currency supports</string>
+    <string name="plan_target_error_overflow">Amount exceeds the supported maximum</string>
+
+    <string name="plan_budget_loading">Loading transactions</string>
+    <string name="plan_budget_actual">Actual spending</string>
+    <string name="plan_budget_target_total">Total of configured limits</string>
+    <string name="plan_budget_currency_scope">%1$s records only. No currency conversion.</string>
+    <string name="plan_budget_edit_target">Edit limit</string>
+    <string name="plan_budget_target_save_error">Could not save the limit. The previous limit is unchanged.</string>
+    <string name="plan_budget_target_save_precision">This limit precision is not supported yet. Use at most two decimal places.</string>
+    <string name="plan_budget_saving">Saving limit</string>
+    <string name="plan_compare_label_a">Period A</string>
+    <string name="plan_compare_label_b">Period B</string>
+    <string name="plan_compare_remainder">Other and uncategorized</string>
+    <string name="plan_budget_show_other_categories">Show remaining categories (%1$d)</string>
+    <string name="plan_budget_hide_other_categories">Hide other categories</string>
+    <string name="plan_budget_transaction">Expense</string>
+    <string name="plan_budget_limit_none">No limit set</string>
+    <string name="plan_budget_show_records">View transactions</string>
+</resources>

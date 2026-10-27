@@ -27,12 +27,27 @@ internal class RuleSeed @Inject constructor(
 
     suspend fun seedIfEmpty() {
         val raw = context.assets.open("seed_rules.json").bufferedReader().use { it.readText() }
+        // Cheap steady-state path: when the bundled payload is byte-identical to the
+        // last completed seed AND the system-rule count is unchanged, skip decoding
+        // the payload and loading all rows. Any real change (new bundle, deleted or
+        // tampered seed rows) breaks the marker and takes the full verification path.
+        val payloadMarker = sha256(raw)
+        val prefs = context.getSharedPreferences("athar_seed_markers", Context.MODE_PRIVATE)
+        val systemCount = dao.countSystemRules()
+        if (prefs.getString(RULE_SEED_MARKER_KEY, null) == payloadMarker &&
+            prefs.getInt(RULE_SEED_COUNT_KEY, -1) == systemCount && systemCount > 0
+        ) {
+            Timber.d("System rules up-to-date ($systemCount) — marker skip.")
+            return
+        }
         val payload = SeedJson.decodeFromString<SeedPayload>(raw)
         val expectedRules = payload.rules.map { it.toSeedRuleSignature() }
         val currentRules = dao.all()
         val currentSeedRules = currentRules.filter { it.isBundledSeedRule() }
         if (!seedRulesNeedRefresh(currentRules, expectedRules)) {
             Timber.d("System rules up-to-date (${currentSeedRules.size}) — skipping seed.")
+            prefs.edit().putString(RULE_SEED_MARKER_KEY, payloadMarker)
+                .putInt(RULE_SEED_COUNT_KEY, currentSeedRules.size).apply()
             return
         }
         if (currentSeedRules.isNotEmpty()) {
@@ -52,8 +67,15 @@ internal class RuleSeed @Inject constructor(
             )
         }
         entities.forEach { dao.upsert(it) }
+        prefs.edit().putString(RULE_SEED_MARKER_KEY, payloadMarker)
+            .putInt(RULE_SEED_COUNT_KEY, entities.size).apply()
         Timber.i("Seeded ${entities.size} categorization rules.")
     }
+
+    private fun sha256(value: String): String =
+        java.security.MessageDigest.getInstance("SHA-256")
+            .digest(value.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
 
     @Serializable private data class SeedPayload(val rules: List<SeedRule>)
     @Serializable private data class SeedRule(
@@ -72,6 +94,8 @@ internal class RuleSeed @Inject constructor(
 
     private companion object {
         val SeedJson = Json { ignoreUnknownKeys = true }
+        const val RULE_SEED_MARKER_KEY = "rule_seed_payload_sha256"
+        const val RULE_SEED_COUNT_KEY = "rule_seed_system_count"
     }
 }
 

@@ -6,12 +6,13 @@ import com.athar.core.common.time.Period
 import com.athar.core.designsystem.component.AtharBarItem
 import com.athar.core.designsystem.component.AtharMonthlyBar
 import com.athar.core.designsystem.component.AtharSplitSegment
+import com.athar.core.domain.model.Transaction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 enum class PeriodKey { WEEK, MONTH, MONTHS_3, YEAR, MONTH_VS_PREVIOUS, CUSTOM }
 
-/** Per-category row in the period-vs-period comparison table (Excel "Historical Comparison" parity). */
+/** Per-category row in the period-vs-comparison table (Excel "Historical Comparison" parity). */
 @Immutable
 data class CategoryDeltaRow(
     val categoryId: String,
@@ -21,7 +22,9 @@ data class CategoryDeltaRow(
     val previousTotal: Money,
 ) {
     val deltaAmount: Money = currentTotal - previousTotal
-    val deltaPercent: Double? = if (previousTotal.isZero()) null else
+
+    /** Null on a zero or negative baseline — an absolute delta is shown instead of a fake percentage. */
+    val deltaPercent: Double? = if (!previousTotal.isPositive()) null else
         ((currentTotal.amount.toDouble() - previousTotal.amount.toDouble()) / previousTotal.amount.toDouble()) * 100.0
 }
 
@@ -38,6 +41,15 @@ data class MonthlySeries(
     val targetExpense: Money?,
     val targetSavings: Money?,
 ) {
+    /**
+     * Target-vs-actual reconciliation at 12-month granularity: the exact gap between the
+     * twelve-month average and the monthly target (positive = average above target).
+     * Null when no target participates. Pure BigDecimal — never Float/Double.
+     */
+    val incomeTargetVariance: Money? get() = targetIncome?.let { averageIncome - it }
+    val expenseTargetVariance: Money? get() = targetExpense?.let { averageExpense - it }
+    val savingsTargetVariance: Money? get() = targetSavings?.let { averageSavings - it }
+
     companion object {
         fun empty(): MonthlySeries = MonthlySeries(
             income = persistentListOf(),
@@ -52,6 +64,14 @@ data class MonthlySeries(
         )
     }
 }
+
+/** One selectable option in the filter sheet (real category, uncategorized, source, …). */
+@Immutable
+data class FilterOption(
+    val id: String,
+    val labelAr: String,
+    val labelEn: String,
+)
 
 @Immutable
 data class TrendsState(
@@ -70,17 +90,57 @@ data class TrendsState(
     val customStart: kotlinx.datetime.LocalDate?,
     val customEnd: kotlinx.datetime.LocalDate?,
     val isLoading: Boolean,
+    // Query context — visible on screen and in every evidence sheet.
+    val reportingCurrency: String = Money.SAR,
+    val currencyOverride: String? = null,
+    val filters: TrendsFilters = TrendsFilters(),
+    val filterAccountIds: ImmutableList<String> = persistentListOf(),
+    /**
+     * accountId → user-provided display name, observed live from AccountRepository
+     * (archived included). An absent key is a missing/deleted account — the UI renders
+     * its localized unknown label and NEVER the raw id. Keys stay the actual ids.
+     */
+    val accountNames: Map<String, String> = emptyMap(),
+    val filterCategoryOptions: ImmutableList<FilterOption> = persistentListOf(),
+    val previousWindow: Period? = null,
+    val previousMatchedElapsed: Boolean = false,
+    val customPrior: Period.Custom? = null,
+    val mixedCurrency: Boolean = false,
+    val evidence: TrendsEvidenceState? = null,
+    /** True when the open evidence sits on top of a previous drill (back returns to it). */
+    val evidenceCanGoBack: Boolean = false,
+    val detailTransaction: Transaction? = null,
+    // F1B — equal-population comparison surface.
+    val comparisonExpense: Money = Money.zero(),
+    val comparisonIncome: Money = Money.zero(),
+    val comparisonSavings: Money = Money.zero(),
+    /** Equal-elapsed slice of the current window the deltas use; null = full current. */
+    val comparisonWindow: Period? = null,
+    /** Current tail excluded from the delta, disclosed instead of hidden. */
+    val unmatchedTail: Period? = null,
+    val futureRange: Boolean = false,
+    val today: kotlinx.datetime.LocalDate? = null,
+    val customRangeError: TrendsRangeError? = null,
+    val comparisonRangeError: TrendsRangeError? = null,
 ) {
-    val expenseDelta: Money? = if (previousExpense.isZero()) null else (totalExpense - previousExpense)
+    // Deltas compare the equal-elapsed comparison populations — never the full headline
+    // against a matched prior window. Zero or negative baselines show absolute deltas only.
+    val expenseDelta: Money? =
+        if (previousExpense.isZero() && comparisonExpense.isZero()) null else (comparisonExpense - previousExpense)
 
-    val expenseDeltaPercent: Double? = if (previousExpense.isZero()) null else
-        ((totalExpense.amount.toDouble() - previousExpense.amount.toDouble()) / previousExpense.amount.toDouble()) * 100.0
+    val expenseDeltaPercent: Double? = if (previousExpense.isPositive())
+        ((comparisonExpense.amount.toDouble() - previousExpense.amount.toDouble()) / previousExpense.amount.toDouble()) * 100.0
+    else null
 
-    val incomeDelta: Money? = if (previousIncome.isZero()) null else (totalIncome - previousIncome)
-    val incomeDeltaPercent: Double? = if (previousIncome.isZero()) null else
-        ((totalIncome.amount.toDouble() - previousIncome.amount.toDouble()) / previousIncome.amount.toDouble()) * 100.0
+    val incomeDelta: Money? =
+        if (previousIncome.isZero() && comparisonIncome.isZero()) null else (comparisonIncome - previousIncome)
 
-    val savingsDelta: Money? = if (previousSavings.isZero()) null else (savings - previousSavings)
+    val incomeDeltaPercent: Double? = if (previousIncome.isPositive())
+        ((comparisonIncome.amount.toDouble() - previousIncome.amount.toDouble()) / previousIncome.amount.toDouble()) * 100.0
+    else null
+
+    val savingsDelta: Money? =
+        if (previousSavings.isZero() && comparisonSavings.isZero()) null else (comparisonSavings - previousSavings)
 
     val savingsRate: Double? =
         if (totalIncome.isZero()) null
@@ -113,9 +173,4 @@ data class TrendsState(
             isLoading = true,
         )
     }
-}
-
-sealed interface TrendsEvent {
-    data class SelectPeriod(val key: PeriodKey) : TrendsEvent
-    data class SelectCustomRange(val start: kotlinx.datetime.LocalDate, val end: kotlinx.datetime.LocalDate) : TrendsEvent
 }

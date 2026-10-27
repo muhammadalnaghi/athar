@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English overrides for the WM028-fast trends lane strings. -->
+<resources>
+    <string name="trends_evidence_back">Back</string>
+    <string name="trends_variance_average_vs_target">12-month average vs target %1$s</string>
+</resources>

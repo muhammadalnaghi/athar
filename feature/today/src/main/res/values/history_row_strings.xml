@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_row_type_income">دخل</string>
+    <string name="history_row_type_expense">مصروف</string>
+    <string name="history_row_type_transfer">تحويل</string>
+</resources>

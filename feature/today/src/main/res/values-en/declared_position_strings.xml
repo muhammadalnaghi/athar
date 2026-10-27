@@ -1,0 +1,5 @@
+<resources>
+    <string name="today_declared_position_title">Latest entered position</string>
+    <string name="today_declared_position_scope">%1$s, as of %2$s</string>
+    <string name="today_declared_position_basis">Your saved inputs, not updated bank balances.</string>
+</resources>

@@ -15,6 +15,9 @@ import com.athar.core.domain.model.PatternType
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.model.TxType
+import com.athar.core.domain.model.position.DeclaredPositionSnapshot
+import com.athar.core.domain.model.position.DeclaredPositionStatus
+import com.athar.core.domain.repo.DeclaredPositionRepository
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
@@ -75,7 +78,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -103,7 +106,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
         originals.forEach { original ->
             viewModel.updateTransaction(original.copy(categoryId = "cat-restaurant"), learnRule = false)
@@ -129,7 +132,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
         viewModel.updateTransaction(original.copy(notes = "Synthetic note"), learnRule = false)
         advanceUntilIdle()
@@ -146,7 +149,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         viewModel.updateTransaction(
@@ -164,7 +167,7 @@ class TodayViewModelTest {
         )
         advanceUntilIdle()
 
-        assertThat(transactions.upserts.single().status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(transactions.upserts.single().status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learned).containsExactly(
             LearnedRule(
                 merchantNormalized = "hemmah",
@@ -193,7 +196,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         viewModel.updateTransaction(
@@ -211,7 +214,7 @@ class TodayViewModelTest {
         )
         advanceUntilIdle()
 
-        assertThat(transactions.upserts.single().status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(transactions.upserts.single().status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learned).isEmpty()
         assertThat(transactions.appliedPatterns).isEmpty()
         assertThat(viewModel.lastBackfill.value).isNull()
@@ -239,7 +242,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(listOf(archivedCoffee)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -282,7 +285,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(listOf(cafe)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -459,7 +462,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -516,7 +519,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(listOf(cafe)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
         viewModel.state.first { !it.isLoading }
 
@@ -528,7 +531,8 @@ class TodayViewModelTest {
                 merchant = "Brew Lab",
                 merchantNormalized = "brew lab",
                 categoryId = "cat-cafe",
-                status = TxStatus.CONFIRMED,
+                // WM033: applying a category never certifies the payment.
+                status = TxStatus.PENDING,
                 categorySource = CategorySource.USER,
                 updatedAt = FixedClock.now(),
             ),
@@ -601,7 +605,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(listOf(cafe, grocery)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
         val state = viewModel.state.first { !it.isLoading }
         assertThat(state.pendingCategorySuggestions.keys).containsExactly("pending-brew", "pending-tamimi")
@@ -613,7 +617,8 @@ class TodayViewModelTest {
             "pending-brew" to "cat-cafe",
             "pending-tamimi" to "cat-grocery",
         ).inOrder()
-        assertThat(transactions.upserts.map { it.status }).containsExactly(TxStatus.CONFIRMED, TxStatus.CONFIRMED)
+        // WM033: optional classification preserves both financial decisions.
+        assertThat(transactions.upserts.map { it.status }).containsExactly(TxStatus.PENDING, TxStatus.PENDING)
         assertThat(viewModel.lastPendingSuggestionApply.value)
             .isEqualTo(TodayViewModel.PendingSuggestionApplyEvent(count = 2))
         assertThat(rules.learned).isEmpty()
@@ -637,7 +642,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -669,7 +674,7 @@ class TodayViewModelTest {
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
-            clock = FixedClock,
+            clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
 
         val state = viewModel.state.first { !it.isLoading }
@@ -688,6 +693,57 @@ class TodayViewModelTest {
             "reconcile-expense",
         ).inOrder()
     }
+    @Test
+    fun `foreign currency stays visible but never becomes a one to one display currency total`() = runTest(mainDispatcher) {
+        val viewModel = TodayViewModel(
+            transactions = FakeTransactionRepository(currentConfirmed = listOf(
+                transaction(id = "sar-income", type = TxType.INCOME, amount = Money.of("1000")),
+                transaction(id = "sar-expense", type = TxType.EXPENSE, amount = Money.of("200")),
+                transaction(id = "usd-expense", type = TxType.EXPENSE, amount = Money.of("90000", "USD")),
+            )),
+            rules = RecordingCategoryRuleRepository(), categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")), clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
+        )
+        val state = viewModel.state.first { !it.isLoading }
+        assertThat(state.totalIncome.amount.toPlainString()).isEqualTo("1000")
+        assertThat(state.totalExpense.amount.toPlainString()).isEqualTo("200")
+        assertThat(state.netFlow.amount.toPlainString()).isEqualTo("800")
+        assertThat(state.todayNet.amount.toPlainString()).isEqualTo("800")
+        assertThat(state.totalExpense.currency).isEqualTo("SAR")
+        assertThat(state.today.map { it.id }).contains("usd-expense")
+    }
+
+    @Test
+    fun `saved declared position stays separate from recorded account money and spending`() = runTest(mainDispatcher) {
+        val position = DeclaredPositionSnapshot(
+            id = "position", title = "Synthetic position", revision = 2L,
+            asOfDate = "2026-10-24", updatedAtEpochMillis = 1L,
+            status = DeclaredPositionStatus.USER_DECLARED, hasUnstructuredOwnershipLabels = false,
+            entryCount = 1, assetsByCurrency = emptyMap(),
+            liabilitiesByCurrency = mapOf("SAR" to "1000.02"), netByCurrency = mapOf("SAR" to "-1000.02"),
+        )
+        val viewModel = TodayViewModel(
+            transactions = FakeTransactionRepository(currentConfirmed = listOf(
+                transaction(id = "expense", type = TxType.EXPENSE, amount = Money.of("42")),
+            )),
+            rules = RecordingCategoryRuleRepository(), categories = TodayFakeCategoryRepository(),
+            prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            accounts = FakeAccountRepository(liquidBalance = Money.of("5000")), clock = FixedClock,
+            declaredPositions = object : DeclaredPositionRepository {
+                override fun observeSnapshots() = flowOf(listOf(position))
+            },
+        )
+        val state = viewModel.state.first { !it.isLoading }
+        assertThat(state.declaredPosition?.net).isEqualTo(Money.of("-1000.02"))
+        assertThat(state.declaredPosition?.revision).isEqualTo(2L)
+        assertThat(state.totalExpense).isEqualTo(Money.of("42"))
+        assertThat(state.netWorth).isEqualTo(Money.of("5000"))
+    }
+}
+
+private object EmptyDeclaredPositions : DeclaredPositionRepository {
+    override fun observeSnapshots(): Flow<List<DeclaredPositionSnapshot>> = flowOf(emptyList())
 }
 
 private class FakeTransactionRepository(
@@ -717,6 +773,9 @@ private class FakeTransactionRepository(
     override suspend fun get(id: String): Transaction? =
         upserts.lastOrNull { it.id == id }
             ?: (currentConfirmed + goalConfirmed + pending + dismissed).firstOrNull { it.id == id }
+    override suspend fun upsertIngest(transaction: Transaction): String =
+        error("Ingestion is outside this UI or import test fixture")
+
     override suspend fun upsert(transaction: Transaction) {
         upserts += transaction
     }

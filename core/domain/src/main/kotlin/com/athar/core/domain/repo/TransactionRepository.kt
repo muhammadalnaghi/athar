@@ -19,6 +19,14 @@ interface TransactionRepository {
     fun observeAll(): Flow<List<Transaction>>
     suspend fun get(id: String): Transaction?
     suspend fun upsert(transaction: Transaction)
+
+    /**
+     * Atomically insert a new source observation or return its existing unchanged row id.
+     * Replay never rewrites financial facts, user decisions, timestamps or receipt links.
+     * A null source reference remains an independent observation. Generic edits use [upsert].
+     * The returned stable id, not the caller UUID, is the audit transaction link.
+     */
+    suspend fun upsertIngest(transaction: Transaction): String
     suspend fun delete(id: String)
     suspend fun setStatus(id: String, status: TxStatus)
 
@@ -46,13 +54,10 @@ interface TransactionRepository {
     suspend fun recoverDismissedToPending(): Int
 
     /**
-     * Retroactively apply [categoryId] to every PENDING or DISMISSED transaction whose
-     * `merchantNormalized` contains [pattern]. Matching rows are confirmed (status → CONFIRMED).
-     * Used by the "Always categorize X as Y" learning flow so that picking a category for
-     * one Hemmah charge fixes every other dismissed Hemmah row in the same action.
-     *
-     * Returns the number of rows updated. CONFIRMED rows are untouched on purpose — the user
-     * may have chosen a different category for some of them.
+     * Fill an unassigned compatible category on PENDING or CONFIRMED transactions
+     * whose merchant contains the explicit literal pattern. Preserve financial status,
+     * existing categories and dismissed observations. Archived/missing categories do
+     * not apply. Returns the number of category assignments, never postings.
      */
     suspend fun applyCategoryToMatching(pattern: String, categoryId: String): Int
 }

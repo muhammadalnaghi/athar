@@ -76,7 +76,7 @@ class MerchantBulkCsvTest {
 
         assertThat(result).isEqualTo(MerchantBulkImportResult.Done(updated = 1, rulesAdded = 1, skipped = 0))
         assertThat(importRepo.get("new-id")?.categoryId).isEqualTo("cat-coffee")
-        assertThat(importRepo.get("new-id")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(importRepo.get("new-id")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learnedRules.map { it.pattern to it.categoryId })
             .containsExactly("barns" to "cat-coffee")
         assertThat(rules.learnedRules.single().patternType).isEqualTo(PatternType.EXACT)
@@ -204,7 +204,7 @@ class MerchantBulkCsvTest {
 
         assertThat(result).isEqualTo(MerchantBulkImportResult.Done(updated = 1, rulesAdded = 1, skipped = 0))
         assertThat(repo.get("new-id")?.categoryId).isEqualTo("cat-home-maintenance")
-        assertThat(repo.get("new-id")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("new-id")?.status).isEqualTo(TxStatus.PENDING)
     }
 
     @Test
@@ -386,8 +386,8 @@ class MerchantBulkCsvTest {
         )
         assertThat(repo.get("hemmah-1")?.categoryId).isEqualTo("cat-home-maintenance")
         assertThat(repo.get("hemmah-2")?.categoryId).isEqualTo("cat-home-maintenance")
-        assertThat(repo.get("hemmah-1")?.status).isEqualTo(TxStatus.CONFIRMED)
-        assertThat(repo.get("hemmah-2")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("hemmah-1")?.status).isEqualTo(TxStatus.PENDING)
+        assertThat(repo.get("hemmah-2")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(repo.get("other")?.categoryId).isNull()
         assertThat(rules.learnedRules.map { it.pattern to it.categoryId })
             .containsExactly("hemmah" to "cat-home-maintenance")
@@ -426,7 +426,7 @@ class MerchantBulkCsvTest {
             ),
         )
         assertThat(repo.get("payment-1")?.categoryId).isEqualTo("cat-coffee")
-        assertThat(repo.get("payment-1")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("payment-1")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(repo.get("payment-2")?.categoryId).isNull()
         assertThat(repo.get("payment-2")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learnedRules).isEmpty()
@@ -563,7 +563,7 @@ class MerchantBulkCsvTest {
 
         assertThat(result).isEqualTo(MerchantBulkImportResult.Done(updated = 1, rulesAdded = 1, skipped = 0))
         assertThat(repo.get("coffee")?.categoryId).isEqualTo("cat-coffee")
-        assertThat(repo.get("coffee")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("coffee")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learnedRules.map { it.pattern to it.categoryId })
             .containsExactly("coffee shop" to "cat-coffee")
     }
@@ -680,7 +680,7 @@ class MerchantBulkCsvTest {
 
         assertThat(result).isEqualTo(MerchantBulkImportResult.Done(updated = 1, rulesAdded = 1, skipped = 0))
         assertThat(repo.get("coffee")?.categoryId).isEqualTo("cat-coffee")
-        assertThat(repo.get("coffee")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("coffee")?.status).isEqualTo(TxStatus.PENDING)
     }
 
     @Test
@@ -721,7 +721,7 @@ class MerchantBulkCsvTest {
             ),
         )
         assertThat(repo.get("merchant-expense")?.categoryId).isEqualTo("cat-home-maintenance")
-        assertThat(repo.get("merchant-expense")?.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(repo.get("merchant-expense")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(repo.get("merchant-income")?.categoryId).isNull()
         assertThat(repo.get("merchant-income")?.status).isEqualTo(TxStatus.PENDING)
         assertThat(rules.learnedRules).isEmpty()
@@ -941,6 +941,9 @@ class MerchantBulkCsvTest {
 
         override fun observeAll(): Flow<List<Transaction>> = flowOf(rows.value.values.toList())
         override suspend fun get(id: String): Transaction? = rows.value[id]
+        override suspend fun upsertIngest(transaction: Transaction): String =
+            error("Ingestion is outside this UI or import test fixture")
+
         override suspend fun upsert(transaction: Transaction) {
             rows.value = rows.value + (transaction.id to transaction)
         }
@@ -952,26 +955,8 @@ class MerchantBulkCsvTest {
         override suspend fun dismissAllLowConfidence(maxConfidence: Float): Int = unsupported()
         override suspend fun dismissAllPending(): Int = unsupported()
         override suspend fun recoverDismissedToPending(): Int = unsupported()
-        override suspend fun applyCategoryToMatching(pattern: String, categoryId: String): Int {
-            val normalized = pattern.lowercase().trim()
-            var updated = 0
-            rows.value = rows.value.mapValues { (_, tx) ->
-                if (
-                    tx.status in setOf(TxStatus.PENDING, TxStatus.DISMISSED) &&
-                    tx.merchantNormalized.contains(normalized)
-                ) {
-                    updated += 1
-                    tx.copy(
-                        categoryId = categoryId,
-                        status = TxStatus.CONFIRMED,
-                        updatedAt = FixedInstant,
-                    )
-                } else {
-                    tx
-                }
-            }
-            return updated
-        }
+        override suspend fun applyCategoryToMatching(pattern: String, categoryId: String): Int = unsupported()
+
     }
 
     private class FakeCategoryRepository(private val rows: List<Category>) : CategoryRepository {

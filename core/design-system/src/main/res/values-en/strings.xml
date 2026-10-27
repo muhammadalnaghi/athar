@@ -2,6 +2,9 @@
 <resources>
     <string name="chart_legend_average">— — Average</string>
     <string name="chart_legend_target">──── Target</string>
+    <string name="chart_bar_a11y">%1$s · %2$s</string>
+    <string name="chart_pair_current">Current</string>
+    <string name="chart_pair_previous">Previous</string>
     <string name="chart_pair_income">Income</string>
     <string name="chart_pair_expense">Expenses</string>
     <string name="chart_pair_savings">Savings</string>

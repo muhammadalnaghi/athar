@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_class_equity">أسهم</string>
+    <string name="plan_portfolio_class_sukuk">صكوك</string>
+    <string name="plan_portfolio_class_cash">نقد</string>
+    <string name="plan_portfolio_class_other">أخرى</string>
+</resources>

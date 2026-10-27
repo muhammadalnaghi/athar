@@ -92,6 +92,31 @@ class BillReminderPlannerTest {
         assertThat(reminders.single().key).isEqualTo("pending:missed:recurring:rent:2026-06-10:2026-06-10")
     }
 
+    @Test
+    fun `stale history cannot suppress today and upcoming reminders`() {
+        val today = LocalDate(2026, 6, 13)
+        val reminders = BillReminderPlanner.plan(
+            rules = listOf(
+                rule(id = "stale-due", displayName = "Stale Due", nextRunDate = LocalDate(2020, 1, 13)),
+                rule(id = "stale-upcoming", displayName = "Stale Upcoming", nextRunDate = LocalDate(2020, 1, 15)),
+            ),
+            pending = emptyList(),
+            today = today,
+        )
+
+        // A decades-stale anchor must not spend the occurrence budget on overdue
+        // history: due-today and horizon reminders still fire, and no synthetic
+        // older obligations are invented from the re-anchored schedule.
+        assertThat(reminders.map { it.kind }).containsExactly(
+            BillReminderKind.DUE_TODAY,
+            BillReminderKind.UPCOMING,
+        ).inOrder()
+        assertThat(reminders.map { it.key }).containsExactly(
+            "recurring:due_today:stale-due:2026-06-13",
+            "recurring:upcoming:stale-upcoming:2026-06-15",
+        ).inOrder()
+    }
+
     private fun rule(
         id: String,
         displayName: String = id,

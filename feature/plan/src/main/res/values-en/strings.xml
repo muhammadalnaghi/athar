@@ -49,14 +49,12 @@
     <!-- Bills -->
     <string name="plan_bills_empty_text">No bills scheduled.</string>
     <string name="plan_bills_empty_subtle">Create recurring rules in Settings to see upcoming bills here.</string>
-    <string name="plan_bills_summary_title">Due now + next 30 days</string>
-    <string name="plan_bills_summary_subtitle" formatted="true">%1$d items through %2$s</string>
+    <string name="plan_bills_summary_title" formatted="true">Due now through %1$s</string>
+    <string name="plan_bills_summary_subtitle" formatted="true">Shown in the list: %1$d, through %2$s</string>
     <string name="plan_bills_unknown_title">Pending item</string>
-    <string name="plan_bills_pending_review">Needs review</string>
     <string name="plan_bills_cadence_monthly">Monthly</string>
     <string name="plan_bills_cadence_weekly">Weekly</string>
     <string name="plan_bills_cadence_yearly">Yearly</string>
-    <string name="plan_bills_overdue">Late</string>
     <string name="plan_bills_today">Today</string>
     <string name="plan_bills_in_days_short" formatted="true">%1$d d</string>
     <string name="plan_bills_reminders_title">Bill reminders</string>
@@ -97,7 +95,7 @@
     <string name="plan_wishlist_summary_none">None</string>
     <string name="plan_wishlist_summary_count" formatted="true">%1$d</string>
     <string name="plan_wishlist_empty_text">No wishes yet.</string>
-    <string name="plan_wishlist_empty_subtle">Add what you want to buy. We will tell you when it fits without strain.</string>
+    <string name="plan_wishlist_empty_subtle">Add a wish to see its effect on your plan.</string>
     <string name="plan_wishlist_saved_label">saved </string>
     <string name="plan_wishlist_remaining_label">left </string>
     <string name="plan_wishlist_required_monthly">needed/mo </string>
@@ -130,6 +128,8 @@
     <string name="plan_goals_monthly_expense">Average monthly expenses</string>
     <string name="plan_goals_monthly_savings">Average monthly savings</string>
     <string name="plan_goals_liquid_balance">Liquid balance</string>
+    <string name="plan_goals_liquidity_withheld">Liquid balance is withheld: the total derives from flows only, with no dated certified balance. Record a certified balance to see it.</string>
+    <string name="plan_goals_emergency_covered_withheld">Coverage is not computed without a dated certified balance.</string>
     <string name="plan_goals_emergency_target_amount">Target amount</string>
     <string name="plan_goals_edit_savings_title">Edit savings goal</string>
     <string name="plan_goals_edit_savings_label">Target percent from 0 to 100</string>

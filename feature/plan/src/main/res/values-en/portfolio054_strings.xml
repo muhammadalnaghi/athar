@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_opening_date_label">Opening capital date (optional)</string>
+    <string name="plan_portfolio_opening_date_hint">For returns from the capital date. Use YYYY-MM-DD.</string>
+    <string name="plan_portfolio_opening_date_invalid">Enter a valid YYYY-MM-DD date, or leave it blank.</string>
+    <string name="plan_portfolio_opening_date_saved">Opening capital date: %1$s</string>
+    <string name="plan_portfolio_opening_date_order">The capital date must be on or before the first transaction.</string>
+</resources>

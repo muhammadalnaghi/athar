@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,13 +20,16 @@ import android.app.Activity
 import android.content.ContextWrapper
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import java.util.Locale
+
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -65,7 +69,17 @@ fun AtharApp() {
     val displayCurrency by appPrefs.displayCurrency.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = context.findActivity()
+    val onboardingSnapshot = onboarded
+    val hijriSnapshot = hijriEnabled
+    val currencySnapshot = displayCurrency
+    if (onboardingSnapshot == null || hijriSnapshot == null || currencySnapshot == null) {
+        StartupLoading()
+        return
+    }
 
+    val startDestination = remember {
+        if (onboardingSnapshot) Routes.Today else Routes.Onboarding
+    }
     val navController = rememberNavController()
     val current by navController.currentBackStackEntryAsState()
     val routeName = current?.destination?.route.orEmpty()
@@ -81,10 +95,14 @@ fun AtharApp() {
         routeName.endsWith("HistoryRepeatedBacklog")
     val theme = AtharTheme
 
-    val layoutDirection = if (Locale.getDefault().language == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+    val layoutDirection = if (LocalConfiguration.current.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL) {
+        LayoutDirection.Rtl
+    } else {
+        LayoutDirection.Ltr
+    }
     CompositionLocalProvider(
-        LocalHijriEnabled provides hijriEnabled,
-        LocalDisplayCurrency provides displayCurrency,
+        LocalHijriEnabled provides hijriSnapshot,
+        LocalDisplayCurrency provides currencySnapshot,
         LocalLayoutDirection provides layoutDirection,
     ) {
         Scaffold(
@@ -106,8 +124,14 @@ fun AtharApp() {
                 if (!isOnboarding) {
                     AtharBottomBar(
                         items = TopLevelTabs,
-                        selectedKey = current.selectedTabKey(),
+                        selectedKey = current.topLevelTabKey().orEmpty(),
                         onSelect = { key ->
+                            // Do not save Settings/details as the restored leaf of a main tab.
+                            while (navController.currentBackStackEntry.topLevelTabKey() == null &&
+                                navController.previousBackStackEntry != null
+                            ) {
+                                if (!navController.popBackStack()) break
+                            }
                             val route: Any = when (key) {
                                 "today" -> Routes.Today
                                 "trends" -> Routes.Trends
@@ -126,10 +150,11 @@ fun AtharApp() {
         ) { padding: PaddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = if (onboarded) Routes.Today else Routes.Onboarding,
+                startDestination = startDestination,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
             ) {
                 composable<Routes.Onboarding> {
                     OnboardingScreen(
@@ -197,6 +222,21 @@ fun AtharApp() {
 }
 
 @Composable
+private fun StartupLoading() {
+    val theme = AtharTheme
+    Box(
+        modifier = Modifier.fillMaxSize().background(theme.colors.parchment),
+        contentAlignment = Alignment.Center,
+    ) {
+        AtharText(
+            text = stringResource(com.athar.R.string.app_name),
+            style = theme.typography.title,
+            color = theme.colors.muted,
+        )
+    }
+}
+
+@Composable
 private fun SettingsGear(onClick: () -> Unit) {
     val theme = AtharTheme
     Box(
@@ -223,11 +263,12 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-private fun NavBackStackEntry?.selectedTabKey(): String {
+private fun NavBackStackEntry?.topLevelTabKey(): String? {
     val route = this?.destination?.route.orEmpty()
     return when {
+        route.endsWith("Today") -> "today"
         route.endsWith("Trends") -> "trends"
         route.endsWith("Plan") -> "plan"
-        else -> "today"
+        else -> null
     }
 }

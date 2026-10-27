@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Wealth-028 today-lane additions (WM028-P). The today_w_ prefix keeps these
+  names unique against the incumbent feature strings; Arabic is the default.
+-->
+<resources>
+    <!-- Money at stake in the pending tray; rendered only when every pending
+         row shares one currency (Athar never converts). -->
+    <string name="today_w_pending_total" formatted="true">إجمالي بانتظار التأكيد · %1$s</string>
+    <!-- Explicit optionality for the category-cleanup chore: it never touches
+         amounts or statuses, so it must never read as overdue money work. -->
+    <string name="today_w_cleanup_optional_badge">اختياري · لا يؤثر على أي مبلغ</string>
+</resources>

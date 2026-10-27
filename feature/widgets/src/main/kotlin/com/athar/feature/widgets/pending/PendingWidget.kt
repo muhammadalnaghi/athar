@@ -1,6 +1,7 @@
 package com.athar.feature.widgets.pending
 
 import android.content.Context
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -31,6 +32,9 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.athar.core.domain.model.Transaction
+import com.athar.feature.widgets.WidgetLoad
+import com.athar.feature.widgets.WidgetRefreshSignal
+import com.athar.feature.widgets.loadWidgetState
 import com.athar.feature.widgets.R
 import com.athar.feature.widgets.WidgetColors
 import com.athar.feature.widgets.WidgetDataLoader
@@ -49,8 +53,9 @@ class PendingWidget : GlanceAppWidget() {
 
     @Composable
     private fun PendingContent(context: Context) {
-        val snapshot by produceState<WidgetDataLoader.PendingSnapshot?>(initialValue = null) {
-            value = runCatching { WidgetDataLoader.loadPendingHead(context, max = 3) }.getOrNull()
+        val refreshToken by WidgetRefreshSignal.revision.collectAsState()
+        val snapshot by produceState<WidgetLoad<WidgetDataLoader.PendingSnapshot>>(WidgetLoad.Loading, refreshToken) {
+            value = loadWidgetState { WidgetDataLoader.loadPendingHead(context, max = 3) }
         }
         Box(
             modifier = GlanceModifier
@@ -58,10 +63,10 @@ class PendingWidget : GlanceAppWidget() {
                 .background(WidgetColors.Parchment)
                 .padding(12.dp),
         ) {
-            val s = snapshot
+            val s = (snapshot as? WidgetLoad.Ready)?.value
             if (s == null) {
                 Text(
-                    text = "Athar",
+                    text = context.getString(if (snapshot == WidgetLoad.Unavailable) R.string.widget_unavailable else R.string.widget_loading),
                     style = TextStyle(color = ColorProvider(WidgetColors.Muted)),
                     modifier = GlanceModifier.clickable(actionStartActivity(appLaunchComponent(context))),
                 )

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- finish_cash: saved cash-scenario documents, comparison and safe storage messages. -->
+<resources>
+    <string name="cash_saved_section_title">السيناريوهات المحفوظة</string>
+    <string name="cash_saved_section_hint">تُحفظ مدخلات السيناريو فقط، وتُعاد النتيجة بالاحتساب عند كل فتح. لا تُخزَّن أرصدة محسوبة.</string>
+    <string name="cash_saved_opening_source_note">مصدر رصيد البداية: إدخال يدوي مؤرَّخ منك.</string>
+    <string name="cash_saved_unavailable_note">مستندات محفوظة لا تُفتح هنا لأن صيغتها أحدث أو غير مفهومة: %1$d. تبقى محفوظة كما هي.</string>
+    <string name="cash_saved_title_label">اسم السيناريو</string>
+    <string name="cash_saved_save">حفظ المدخلات</string>
+    <string name="cash_saved_update">تحديث المحفوظ</string>
+    <string name="cash_saved_saving">جارٍ الحفظ</string>
+    <string name="cash_saved_loaded_badge">مفتوح من المحفوظات: %1$s</string>
+    <string name="cash_saved_range">%1$s إلى %2$s</string>
+    <string name="cash_saved_load">فتح</string>
+    <string name="cash_saved_delete">حذف</string>
+    <string name="cash_saved_delete_note">سيُحذف هذا المستند المحفوظ نهائيًا.</string>
+    <string name="cash_saved_delete_confirm">تأكيد الحذف</string>
+    <string name="cash_saved_cancel">إلغاء</string>
+    <string name="cash_saved_selected_badge">محدد للمقارنة</string>
+    <string name="cash_saved_compare_toggle">مقارنة</string>
+    <string name="cash_saved_msg_saved">حُفظ السيناريو.</string>
+    <string name="cash_saved_msg_updated">حُدِّث السيناريو المحفوظ.</string>
+    <string name="cash_saved_msg_deleted">حُذف السيناريو.</string>
+    <string name="cash_saved_msg_title">اكتب اسمًا للسيناريو قبل الحفظ.</string>
+    <string name="cash_saved_msg_conflict">تغيّر المستند المحفوظ من جهة أخرى. أعد فتحه ثم حدّث.</string>
+    <string name="cash_saved_msg_storage">تعذر إكمال الحفظ. لم يتغيَّر شيء.</string>
+    <string name="cash_saved_msg_missing">لم يُعثر على المستند المحفوظ.</string>
+    <string name="cash_saved_compare_open">مقارنة المحفوظات</string>
+    <string name="cash_saved_compare_close">إغلاق المقارنة</string>
+    <string name="cash_saved_compare_hint">اختر سيناريوهين أو أكثر بنفس العملة وتاريخ البداية ومصدرها ونهاية الفترة.</string>
+    <string name="cash_saved_compare_selected">المحدد للمقارنة: %1$d</string>
+    <string name="cash_saved_compare_run">قارن</string>
+    <string name="cash_saved_compare_none">لا مقارنة بعد. اختر سيناريوهات متوافقة ثم قارن.</string>
+    <string name="cash_saved_compare_rejected">رُفض احتساب هذا السيناريو بمدخلاته الحالية.</string>
+    <string name="cash_saved_compare_flows">الحركات المدخلة: %1$d</string>
+    <string name="cash_saved_compare_minimum_on">أدنى متاح في %1$s</string>
+    <string name="cash_saved_compare_shortfall_on">نقص متوقع في %1$s</string>
+    <string name="cash_saved_compare_shortfall_plain">نقص متوقع</string>
+    <string name="cash_saved_compare_known_end_on">آخر معروف في %1$s</string>
+</resources>

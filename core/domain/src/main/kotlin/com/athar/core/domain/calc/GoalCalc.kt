@@ -3,13 +3,15 @@ package com.athar.core.domain.calc
 import com.athar.core.common.money.Money
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Currency
 
 object GoalCalc {
 
     fun averageMonthly(total: Money, months: Int): Money {
         require(months > 0) { "months must be positive" }
+        val scale = standardMinorUnitScale(total.currency)
         return Money.of(
-            total.amount.divide(BigDecimal(months), MONEY_SCALE, RoundingMode.HALF_EVEN),
+            total.amount.divide(BigDecimal(months), scale, RoundingMode.HALF_EVEN),
             total.currency,
         )
     }
@@ -70,6 +72,20 @@ object GoalCalc {
         }
 
     private val ONE_HUNDRED = BigDecimal("100")
+
+    /**
+     * Standard minor-unit scale for [currency]: the ISO-4217 default fraction digits
+     * (SAR 2, KWD/BHD 3, JPY 0, ...). For unknown or pseudo-currency codes (no
+     * fraction-digit definition) this falls back to [MONEY_SCALE] — a conservative,
+     * documented precision default only. The literal currency code is always
+     * preserved; no FX conversion or relabeling ever occurs here.
+     */
+    private fun standardMinorUnitScale(currency: String): Int {
+        val fractionDigits = runCatching { Currency.getInstance(currency).defaultFractionDigits }
+            .getOrDefault(MONEY_SCALE)
+        return if (fractionDigits >= 0) fractionDigits else MONEY_SCALE
+    }
+
     private const val MONEY_SCALE = 2
     private const val PERCENT_SCALE = 1
     private const val PROGRESS_SCALE = 4

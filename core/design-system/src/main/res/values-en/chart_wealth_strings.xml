@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 028-P-CHARTS lane-owned chart strings (English). Keys mirror values/chart_wealth_strings.xml. -->
+<resources>
+    <string name="chart_point_a11y">Month %1$s, value %2$s</string>
+    <string name="chart_series_a11y">Monthly chart from %1$s to %2$s, %3$d months</string>
+    <string name="chart_series_target_a11y">Target line %1$s</string>
+    <string name="chart_series_average_a11y">Average line %1$s</string>
+    <string name="chart_series_selected_a11y">Selected: %1$s, value %2$s</string>
+    <string name="chart_series_join">, </string>
+    <string name="chart_bar_row_a11y">Category %1$s, value %2$s</string>
+</resources>

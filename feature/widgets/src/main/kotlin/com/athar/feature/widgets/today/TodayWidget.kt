@@ -1,10 +1,12 @@
 package com.athar.feature.widgets.today
 
 import android.content.Context
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -24,74 +26,66 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.athar.feature.widgets.R
-import com.athar.feature.widgets.WidgetColors
-import com.athar.feature.widgets.WidgetDataLoader
-import com.athar.feature.widgets.appLaunchComponent
-import com.athar.feature.widgets.widgetLocaleContext
+import com.athar.feature.widgets.*
 
 class TodayWidget : GlanceAppWidget() {
-
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent {
-            GlanceTheme {
-                TodayContent(context)
+        provideContent { GlanceTheme { TodayLiveContent(context) } }
+    }
+
+    /** Session-composed path: reloads the encrypted snapshot, keyed on the refresh signal. */
+    @Composable
+    internal fun TodayLiveContent(context: Context) {
+        val refreshToken by WidgetRefreshSignal.revision.collectAsState()
+        val state by produceState<WidgetLoad<WidgetDataLoader.TodaySnapshot>>(WidgetLoad.Loading, refreshToken) {
+            value = loadWidgetState { WidgetDataLoader.loadTodaySnapshot(context) }
+        }
+        TodayWidgetContent(context, state)
+    }
+
+    /**
+     * Shared three-state frame. The one-shot strong publisher (WM059) renders this
+     * same tree with a [WidgetLoad.Ready] value only, so both publication paths use
+     * one visual definition.
+     */
+    @Composable
+    internal fun TodayWidgetContent(context: Context, state: WidgetLoad<WidgetDataLoader.TodaySnapshot>) {
+        Box(GlanceModifier.fillMaxSize().background(WidgetColors.Parchment).padding(16.dp)
+            .clickable(actionStartActivity(appLaunchComponent(context)))) {
+            when (val loaded = state) {
+                WidgetLoad.Loading -> Text(context.getString(R.string.widget_loading))
+                WidgetLoad.Unavailable -> Text(context.getString(R.string.widget_unavailable))
+                is WidgetLoad.Ready -> TodayReadyContent(context, loaded.value)
             }
         }
     }
 
+    /** Ready-state money tree, reused verbatim by the session and one-shot composers. */
     @Composable
-    private fun TodayContent(context: Context) {
-        val snapshot by produceState<WidgetDataLoader.TodaySnapshot?>(initialValue = null) {
-            value = runCatching { WidgetDataLoader.loadTodaySnapshot(context) }.getOrNull()
-        }
-        Box(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(WidgetColors.Parchment)
-                .padding(16.dp)
-                .clickable(actionStartActivity(appLaunchComponent(context))),
-        ) {
-            val s = snapshot
-            if (s == null) {
-                Text(text = "Athar", style = TextStyle(color = ColorProvider(WidgetColors.Muted)))
-            } else {
-                val strings = context.widgetLocaleContext(s.localeTag)
-                Column(modifier = GlanceModifier.fillMaxSize()) {
-                    Text(
-                        text = strings.getString(R.string.widget_today_title),
-                        style = TextStyle(
-                            color = ColorProvider(WidgetColors.Muted),
-                            fontSize = 11.sp,
-                        ),
-                    )
-                    Spacer(modifier = GlanceModifier.height(4.dp))
-                    Text(
-                        text = "${s.todayNet.amount.toPlainString()} ${s.todayNet.currency}",
-                        style = TextStyle(
-                            color = ColorProvider(WidgetColors.Ink),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
-                    )
-                    if (s.pendingCount > 0) {
-                        Spacer(modifier = GlanceModifier.height(6.dp))
-                        Text(
-                            text = strings.getString(R.string.widget_today_pending_count, s.pendingCount),
-                            style = TextStyle(
-                                color = ColorProvider(WidgetColors.Ember),
-                                fontSize = 12.sp,
-                            ),
-                        )
-                    }
-                }
+    internal fun TodayReadyContent(context: Context, s: WidgetDataLoader.TodaySnapshot) {
+        val strings = context.widgetLocaleContext(s.localeTag)
+        Column(GlanceModifier.fillMaxSize()) {
+            Text(strings.getString(R.string.widget_today_title), style = TextStyle(color = ColorProvider(WidgetColors.Muted), fontSize = 11.sp))
+            Spacer(GlanceModifier.height(4.dp))
+            Text(widgetMoneyText(s.todayNet, s.localeTag), style = TextStyle(
+                color = ColorProvider(WidgetColors.Ink), fontSize = 22.sp, fontWeight = FontWeight.Bold))
+            Spacer(GlanceModifier.height(8.dp))
+            val position = s.declaredPosition
+            if (position != null) {
+                Text(strings.getString(R.string.widget_declared_position, position.asOfDate),
+                    style = TextStyle(color = ColorProvider(WidgetColors.Muted), fontSize = 11.sp))
+                Text(widgetMoneyText(position.net, s.localeTag),
+                    style = TextStyle(color = ColorProvider(WidgetColors.Ink), fontSize = 15.sp))
             }
         }
     }
+}
+
+@Composable
+private fun WidgetLine(label: String, value: String) {
+    Text("$label: $value", style = TextStyle(color = ColorProvider(WidgetColors.Muted), fontSize = 13.sp))
 }
 
 class TodayWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TodayWidget()
 }
-
-private val Int.sp get() = androidx.compose.ui.unit.TextUnit(this.toFloat(), androidx.compose.ui.unit.TextUnitType.Sp)

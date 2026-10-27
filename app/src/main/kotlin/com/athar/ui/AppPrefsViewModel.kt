@@ -19,9 +19,10 @@ class AppPrefsViewModel @Inject constructor(
     prefs: UserPreferencesRepository,
 ) : ViewModel() {
 
-    val hijriEnabled: StateFlow<Boolean> = prefs.hijriEnabled()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    // A plausible default is not the user's persisted display configuration.
+    val hijriEnabled: StateFlow<Boolean?> = prefs.hijriEnabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val displayCurrency: StateFlow<String> = prefs.displayCurrency()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, "SAR")
+    val displayCurrency: StateFlow<String?> = prefs.displayCurrency()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 }

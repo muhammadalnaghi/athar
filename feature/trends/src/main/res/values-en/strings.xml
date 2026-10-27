@@ -58,7 +58,7 @@
 
     <!-- Top categories section -->
     <string name="trends_section_top_categories">Top categories</string>
-    <string name="trends_top_categories_hint">Tap a card to see the category over the last 12 months.</string>
+    <string name="trends_top_categories_hint">Tap a category to see the transactions behind it.</string>
 
     <!-- Custom range banner -->
     <string name="trends_custom_range_label">Custom range: %1$s → %2$s</string>
@@ -77,4 +77,67 @@
     <string name="trends_over_last_12_months">Over the last 12 months</string>
     <string name="trends_monthly_target">Monthly target</string>
     <string name="trends_average_12_months">Average (12 months)</string>
+
+    <!-- Filters (WM028-01) -->
+    <string name="trends_filters">Filters</string>
+    <string name="trends_filters_title">Filters</string>
+    <string name="trends_filters_active">Filters (%1$d)</string>
+    <string name="trends_filters_clear">Clear filters</string>
+    <string name="trends_filter_currency">Display currency</string>
+    <string name="trends_filter_currency_default">Default</string>
+    <string name="trends_filter_accounts">Accounts</string>
+    <string name="trends_filter_sources">Source</string>
+    <string name="trends_filter_type">Type</string>
+    <string name="trends_filter_category">Category</string>
+    <string name="trends_filter_merchant">Merchant</string>
+    <string name="trends_filter_merchant_hint">Merchant name</string>
+    <string name="trends_filter_merchant_apply">Apply to merchant</string>
+    <string name="trends_filter_all">All</string>
+    <string name="trends_uncategorized">Uncategorized</string>
+    <string name="trends_other">Other</string>
+    <string name="trends_unknown_account">Unknown account</string>
+    <string name="trends_unknown_category">Unknown category</string>
+    <string name="trends_open_evidence">View transactions</string>
+    <string name="trends_open_details">View details</string>
+    <string name="trends_zero_baseline">Previous period is zero or negative, so the change is shown as an absolute amount.</string>
+    <string name="trends_mixed_currency_note">These results include the selected currency only; other currencies are excluded, not converted.</string>
+    <string name="trends_currency_line">Display currency: %1$s</string>
+    <string name="trends_month_year">%1$s %2$d</string>
+    <string name="trends_period_range">From %1$s to %2$s</string>
+    <string name="trends_comparison_matched_elapsed">Same elapsed days of the previous period</string>
+    <string name="trends_comparison_previous_period">Full previous period</string>
+    <string name="trends_comparison_custom">Custom range: %1$s to %2$s</string>
+    <string name="trends_comparison_section">Comparison range</string>
+    <string name="trends_comparison_auto">Automatic</string>
+    <string name="trends_comparison_apply">Apply comparison range</string>
+    <string name="trends_period_comparison_legend_matched">Colored bars = this period to date. Grey bars = the same elapsed days of the previous period.</string>
+    <string name="trends_evidence_context_period">Period: %1$s</string>
+    <string name="trends_evidence_context_comparison">Comparison: %1$s</string>
+    <string name="trends_evidence_count">Transactions: %1$d</string>
+    <string name="trends_evidence_row_meta">%1$s · %2$s · %3$s</string>
+    <string name="trends_empty_evidence">No transactions match these filters.</string>
+    <string name="trends_empty_evidence_subtle">Adjust or clear the filters to see results.</string>
+    <string name="trends_detail_title">Transaction details</string>
+    <string name="trends_detail_merchant">Merchant</string>
+    <string name="trends_detail_date">Date</string>
+    <string name="trends_label_amount">Amount</string>
+    <string name="trends_type_transfer">Transfer</string>
+    <string name="trends_detail_account">Account</string>
+    <string name="trends_detail_source">Source</string>
+    <string name="trends_detail_category">Category</string>
+    <string name="trends_detail_notes">Notes</string>
+    <string name="trends_action_close">Close</string>
+    <string name="trends_source_manual">Manual</string>
+    <string name="trends_source_sms">SMS</string>
+    <string name="trends_source_notification">Notification</string>
+    <string name="trends_source_share">Share</string>
+    <string name="trends_source_import">Import</string>
+    <string name="trends_source_recurring">Recurring</string>
+
+    <!-- F1B: equal-population comparison + range validation -->
+    <string name="trends_error_future_start">Start date is in the future. Pick a range that has already begun.</string>
+    <string name="trends_comparison_tail_excluded">The delta compares through %1$s; later days of the current period are excluded from the comparison.</string>
+    <string name="trends_future_range_note">This range has not started yet, so there is nothing to show.</string>
+    <string name="trends_evidence_comparison_current">Matched current window: %1$s</string>
+    <string name="trends_evidence_comparison_prior">Previous comparison window: %1$s</string>
 </resources>

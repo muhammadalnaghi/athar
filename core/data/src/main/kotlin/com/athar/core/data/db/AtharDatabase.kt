@@ -28,9 +28,23 @@ import com.athar.core.data.db.entity.TransactionEntity
 import com.athar.core.data.db.entity.TransactionReceiptEntity
 import com.athar.core.data.db.entity.UserTemplateEntity
 import com.athar.core.data.db.entity.WishlistEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerDao
+import com.athar.core.data.ledger.db.CanonicalLedgerEventEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerEventSourceEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerComponentEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerLegEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerSchema
+import com.athar.core.data.ledger.db.CanonicalLedgerSourceObservationEntity
+import com.athar.core.data.ledger.db.CanonicalLedgerRevisionEntity
+import com.athar.core.data.ledger.db.CanonicalEvidenceDao
+import com.athar.core.data.ledger.db.CanonicalEvidenceSchema
+import com.athar.core.data.ledger.db.CanonicalLedgerConflictEntity
+import com.athar.core.data.ledger.db.CanonicalObservationSnapshotEntity
+import com.athar.core.data.planning.SavedFinancialPlanDao
+import com.athar.core.data.planning.SavedFinancialPlanEntity
 
 @Database(
-    version = 8,
+    version = 11,
     exportSchema = true,
     entities = [
         AccountEntity::class,
@@ -45,6 +59,15 @@ import com.athar.core.data.db.entity.WishlistEntity
         UserTemplateEntity::class,
         RecurringRuleEntity::class,
         TransactionReceiptEntity::class,
+        CanonicalLedgerEventEntity::class,
+        CanonicalLedgerSourceObservationEntity::class,
+        CanonicalLedgerEventSourceEntity::class,
+        CanonicalLedgerComponentEntity::class,
+        CanonicalLedgerLegEntity::class,
+        CanonicalLedgerRevisionEntity::class,
+        CanonicalObservationSnapshotEntity::class,
+        CanonicalLedgerConflictEntity::class,
+        SavedFinancialPlanEntity::class,
     ],
 )
 @TypeConverters(Converters::class)
@@ -60,6 +83,13 @@ internal abstract class AtharDatabase : RoomDatabase() {
     abstract fun userTemplateDao(): UserTemplateDao
     abstract fun recurringRuleDao(): RecurringRuleDao
     abstract fun transactionReceiptDao(): TransactionReceiptDao
+
+    /** WM028-13B1 canonical ledger — internal low-level access only, no domain/UI exposure. */
+    abstract fun canonicalLedgerDao(): CanonicalLedgerDao
+    abstract fun canonicalEvidenceDao(): CanonicalEvidenceDao
+
+    /** WM028 fast-store: durable saved planning inputs (goal/debt/cash/portfolio). */
+    abstract fun savedFinancialPlanDao(): SavedFinancialPlanDao
 
     companion object {
         internal const val NAME: String = "athar.db"
@@ -239,6 +269,47 @@ internal abstract class AtharDatabase : RoomDatabase() {
         internal val MIGRATION_7_8: Migration = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE transactions ADD COLUMN categorySource TEXT")
+            }
+        }
+
+        /**
+         * v8 → v9: canonical ledger (WM028-13B1). The DDL lives in
+         * [CanonicalLedgerSchema] to keep this class inside its 300-line
+         * bound; registrations stay listed here beside migrations 1→8,
+         * which are unchanged.
+         */
+        internal val MIGRATION_8_9: Migration = CanonicalLedgerSchema.MIGRATION_8_9
+
+        /** v9 → v10: retain incoming source variants and recoverable replay conflicts. */
+        internal val MIGRATION_9_10: Migration = CanonicalEvidenceSchema.MIGRATION_9_10
+
+        /**
+         * v10 → v11: durable saved planning inputs (WM028 fast-store).
+         * Strictly additive: creates `saved_financial_plan` and its kind index;
+         * no incumbent table, row, key or downgrade protection is touched.
+         */
+        internal val MIGRATION_10_11: Migration = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `saved_financial_plan` (
+                        `id` TEXT NOT NULL,
+                        `kind` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `currency` TEXT NOT NULL,
+                        `payloadVersion` INTEGER NOT NULL,
+                        `payloadJson` TEXT NOT NULL,
+                        `revision` INTEGER NOT NULL,
+                        `createdAtEpochMillis` INTEGER NOT NULL,
+                        `updatedAtEpochMillis` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_saved_financial_plan_kind` " +
+                        "ON `saved_financial_plan` (`kind`)",
+                )
             }
         }
     }

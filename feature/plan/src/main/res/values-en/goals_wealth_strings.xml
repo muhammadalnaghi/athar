@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English overrides for the Goals solver lane (WM028-P-goals). -->
+<resources>
+
+    <string name="plan_goals_scenario_title">Goal planning</string>
+    <string name="plan_goals_scenario_transient">Save and reopen your goal assumptions. No funding is reserved from your accounts.</string>
+
+    <string name="plan_goals_scenario_target_amount">Target amount</string>
+    <string name="plan_goals_scenario_basis_nominal">Future amount (nominal)</string>
+    <string name="plan_goals_scenario_basis_today">In today\'s prices</string>
+    <string name="plan_goals_scenario_inflation">Annual inflation %</string>
+    <string name="plan_goals_scenario_inflation_convention">The amount is inflated monthly at the declared rate until the horizon; it is never netted against growth.</string>
+
+    <string name="plan_goals_scenario_allocation">Current allocation to this goal</string>
+    <string name="plan_goals_scenario_allocation_source">Enter the amount you plan to allocate. No funds are reserved.</string>
+    <string name="plan_goals_scenario_contribution">Monthly contribution</string>
+    <string name="plan_goals_scenario_contribution_source">Enter a monthly amount, or start from your observed average savings.</string>
+    <string name="plan_goals_scenario_horizon">Horizon in months (1 to 1200)</string>
+
+    <string name="plan_goals_scenario_assumptions_cash">Cash only (no return)</string>
+    <string name="plan_goals_scenario_assumptions_apr">Fixed nominal APR</string>
+    <string name="plan_goals_scenario_apr">Nominal APR % per year</string>
+    <string name="plan_goals_scenario_fee">Annual fee %</string>
+    <string name="plan_goals_scenario_fee_convention">The fee is netted from the APR before monthly conversion, not deducted monthly from the balance.</string>
+    <string name="plan_goals_scenario_zero_return_convention">Zero return: all growth comes from your own saving.</string>
+
+    <string name="plan_goals_scenario_timing_label">Monthly deposit timing</string>
+    <string name="plan_goals_scenario_timing_beginning">Start of month (earns that growth)</string>
+    <string name="plan_goals_scenario_timing_end">End of month (after growth)</string>
+
+    <string name="plan_goals_scenario_mode_label">What should be calculated?</string>
+    <string name="plan_goals_scenario_mode_project">Projected amount</string>
+    <string name="plan_goals_scenario_mode_contribution">Required contribution</string>
+    <string name="plan_goals_scenario_mode_months">When it is reached</string>
+    <string name="plan_goals_scenario_mode_rate">Required return</string>
+
+    <string name="plan_goals_scenario_compute">Calculate</string>
+    <string name="plan_goals_scenario_reset">From my actual figures</string>
+    <string name="plan_goals_scenario_empty_hint">Enter your assumptions, then calculate; no number you did not enter is inferred.</string>
+
+    <string name="plan_goals_scenario_result_future">Projected balance at the horizon</string>
+    <string name="plan_goals_scenario_result_contributions">Total you will have saved</string>
+    <string name="plan_goals_scenario_result_growth">Cumulative growth</string>
+    <string name="plan_goals_scenario_result_nominal_target">Nominal target at the horizon</string>
+    <string name="plan_goals_scenario_result_cash_baseline">For comparison: the same scenario with no return</string>
+    <string name="plan_goals_scenario_result_required_contribution">Smallest sufficient monthly contribution</string>
+    <string name="plan_goals_scenario_result_reach_in" formatted="true">Months required: %1$d</string>
+    <string name="plan_goals_scenario_result_reach_month">Expected month</string>
+    <string name="plan_goals_scenario_month_year" formatted="true">%2$d %1$s</string>
+    <string name="plan_goals_scenario_result_required_rate">Smallest sufficient nominal APR</string>
+    <string name="plan_goals_scenario_result_rate_value" formatted="true">%1$s%%</string>
+
+    <string name="plan_goals_scenario_already_funded">Your current allocation covers this goal under your assumptions, with no extra saving.</string>
+    <string name="plan_goals_scenario_not_reachable_horizon">The gap remains after the technical calculation window (1200 months); nothing beyond it is inferred.</string>
+    <string name="plan_goals_scenario_not_reachable_never">Under these assumptions the balance never approaches the target; adjust the contribution or assumptions.</string>
+    <string name="plan_goals_scenario_not_reachable_rate_bounds">The required return is outside the solver bounds (-99.99% to 1000% a year); no out-of-bounds figure is shown.</string>
+    <string name="plan_goals_scenario_invalid_summary">Review the flagged inputs, then calculate again.</string>
+    <string name="plan_goals_scenario_field_invalid">Invalid value</string>
+
+    <!-- Solver input-contract messages, one per GoalInputProblemCode. -->
+    <string name="plan_goals_problem_blank_name">A scenario name is required.</string>
+    <string name="plan_goals_problem_currency_mismatch">Target, allocation and contribution must share one currency.</string>
+    <string name="plan_goals_problem_target_not_positive">The target amount must be greater than zero.</string>
+    <string name="plan_goals_problem_negative_allocation">The current allocation cannot be negative.</string>
+    <string name="plan_goals_problem_negative_contribution">The monthly contribution cannot be negative.</string>
+    <string name="plan_goals_problem_horizon_bounds">The horizon is between 1 and 1200 months (a technical model bound, not a financial judgment).</string>
+    <string name="plan_goals_problem_apr_rate_range">The net monthly rate must stay above -100%; adjust the APR or the fee.</string>
+    <string name="plan_goals_problem_negative_fee">The annual fee cannot be negative.</string>
+    <string name="plan_goals_problem_inflation_range">Monthly inflation must stay above -100%.</string>
+
+    <!-- Currency-scope and loading disclosures (WM028-P-goals UI scope). -->
+    <string name="plan_goals_totals_loading">Loading your actual figures…</string>
+    <string name="plan_goals_totals_currency_scope" formatted="true">The amounts above are in %1$s only; no currency conversion is applied.</string>
+    <string name="plan_goals_totals_excluded" formatted="true">The amounts above are in %1$s only; amounts in %2$s are excluded as-is, without conversion.</string>
+    <string name="plan_goals_scenario_loading_currency">Loading the currency. Calculation is available once it is ready.</string>
+    <string name="plan_goals_scenario_currency_scope" formatted="true">Scenario currency: %1$s. Changing currency clears the draft; amounts are not converted.</string>
+
+</resources>

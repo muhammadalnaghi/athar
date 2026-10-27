@@ -1,0 +1,5 @@
+<resources>
+    <string name="today_declared_position_title">آخر وضع مالي أدخلته</string>
+    <string name="today_declared_position_scope">%1$s، بتاريخ %2$s</string>
+    <string name="today_declared_position_basis">قيم أدخلتها، وليست أرصدة مصرفية محدثة.</string>
+</resources>

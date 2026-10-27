@@ -1,6 +1,13 @@
 package com.athar.core.designsystem.display
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalConfiguration
+import java.util.Locale
+
+/** Resource locale is reactive and survives configuration changes; process defaults do not. */
+@Composable
+fun currentUiLocale(): Locale = LocalConfiguration.current.locales[0]
 
 /**
  * App-wide display flags hoisted at the AtharApp scaffold so any screen can read them

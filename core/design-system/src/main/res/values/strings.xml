@@ -2,6 +2,9 @@
 <resources>
     <string name="chart_legend_average">— — متوسط</string>
     <string name="chart_legend_target">──── الهدف</string>
+    <string name="chart_bar_a11y">%1$s · %2$s</string>
+    <string name="chart_pair_current">الحالي</string>
+    <string name="chart_pair_previous">السابق</string>
     <string name="chart_pair_income">الدخل</string>
     <string name="chart_pair_expense">المصاريف</string>
     <string name="chart_pair_savings">الادخار</string>

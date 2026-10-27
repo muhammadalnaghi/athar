@@ -3,7 +3,11 @@ package com.athar.ingestion.smsparser
 import com.athar.core.common.money.Money
 import com.athar.core.domain.model.RawIngestEvent
 import com.athar.core.domain.model.TxType
+import com.athar.core.domain.model.financial.PostingEvidence
+import com.athar.core.domain.model.financial.PostingState
+import com.athar.core.domain.model.financial.PostingSupport
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 
 /**
  * Pure-Kotlin parser interface. Master Brief §5.5.
@@ -25,6 +29,10 @@ sealed interface ParseResult {
         val occurredAt: Instant?,
         val confidence: Float,
         val templateId: String,
+        /** A successful shape/category score is not proof that money posted. */
+        val posting: PostingEvidence = PostingEvidence(PostingState.POSTED, PostingSupport.HEURISTIC_ONLY),
+        /** Source-stated date only; never the receive-time fallback. */
+        val bankEventDate: LocalDate? = null,
     ) : ParseResult
 
     data class Failed(

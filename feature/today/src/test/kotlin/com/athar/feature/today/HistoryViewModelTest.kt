@@ -78,7 +78,7 @@ class HistoryViewModelTest {
         assertThat(txRepo.upserts.map { it.id }).containsExactly("expense")
         val updated = txRepo.upserts.single()
         assertThat(updated.categoryId).isEqualTo("cat-food")
-        assertThat(updated.status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(updated.status).isEqualTo(TxStatus.PENDING)
         assertThat(updated.updatedAt).isEqualTo(FixedHistoryClock.now())
         assertThat(viewModel.lastBulkCategory.value).isEqualTo(
             HistoryViewModel.BulkCategoryEvent(applied = 1, skipped = 1),
@@ -123,7 +123,7 @@ class HistoryViewModelTest {
         )
         advanceUntilIdle()
 
-        assertThat(txRepo.upserts.single().status).isEqualTo(TxStatus.CONFIRMED)
+        assertThat(txRepo.upserts.single().status).isEqualTo(TxStatus.PENDING)
         assertThat(ruleRepo.learnedRules).isEmpty()
         assertThat(viewModel.lastBackfill.value).isNull()
     }
@@ -694,6 +694,9 @@ private class HistoryFakeTransactionRepository(rows: List<Transaction>) : Transa
 
     override fun observeAll(): Flow<List<Transaction>> = rowsFlow
     override suspend fun get(id: String): Transaction? = rowsById[id]
+    override suspend fun upsertIngest(transaction: Transaction): String =
+        error("Ingestion is outside this UI or import test fixture")
+
     override suspend fun upsert(transaction: Transaction) {
         rowsById[transaction.id] = transaction
         rowsFlow.value = rowsById.values.toList()

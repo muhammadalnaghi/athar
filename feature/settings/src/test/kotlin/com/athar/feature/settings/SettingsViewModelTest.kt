@@ -32,6 +32,7 @@ import com.athar.core.domain.repo.CsvImportResult
 import com.athar.core.domain.repo.CsvImportRowDecision
 import com.athar.core.domain.repo.CsvImportRowEdit
 import com.athar.core.domain.repo.CsvImportTrigger
+import com.athar.core.domain.repo.FinancialRecordingPreferences
 import com.athar.core.domain.repo.InvestmentImportPreview
 import com.athar.core.domain.repo.InvestmentImportPreviewResult
 import com.athar.core.domain.repo.InvestmentImportResult
@@ -65,6 +66,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -91,6 +93,56 @@ class SettingsViewModelTest {
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `recording control defaults to off`() = runTest(mainDispatcher) {
+        val viewModel = settingsViewModel()
+
+        advanceUntilIdle()
+
+        assertThat(viewModel.recordingEnabled.value).isFalse()
+    }
+
+    @Test
+    fun `recording enable writes the rollout flag on`() = runTest(mainDispatcher) {
+        val recording = FakeFinancialRecordingPreferences()
+        val viewModel = settingsViewModel(recording = recording)
+
+        viewModel.setRecordingEnabled(true)
+        advanceUntilIdle()
+
+        assertThat(recording.writes).containsExactly(true)
+        assertThat(recording.current).isTrue()
+        assertThat(viewModel.recordingEnabled.value).isTrue()
+    }
+
+    @Test
+    fun `recording explicit off wins over previous on`() = runTest(mainDispatcher) {
+        val recording = FakeFinancialRecordingPreferences(initial = true)
+        val viewModel = settingsViewModel(recording = recording)
+
+        advanceUntilIdle()
+        assertThat(viewModel.recordingEnabled.value).isTrue()
+
+        viewModel.setRecordingEnabled(false)
+        advanceUntilIdle()
+
+        assertThat(recording.writes).containsExactly(false)
+        assertThat(recording.current).isFalse()
+        assertThat(viewModel.recordingEnabled.value).isFalse()
+    }
+
+    @Test
+    fun `recording off preference survives view model recreation`() = runTest(mainDispatcher) {
+        val recording = FakeFinancialRecordingPreferences(initial = true)
+        settingsViewModel(recording = recording).setRecordingEnabled(false)
+        advanceUntilIdle()
+
+        val relaunched = settingsViewModel(recording = recording)
+        advanceUntilIdle()
+
+        assertThat(relaunched.recordingEnabled.value).isFalse()
     }
 
     @Test
@@ -495,7 +547,42 @@ class SettingsViewModelTest {
         assertThat(catalog.refreshAttempts).isEqualTo(0)
     }
 
+    @Test
+    fun `backup import failure hides diagnostic text and allows retry`() = runTest(mainDispatcher) {
+        var fail = true
+        var imports = 0
+        val repository = object : BackupRepository by FakeBackupRepository {
+            override suspend fun import(input: InputStream, passphrase: CharArray) {
+                imports += 1
+                if (fail) throw IllegalStateException("BAD_DECRYPT synthetic payload diagnostic")
+            }
+        }
+        val viewModel = settingsViewModel(backup = repository)
+        viewModel.importBackup("synthetic-passphrase") { java.io.ByteArrayInputStream(byteArrayOf(1)) }
+        val failure = viewModel.status.first { it is BackupStatus.ImportFailure } as BackupStatus.ImportFailure
+        assertThat(failure.detail).isNull()
+        assertThat(imports).isEqualTo(1)
+        fail = false
+        viewModel.importBackup("synthetic-passphrase") { java.io.ByteArrayInputStream(byteArrayOf(1)) }
+        assertThat(viewModel.status.first { it == BackupStatus.ImportSuccess }).isEqualTo(BackupStatus.ImportSuccess)
+        assertThat(imports).isEqualTo(2)
+    }
+
+    @Test
+    fun `backup export failure hides provider diagnostic text`() = runTest(mainDispatcher) {
+        val repository = object : BackupRepository by FakeBackupRepository {
+            override suspend fun export(output: OutputStream, passphrase: CharArray) {
+                throw java.io.IOException("synthetic private provider path diagnostic")
+            }
+        }
+        val viewModel = settingsViewModel(backup = repository)
+        viewModel.exportBackup("synthetic-passphrase") { java.io.ByteArrayOutputStream() }
+        val failure = viewModel.status.first { it is BackupStatus.ExportFailure } as BackupStatus.ExportFailure
+        assertThat(failure.detail).isNull()
+    }
+
     private fun settingsViewModel(
+        backup: BackupRepository = FakeBackupRepository,
         backfill: SmsBackfillTrigger = FakeSmsBackfillTrigger(),
         csvImporter: CsvImportTrigger = FakeCsvImportTrigger,
         budgetTargetsImporter: BudgetTargetImportTrigger = FakeBudgetTargetImportTrigger,
@@ -505,8 +592,9 @@ class SettingsViewModelTest {
         transactions: TransactionRepository = FakeTransactionRepository(),
         accounts: AccountRepository = FakeAccountRepository(),
         catalog: MerchantCatalogRepository = FakeMerchantCatalogRepository(),
+        recording: FinancialRecordingPreferences = FakeFinancialRecordingPreferences(),
     ) = SettingsViewModel(
-        backup = FakeBackupRepository,
+        backup = backup,
         backfillTrigger = backfill,
         csvImporter = csvImporter,
         budgetTargetsImporter = budgetTargetsImporter,
@@ -522,6 +610,7 @@ class SettingsViewModelTest {
         transactions = transactions,
         accounts = accounts,
         merchantCatalogRepository = catalog,
+        recording = recording,
     )
 }
 
@@ -534,6 +623,9 @@ private class FakeTransactionRepository(
     override fun observePending(): Flow<List<Transaction>> = pending
     override fun observeAll(): Flow<List<Transaction>> = flowOf(emptyList())
     override suspend fun get(id: String): Transaction? = null
+    override suspend fun upsertIngest(transaction: Transaction): String =
+        error("Ingestion is outside this UI or import test fixture")
+
     override suspend fun upsert(transaction: Transaction) = Unit
     override suspend fun delete(id: String) = Unit
     override suspend fun setStatus(id: String, status: TxStatus) = Unit
@@ -581,6 +673,7 @@ private class FakeSmsBackfillTrigger(
 private object FakeBackupRepository : BackupRepository {
     override suspend fun export(output: OutputStream, passphrase: CharArray) = Unit
     override suspend fun import(bytes: ByteArray, passphrase: CharArray) = Unit
+    override suspend fun import(input: InputStream, passphrase: CharArray) = Unit
 }
 
 private object FakeCsvImportTrigger : CsvImportTrigger {
@@ -885,6 +978,24 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun setBillRemindersEnabled(enabled: Boolean) = Unit
     override fun billReminderSentKeys(): Flow<Set<String>> = flowOf(emptySet())
     override suspend fun setBillReminderSentKeys(keys: Set<String>) = Unit
+}
+
+private class FakeFinancialRecordingPreferences(
+    initial: Boolean = false,
+) : FinancialRecordingPreferences {
+    val writes = mutableListOf<Boolean>()
+    private val state = MutableStateFlow(initial)
+
+    /** Latest persisted value, as a test-only read. */
+    val current: Boolean
+        get() = state.value
+
+    override fun enabled(): Flow<Boolean> = state
+
+    override suspend fun setEnabled(enabled: Boolean) {
+        writes += enabled
+        state.value = enabled
+    }
 }
 
 /** Honest in-memory fake of the domain catalog repository for Settings tests. */

@@ -30,20 +30,6 @@ private fun parseAmount(s: String): BigDecimal? =
     runCatching { BigDecimal(s.replace(" ", "").replace(",", "")) }.getOrNull()
 
 /**
- * Capture a multi-currency `Amount:` line — returns the SAR-equivalent (in-parens).
- * Handles both orderings:
- *   - `(SAR 60.96)` — D360-style (SAR before number)
- *   - `(60.96 SAR)` — Al Rajhi / Barq-style (number before SAR)
- * Returns null if the line is single-currency SAR.
- */
-private fun captureSarInParens(text: String): BigDecimal? {
-    val sarFirst = Regex("""\(\s*SAR\s*(${NUM_RE.pattern})\s*\)""", RegexOption.IGNORE_CASE)
-    sarFirst.find(text)?.groupValues?.get(1)?.let(::parseAmount)?.let { return it }
-    val numFirst = Regex("""\(\s*(${NUM_RE.pattern})\s*SAR\s*\)""", RegexOption.IGNORE_CASE)
-    return numFirst.find(text)?.groupValues?.get(1)?.let(::parseAmount)
-}
-
-/**
  * Online Purchase — most common Al Rajhi card transaction. SAR-only and multi-currency
  * both supported. Header line is exactly `Online Purchase`. The merchant follows `At:`,
  * the amount follows `Amount:`, the balance follows `Balance:`.
@@ -62,9 +48,8 @@ class AlRajhiOnlinePurchaseRealTemplate : BankTemplate {
         val n = Normalize.digits(body)
         if (!header.containsMatchIn(n)) return ParseResult.Failed("not Online Purchase", listOf(id))
         val amtTxt = amountLine.find(n)?.groupValues?.get(1) ?: return ParseResult.Failed("no Amount line", listOf(id))
-        val amount = captureSarInParens(amtTxt)
-            ?: NUM_RE.find(amtTxt)?.value?.let(::parseAmount)
-            ?: return ParseResult.Failed("amount unparseable: $amtTxt", listOf(id))
+        val amount = AlRajhiPurchaseAmounts.read(n, amtTxt)
+            ?: return ParseResult.Failed("purchase amount unavailable", listOf(id))
 
         val merchant = atLine.find(n)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
         val balance = balanceLine.find(n)?.groupValues?.get(1)?.let(::parseAmount)
@@ -72,11 +57,11 @@ class AlRajhiOnlinePurchaseRealTemplate : BankTemplate {
 
         return ParseResult.Success(
             type = TxType.EXPENSE,
-            amount = Money.of(amount),
+            amount = amount,
             merchant = merchant,
             counterparty = card?.let { "Card $it" },
             balanceAfter = balance?.let { Money.of(it) },
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.95f else 0.75f,
             templateId = id,
         )
@@ -91,7 +76,7 @@ class AlRajhiPosPurchaseRealTemplate : BankTemplate {
     override val id: String = "al-rajhi-pos-purchase-real"
     override val senderMatcher: SenderMatcher = AL_RAJHI_SENDERS_REAL
 
-    private val header = Regex("""^PoS\s+purchase\s*$""", setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
+    private val header = Regex("""^PoS(?:\s+International)?\s+purchase\s*$""", setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
     private val amountLine = Regex("""^Amount\s*:\s*(.+)$""", setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
     private val atLine = Regex("""^At\s*:\s*([^\n\r]+)$""", setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
     private val balanceLine = Regex("""^Balance\s*:\s*(${NUM_RE.pattern})""", setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
@@ -101,19 +86,18 @@ class AlRajhiPosPurchaseRealTemplate : BankTemplate {
         val n = Normalize.digits(body)
         if (!header.containsMatchIn(n)) return ParseResult.Failed("not PoS purchase", listOf(id))
         val amtTxt = amountLine.find(n)?.groupValues?.get(1) ?: return ParseResult.Failed("no Amount line", listOf(id))
-        val amount = captureSarInParens(amtTxt)
-            ?: NUM_RE.find(amtTxt)?.value?.let(::parseAmount)
-            ?: return ParseResult.Failed("amount unparseable: $amtTxt", listOf(id))
+        val amount = AlRajhiPurchaseAmounts.read(n, amtTxt)
+            ?: return ParseResult.Failed("purchase amount unavailable", listOf(id))
         val merchant = atLine.find(n)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
         val balance = balanceLine.find(n)?.groupValues?.get(1)?.let(::parseAmount)
         val card = cardLine.find(n)?.groupValues?.get(1)
         return ParseResult.Success(
             type = TxType.EXPENSE,
-            amount = Money.of(amount),
+            amount = amount,
             merchant = merchant,
             counterparty = card?.let { "Card $it" },
             balanceAfter = balance?.let { Money.of(it) },
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.95f else 0.75f,
             templateId = id,
         )
@@ -144,7 +128,7 @@ class AlRajhiReverseTemplate : BankTemplate {
             merchant = merchant,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.90f,
             templateId = id,
         )
@@ -176,7 +160,7 @@ class AlRajhiDebitInternalTransferTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.92f,
             templateId = id,
         )
@@ -207,7 +191,7 @@ class AlRajhiDebitLocalTransferTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.92f,
             templateId = id,
         )
@@ -239,7 +223,7 @@ class AlRajhiCreditLocalTransferTemplate : BankTemplate {
             merchant = from,
             counterparty = from,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.92f,
             templateId = id,
         )
@@ -270,7 +254,7 @@ class AlRajhiBillPaymentTemplate : BankTemplate {
             merchant = service,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (service != null) 0.94f else 0.7f,
             templateId = id,
         )
@@ -300,7 +284,7 @@ class AlRajhiDepositRealTemplate : BankTemplate {
             merchant = depositType,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.90f,
             templateId = id,
         )
@@ -321,22 +305,31 @@ class AlRajhiCreditCardPaymentTemplate : BankTemplate {
         setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE),
     )
     private val amountLine = Regex(
-        """(?:^Amount\s*:\s*|^مبلغ\s*:\s*|بـ\s*)(?:SAR\s+|SR\s+)?(${NUM_RE.pattern})(?:\s*SAR|\s*SR|\s*ر\.?\s*س)?""",
+        """(?:^Amount[ \t]*:[ \t]*|^مبلغ[ \t]*:[ \t]*|بـ[ \t]*)(?:([A-Z]{3}|SR|ر\.?[ \t]*س)[ \t]+)?(${NUM_RE.pattern})(?:[ \t]*([A-Z]{3}|SR|ر\.?[ \t]*س))?(?=\s|$|;)""",
         setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE),
     )
 
     override fun tryParse(body: String, receivedAt: Instant): ParseResult {
         val n = Normalize.digits(body)
         if (!header.containsMatchIn(n)) return ParseResult.Failed("not Credit Card:Payment", listOf(id))
-        val amount = amountLine.find(n)?.groupValues?.get(1)?.let(::parseAmount)
+        val fields = amountLine.find(n)?.groupValues
             ?: return ParseResult.Failed("amount not found", listOf(id))
+        val amount = fields[2].let(::parseAmount)
+            ?: return ParseResult.Failed("amount not found", listOf(id))
+        fun currency(token: String) = token.replace(" ", "").uppercase(java.util.Locale.ROOT).let {
+            if (it in setOf("", "SAR", "SR", "ر.س", "رس")) "SAR" else it
+        }
+        if (fields[1].isNotBlank() && fields[3].isNotBlank() && currency(fields[1]) != currency(fields[3])) {
+            return ParseResult.Failed("conflicting payment currencies", listOf(id))
+        }
+        val denomination = currency(fields[1].ifBlank { fields[3] })
         return ParseResult.Success(
             type = TxType.TRANSFER,
-            amount = Money.of(amount),
+            amount = Money.of(amount, denomination),
             merchant = "Credit Card Payment",
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.88f,
             templateId = id,
         )
@@ -365,7 +358,7 @@ class AlRajhiLoanInstalmentTemplate : BankTemplate {
             merchant = "Loan Instalment",
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.93f,
             templateId = id,
         )
@@ -394,7 +387,7 @@ class AlRajhiTransferBetweenOwnTemplate : BankTemplate {
             merchant = "Own account transfer",
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.85f,
             templateId = id,
         )

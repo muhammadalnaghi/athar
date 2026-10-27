@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  WM032 — comparison, evidence drilldown, and safe target editor strings.
+  Arabic is Athar's primary language; English overrides live in values-en/.
+-->
+<resources>
+
+    <!-- Optional two-independent-period comparison -->
+    <string name="plan_compare_toggle_off">مقارنة بفترة أخرى</string>
+    <string name="plan_compare_toggle_on">إيقاف المقارنة</string>
+    <string name="plan_compare_panel_a">الفترة الحالية: %1$s ← %2$s</string>
+    <string name="plan_compare_panel_b">فترة المقارنة: %1$s ← %2$s</string>
+    <string name="plan_compare_edit_b">تعديل نطاق المقارنة</string>
+    <string name="plan_compare_total">الإجمالي</string>
+    <string name="plan_compare_uncategorized_count">أخرى وغير مصنفة (%1$d)</string>
+
+    <!-- Read-only supporting-record sheet -->
+    <string name="plan_evidence_title">السجلات الداعمة</string>
+    <string name="plan_evidence_scope">%1$s ← %2$s · %3$s · مصاريف مؤكدة فقط</string>
+    <string name="plan_evidence_empty">لا توجد سجلات في هذا النطاق</string>
+    <string name="plan_evidence_close">إغلاق</string>
+
+    <!-- Safe target editor -->
+    <string name="plan_target_editor_currency_label">العملة: %1$s</string>
+    <string name="plan_target_error_invalid">أدخل مبلغًا صحيحًا</string>
+    <string name="plan_target_error_fractional">دقة المبلغ أكبر من التي تدعمها هذه العملة</string>
+    <string name="plan_target_error_overflow">المبلغ يتجاوز الحد المدعوم</string>
+
+    <string name="plan_budget_loading">جارٍ قراءة الحركات</string>
+    <string name="plan_budget_actual">المصروف الفعلي</string>
+    <string name="plan_budget_target_total">مجموع الحدود المحددة</string>
+    <string name="plan_budget_currency_scope">الحركات بعملة %1$s فقط، دون تحويل عملات</string>
+    <string name="plan_budget_edit_target">تعديل الحد</string>
+    <string name="plan_budget_target_save_error">تعذر حفظ الحد. بقي الحد السابق دون تغيير.</string>
+    <string name="plan_budget_target_save_precision">هذه الدقة غير متاحة للحدود حاليًا. استخدم منزلتين عشريتين.</string>
+    <string name="plan_budget_saving">جارٍ حفظ الحد</string>
+    <string name="plan_compare_label_a">الفترة أ</string>
+    <string name="plan_compare_label_b">الفترة ب</string>
+    <string name="plan_compare_remainder">أخرى وغير مصنفة</string>
+    <string name="plan_budget_show_other_categories">عرض بقية الفئات (%1$d)</string>
+    <string name="plan_budget_hide_other_categories">إخفاء الفئات الأخرى</string>
+    <string name="plan_budget_transaction">مصروف</string>
+    <string name="plan_budget_limit_none">لا حد محدد</string>
+    <string name="plan_budget_show_records">عرض الحركات</string>
+</resources>

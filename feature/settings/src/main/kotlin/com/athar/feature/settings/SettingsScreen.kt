@@ -1,5 +1,7 @@
 package com.athar.feature.settings
 
+import com.athar.core.designsystem.display.currentUiLocale
+
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -23,6 +25,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.TextButton
 import com.athar.core.domain.repo.BackfillProgress
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -119,6 +122,8 @@ fun SettingsScreen(
     val budgetTargetStatus by viewModel.budgetTargetStatus.collectAsStateWithLifecycle()
     val wishlistImportStatus by viewModel.wishlistImportStatus.collectAsStateWithLifecycle()
     val investmentImportStatus by viewModel.investmentImportStatus.collectAsStateWithLifecycle()
+    val recordingEnabled by viewModel.recordingEnabled.collectAsStateWithLifecycle()
+    val recordingWriteFailed by viewModel.recordingWriteFailed.collectAsStateWithLifecycle()
 
     val exportLauncher = rememberLauncherForActivityResult(CreateDocument("application/octet-stream")) { uri ->
         if (uri != null) pendingExportUri = uri
@@ -224,6 +229,12 @@ fun SettingsScreen(
                 status = recoverStatus,
                 onRecover = viewModel::recoverDismissed,
                 onClearStatus = viewModel::clearRecoverStatus,
+            )
+
+            RecordingToggleCard(
+                enabled = recordingEnabled,
+                failed = recordingWriteFailed,
+                onToggle = viewModel::setRecordingEnabled,
             )
 
             BackupCard(
@@ -536,6 +547,68 @@ private fun HijriToggleCard(
     }
 }
 
+/**
+ * WM033: prospective automatic recording of clearly evidenced completed
+ * purchases. Same toggle pattern as [HijriToggleCard]; the whole card is the
+ * touch target (≥48dp), ember pill marks ON, one accent.
+ */
+@Composable
+private fun RecordingToggleCard(
+    enabled: Boolean,
+    failed: Boolean,
+    onToggle: (Boolean) -> Unit,
+) {
+    val theme = AtharTheme
+    AtharCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = enabled, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = onToggle),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                AtharText(
+                    text = stringResource(R.string.settings_recording_title),
+                    style = theme.typography.headline,
+                )
+                AtharText(
+                    text = if (enabled) {
+                        stringResource(R.string.settings_recording_body_on)
+                    } else {
+                        stringResource(R.string.settings_recording_body_off)
+                    },
+                    style = theme.typography.body,
+                    color = theme.colors.muted,
+                )
+                if (failed) AtharText(
+                    text = stringResource(R.string.settings_recording_write_failed),
+                    style = theme.typography.caption,
+                    color = theme.colors.muted,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(theme.spacing.s))
+                    .background(if (enabled) theme.colors.ember else theme.colors.divider)
+                    .padding(horizontal = theme.spacing.m, vertical = theme.spacing.s),
+            ) {
+                AtharText(
+                    text = if (enabled) {
+                        stringResource(R.string.settings_recording_pill_on)
+                    } else {
+                        stringResource(R.string.settings_recording_pill_off)
+                    },
+                    style = theme.typography.caption,
+                    color = if (enabled) theme.colors.parchment else theme.colors.ink,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun CommunityRulesShareCard(
     status: CommunityShareStatus,
@@ -832,7 +905,7 @@ private fun BulkCategorizeCategoryImpactSummary(impact: List<MerchantBulkImportC
     if (impact.isEmpty()) return
 
     val theme = AtharTheme
-    val isArabic = Locale.getDefault().language.equals("ar", ignoreCase = true)
+    val isArabic = currentUiLocale().language.equals("ar", ignoreCase = true)
     val visible = impact.take(5).map { row ->
         val categoryName = if (isArabic) {
             row.categoryNameAr.ifBlank { row.categoryName }
@@ -2765,9 +2838,9 @@ private fun BackupCard(
                 }
                 is BackupStatus.ExportFailure -> {
                     AtharText(
-                        text = status.detail ?: stringResource(R.string.settings_backup_export_failure),
+                        text = stringResource(R.string.settings_backup_export_failure),
                         style = theme.typography.caption,
-                        color = theme.colors.crimson,
+                        color = theme.colors.dust,
                     )
                     TextButton(onClick = onClearStatus) {
                         AtharText(stringResource(R.string.settings_action_ok), color = theme.colors.muted)
@@ -2775,9 +2848,9 @@ private fun BackupCard(
                 }
                 is BackupStatus.ImportFailure -> {
                     AtharText(
-                        text = status.detail ?: stringResource(R.string.settings_backup_import_failure),
+                        text = stringResource(R.string.settings_backup_import_failure),
                         style = theme.typography.caption,
-                        color = theme.colors.crimson,
+                        color = theme.colors.dust,
                     )
                     TextButton(onClick = onClearStatus) {
                         AtharText(stringResource(R.string.settings_action_ok), color = theme.colors.muted)

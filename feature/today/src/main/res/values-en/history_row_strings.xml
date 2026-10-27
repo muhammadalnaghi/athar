@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_row_type_income">Income</string>
+    <string name="history_row_type_expense">Expense</string>
+    <string name="history_row_type_transfer">Transfer</string>
+</resources>

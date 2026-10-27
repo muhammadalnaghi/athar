@@ -49,14 +49,12 @@
     <!-- Bills -->
     <string name="plan_bills_empty_text">لا فواتير مجدولة.</string>
     <string name="plan_bills_empty_subtle">أضف قواعد متكررة من الإعدادات لرؤية القادم هنا.</string>
-    <string name="plan_bills_summary_title">المستحق الآن و٣٠ يومًا</string>
-    <string name="plan_bills_summary_subtitle" formatted="true">%1$d بنود حتى %2$s</string>
+    <string name="plan_bills_summary_title" formatted="true">المستحق الآن وحتى %1$s</string>
+    <string name="plan_bills_summary_subtitle" formatted="true">المعروض في القائمة: %1$d، حتى %2$s</string>
     <string name="plan_bills_unknown_title">بند معلق</string>
-    <string name="plan_bills_pending_review">يحتاج مراجعة</string>
     <string name="plan_bills_cadence_monthly">شهري</string>
     <string name="plan_bills_cadence_weekly">أسبوعي</string>
     <string name="plan_bills_cadence_yearly">سنوي</string>
-    <string name="plan_bills_overdue">متأخر</string>
     <string name="plan_bills_today">اليوم</string>
     <string name="plan_bills_in_days_short" formatted="true">%1$d ي</string>
     <string name="plan_bills_reminders_title">تذكيرات الفواتير</string>
@@ -97,7 +95,7 @@
     <string name="plan_wishlist_summary_none">لا يوجد</string>
     <string name="plan_wishlist_summary_count" formatted="true">%1$d</string>
     <string name="plan_wishlist_empty_text">لا رغبات بعد.</string>
-    <string name="plan_wishlist_empty_subtle">أضف ما تتمنى شراءه — سنخبرك متى يمكنك ذلك بدون أن تقع في الحفرة.</string>
+    <string name="plan_wishlist_empty_subtle">أضف رغبة لمعرفة أثرها في خطتك.</string>
     <string name="plan_wishlist_saved_label">وفّرت </string>
     <string name="plan_wishlist_remaining_label">المتبقي </string>
     <string name="plan_wishlist_required_monthly">المطلوب شهريًا </string>
@@ -130,6 +128,8 @@
     <string name="plan_goals_monthly_expense">متوسط المصروف الشهري</string>
     <string name="plan_goals_monthly_savings">متوسط الادخار الشهري</string>
     <string name="plan_goals_liquid_balance">الرصيد السائل</string>
+    <string name="plan_goals_liquidity_withheld">الرصيد السائل غير معروض: المجموع مشتق من الحركات فقط ولا يوجد رصيد موثق بتاريخ. سجّل رصيدًا موثقًا لظهوره.</string>
+    <string name="plan_goals_emergency_covered_withheld">التغطية غير محسوبة دون رصيد موثق بتاريخ.</string>
     <string name="plan_goals_emergency_target_amount">مبلغ الهدف</string>
     <string name="plan_goals_edit_savings_title">تعديل هدف الادخار</string>
     <string name="plan_goals_edit_savings_label">النسبة المستهدفة من 0 إلى 100</string>

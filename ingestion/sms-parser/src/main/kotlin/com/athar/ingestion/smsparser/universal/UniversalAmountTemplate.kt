@@ -61,6 +61,36 @@ class UniversalAmountTemplate : BankTemplate {
         setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE),
     )
 
+    private val primaryAmountLabel = Regex(
+        """(?<![\p{L}\p{N}_])(?:amount|المبلغ|مبلغ)\s*[:：][ \t]*""",
+        RegexOption.IGNORE_CASE,
+    )
+    // Reuse the existing currency/grouping grammar without truncating the
+    // fractional token in an explicit field to two digits (e.g. KWD fils).
+    private val labelledAmountWithCurrency = Regex(
+        amountWithCurrency.pattern.replace(
+            Normalize.LOCALIZED_AMOUNT_PATTERN,
+            Normalize.LOCALIZED_AMOUNT_PATTERN.replace("\\d{1,2}", "\\d+"),
+        ),
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** A labelled value must not fall forward to a later identifier or balance. */
+    private fun transactionAmount(body: String): MatchResult? {
+        val labels = primaryAmountLabel.findAll(body).toList()
+        if (labels.isEmpty()) return amountWithCurrency.find(body)
+        if (labels.size != 1) return null
+        val start = labels.single().range.last + 1
+        val match = labelledAmountWithCurrency.find(body, start) ?: return null
+        if (match.range.first != start) return null
+        // Do not repair a partial exponent, malformed separator, or unknown suffix
+        // into a different amount. Whitespace still permits following labelled
+        // fields and literal foreign/settlement countervalues; never add them.
+        val next = body.getOrNull(match.range.last + 1)
+        if (next != null && (next.isLetter() || next.isDigit() || next in ".,٫٬_")) return null
+        return match
+    }
+
     override fun tryParse(body: String, receivedAt: Instant): ParseResult {
         val normalized = Normalize.digits(body)
 
@@ -72,15 +102,20 @@ class UniversalAmountTemplate : BankTemplate {
             return ParseResult.Ignored
         }
 
-        val match = amountWithCurrency.find(normalized)
+        val match = transactionAmount(normalized)
             ?: return ParseResult.Failed("no monetary value detected", listOf(id))
         val rawNum = match.groups["num"]?.value
             ?: return ParseResult.Failed("amount group missing", listOf(id))
-        val parsed = Normalize.amount(rawNum)
-            ?: return ParseResult.Failed("amount unparseable: $rawNum", listOf(id))
-
         val currency = (match.groups["lead"]?.value ?: match.groups["trail"]?.value)?.trim()
         val currencyCode = Normalize.currencyCode(currency)
+        val labelled = primaryAmountLabel.containsMatchIn(normalized)
+        val singleThreeDecimal = labelled && Regex("""\d+\.\d{3}""").matches(rawNum)
+        val parsed = if (singleThreeDecimal) {
+            val precision = runCatching { java.util.Currency.getInstance(currencyCode).defaultFractionDigits }.getOrNull()
+            if (precision != 3) return ParseResult.Failed("ambiguous labelled amount separator", listOf(id))
+            rawNum.toBigDecimalOrNull()
+        } else Normalize.amount(rawNum)
+        parsed ?: return ParseResult.Failed("amount unparseable", listOf(id))
 
         // Heuristic: prefer the most specific verb. Income > Transfer > Expense (default).
         val type = when {

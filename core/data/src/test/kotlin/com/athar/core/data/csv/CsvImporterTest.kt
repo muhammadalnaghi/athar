@@ -738,6 +738,9 @@ class CsvImporterTest {
         override fun observePending(): Flow<List<Transaction>> = flowOf(emptyList())
         override fun observeAll(): Flow<List<Transaction>> = flowOf(initialRows + upserts)
         override suspend fun get(id: String): Transaction? = null
+        override suspend fun upsertIngest(transaction: Transaction): String =
+            error("Ingestion is outside this UI or import test fixture")
+
         override suspend fun upsert(transaction: Transaction) {
             upserts += transaction
         }

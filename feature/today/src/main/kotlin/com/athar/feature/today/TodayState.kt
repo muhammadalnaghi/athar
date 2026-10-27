@@ -29,6 +29,7 @@ data class TodayState(
     val categoryLabels: ImmutableMap<String, CategoryLabel>,
     val goalNudge: TodayGoalNudge?,
     val isLoading: Boolean,
+    val declaredPosition: TodayDeclaredPosition? = null,
 ) {
     /** Percentage of income that became savings this month, or null if no income yet. */
     val savingsRate: Double? =

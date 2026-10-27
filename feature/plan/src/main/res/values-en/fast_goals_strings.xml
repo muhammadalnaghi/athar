@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM028-fast-goals lane-only strings (English). Do not merge into common resource files. -->
+<resources>
+    <string name="plan_goals_saved_title">Saved goals</string>
+    <string name="plan_goals_saved_inputs_only">Inputs are saved only; results are recomputed on load</string>
+    <string name="plan_goals_saved_title_label">Goal name</string>
+    <string name="plan_goals_saved_save">Save as goal</string>
+    <string name="plan_goals_saved_update" formatted="true">Update “%1$s”</string>
+    <string name="plan_goals_saved_editing" formatted="true">Open goal: %1$s</string>
+    <string name="plan_goals_saved_row_loadable" formatted="true">Saved in %1$s</string>
+    <string name="plan_goals_saved_row_other_currency" formatted="true">Saved in %1$s, kept as is without conversion</string>
+    <string name="plan_goals_saved_row_unsupported">Document from an unsupported version here, kept as is</string>
+    <string name="plan_goals_saved_load">Open</string>
+    <string name="plan_goals_saved_delete">Delete</string>
+    <string name="plan_goals_saved_notice_saved">Goal saved.</string>
+    <string name="plan_goals_saved_notice_updated">Goal updated.</string>
+    <string name="plan_goals_saved_notice_loaded">Inputs loaded. Recompute to see the result.</string>
+    <string name="plan_goals_saved_notice_deleted">Document deleted.</string>
+    <string name="plan_goals_saved_notice_needs_title">Write a goal name first</string>
+    <string name="plan_goals_saved_notice_conflict">The document changed elsewhere. Load it again before writing</string>
+    <string name="plan_goals_saved_notice_unsupported">An unsupported document could not load, and stayed saved</string>
+    <string name="plan_goals_saved_notice_currency_mismatch">The document is saved in another currency, and was not loaded to keep currencies unmixed</string>
+    <string name="plan_goals_saved_notice_load_failed">The document could not be found; it may have been deleted</string>
+    <string name="plan_goals_saved_notice_save_failed">Saving failed. Try again</string>
+    <string name="plan_goals_saved_notice_delete_failed">Deleting failed. Try again</string>
+    <string name="plan_goals_saved_notice_dismiss">OK</string>
+</resources>

@@ -229,7 +229,7 @@ class HistoryViewModel @Inject constructor(
                 existing.categoryId != tx.categoryId -> tx.categoryId?.let { CategorySource.USER }
                 else -> existing.categorySource
             }
-            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now, categorySource = provenance)
+            val confirmed = tx.copy(status = existing?.status ?: tx.status, updatedAt = now, categorySource = provenance)
             transactions.upsert(confirmed)
             val categoryId = confirmed.categoryId
             val merchantKey = specificMerchantKey(
@@ -343,7 +343,6 @@ class HistoryViewModel @Inject constructor(
                 val updated = tx.copy(
                     categoryId = category.id,
                     categorySource = CategorySource.USER,
-                    status = TxStatus.CONFIRMED,
                     updatedAt = now,
                 )
                 transactions.upsert(updated)

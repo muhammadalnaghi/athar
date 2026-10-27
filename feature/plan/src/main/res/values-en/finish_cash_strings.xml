@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- finish_cash: saved cash-scenario documents, comparison and safe storage messages. -->
+<resources>
+    <string name="cash_saved_section_title">Saved scenarios</string>
+    <string name="cash_saved_section_hint">Only scenario inputs are saved; the result is recomputed on every open. Computed balances are never stored.</string>
+    <string name="cash_saved_opening_source_note">Opening balance source: a dated manual entry by you.</string>
+    <string name="cash_saved_unavailable_note">Saved documents not openable here because their format is newer or unrecognized: %1$d. They remain stored as they are.</string>
+    <string name="cash_saved_title_label">Scenario name</string>
+    <string name="cash_saved_save">Save inputs</string>
+    <string name="cash_saved_update">Update saved</string>
+    <string name="cash_saved_saving">Saving</string>
+    <string name="cash_saved_loaded_badge">Opened from saved: %1$s</string>
+    <string name="cash_saved_range">%1$s to %2$s</string>
+    <string name="cash_saved_load">Open</string>
+    <string name="cash_saved_delete">Delete</string>
+    <string name="cash_saved_delete_note">This saved document will be deleted permanently.</string>
+    <string name="cash_saved_delete_confirm">Confirm delete</string>
+    <string name="cash_saved_cancel">Cancel</string>
+    <string name="cash_saved_selected_badge">Selected</string>
+    <string name="cash_saved_compare_toggle">Compare</string>
+    <string name="cash_saved_msg_saved">Scenario saved.</string>
+    <string name="cash_saved_msg_updated">Saved scenario updated.</string>
+    <string name="cash_saved_msg_deleted">Scenario deleted.</string>
+    <string name="cash_saved_msg_title">Write a scenario name before saving.</string>
+    <string name="cash_saved_msg_conflict">The saved document changed elsewhere. Reopen it, then update.</string>
+    <string name="cash_saved_msg_storage">Could not complete the save. Nothing changed.</string>
+    <string name="cash_saved_msg_missing">The saved document was not found.</string>
+    <string name="cash_saved_compare_open">Compare saved</string>
+    <string name="cash_saved_compare_close">Close comparison</string>
+    <string name="cash_saved_compare_hint">Pick two or more scenarios sharing currency, opening date and source, and horizon end.</string>
+    <string name="cash_saved_compare_selected">Selected: %1$d</string>
+    <string name="cash_saved_compare_run">Compare</string>
+    <string name="cash_saved_compare_none">No comparison yet. Pick compatible scenarios, then compare.</string>
+    <string name="cash_saved_compare_rejected">This scenario\'s inputs were rejected by the calculation.</string>
+    <string name="cash_saved_compare_flows">Entered movements: %1$d</string>
+    <string name="cash_saved_compare_minimum_on">Lowest available on %1$s</string>
+    <string name="cash_saved_compare_shortfall_on">Expected shortfall on %1$s</string>
+    <string name="cash_saved_compare_shortfall_plain">Expected shortfall</string>
+    <string name="cash_saved_compare_known_end_on">Last known on %1$s</string>
+</resources>

@@ -59,7 +59,7 @@ class D360OnlinePurchaseTemplate : BankTemplate {
             merchant = merchant,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.94f else 0.7f,
             templateId = id,
         )
@@ -89,7 +89,7 @@ class D360InternationalPurchaseTemplate : BankTemplate {
             merchant = combined,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.93f else 0.7f,
             templateId = id,
         )
@@ -116,7 +116,7 @@ class D360LocalPurchaseTemplate : BankTemplate {
             merchant = merchant,
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (merchant != null) 0.94f else 0.7f,
             templateId = id,
         )
@@ -141,7 +141,7 @@ class D360AccountFundingTemplate : BankTemplate {
             merchant = "Account funding",
             counterparty = null,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = 0.85f,
             templateId = id,
         )
@@ -168,7 +168,7 @@ class D360IncomingTransferTemplate : BankTemplate {
             merchant = from,
             counterparty = from,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (from != null) 0.94f else 0.75f,
             templateId = id,
         )
@@ -195,7 +195,7 @@ class D360InternationalTransferTemplate : BankTemplate {
             merchant = null,
             counterparty = to,
             balanceAfter = null,
-            occurredAt = parseSmsDate(body) ?: receivedAt,
+            occurredAt = parseSmsDate(body, receivedAt) ?: receivedAt,
             confidence = if (to != null) 0.92f else 0.75f,
             templateId = id,
         )

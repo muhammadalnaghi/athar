@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_investments_records_evidence">Contributions: %1$d · currencies: %2$s</string>
+    <string name="plan_investments_corpus_in_currency">%1$s contributions</string>
+    <string name="plan_investments_declared_return">Recorded total return</string>
+    <string name="plan_investments_edit_return_percent">Edit return percentage</string>
+    <string name="plan_investments_rounding_remainder">Unallocated rounding remainder</string>
+    <string name="plan_investments_allocation_unavailable">Return allocation is unavailable for these contributions. Currencies are shown separately without conversion.</string>
+    <string name="plan_investments_record_limits">What do these records establish?</string>
+    <string name="plan_investments_unavailable_body">These are contribution records and a declared return, not a market valuation. Annualized performance and allocation need dated records and prices; fees are not recorded.</string>
+    <string name="plan_investments_contribution_amount">Contribution</string>
+    <string name="plan_investments_currency_composition">%2$s%% of %1$s contributions</string>
+    <string name="plan_investments_contribution_plus_return">Contribution plus allocated return</string>
+    <string name="plan_investments_remove_contribution_title">Remove contribution?</string>
+    <string name="plan_investments_remove_contribution_body">This contribution will be removed from this pool.</string>
+    <string name="plan_investments_entry_currency">Amount currency: %1$s</string>
+    <string name="plan_investments_declared_percent_hint">A percentage of recorded contributions in one currency, not an annualized performance rate.</string>
+    <string name="plan_investments_invalid_input">Complete the fields and enter a valid number.</string>
+    <string name="plan_investments_unsupported_amount">Use a smaller amount with at most two decimal places.</string>
+    <string name="plan_investments_storage_error">Could not save. Try again.</string>
+</resources>

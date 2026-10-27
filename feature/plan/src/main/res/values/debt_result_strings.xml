@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default (Arabic) strings for the debt scenario RESULT renderer (WM028-P).
+  English overrides live in values-en/debt_result_strings.xml. Every figure is
+  rendered from the calculator outcome; copy never invents dates, costs, or advice.
+-->
+<resources>
+
+    <!-- Compared -->
+    <string name="debt_result_compared_title">مقارنة الاستراتيجيتين</string>
+    <string name="debt_result_strategy_avalanche">الأعلى فائدة أولًا</string>
+    <string name="debt_result_strategy_snowball">الأقل رصيدًا أولًا</string>
+    <string name="debt_result_cheaper_total">الأقل كلفة إجمالية</string>
+    <string name="debt_result_total_interest">إجمالي الفوائد</string>
+    <string name="debt_result_total_fees">إجمالي الرسوم</string>
+    <string name="debt_result_total_paid">إجمالي المدفوع</string>
+    <string name="debt_result_payoff_date">تاريخ آخر دفعة</string>
+    <string name="debt_result_payoff_date_value" formatted="true">%1$d %2$s %3$d</string>
+    <string name="debt_result_open_schedule">فتح الجدول</string>
+
+    <!-- Horizon exhausted -->
+    <string name="debt_result_horizon_title">السداد غير مكتمل خلال المدة</string>
+    <string name="debt_result_horizon_body" formatted="true">دورات شهرية محسوبة: %1$d. ما زال رصيد قائم.</string>
+    <string name="debt_result_horizon_partial">الأرقام خلال المدة فقط، وليست الكلفة النهائية.</string>
+
+    <!-- Budget below minimums -->
+    <string name="debt_result_below_minimums_title">الميزانية أقل من أدنى الدفعات</string>
+    <string name="debt_result_below_minimums_body">الميزانية الشهرية لا تغطي أدنى الدفعات المطلوبة لديونك.</string>
+    <string name="debt_result_budget">الميزانية الشهرية</string>
+    <string name="debt_result_required_minimums">أدنى الدفعات المطلوبة</string>
+    <string name="debt_result_minimums_by_debt">أدنى دفعة لكل دين</string>
+
+    <!-- Unsupported terms -->
+    <string name="debt_result_unsupported_title">شروط غير مدعومة</string>
+    <string name="debt_result_unsupported_body">لا يمكن تقدير موعد السداد بهذه الشروط.</string>
+    <string name="debt_result_reason_missing_terms">شروط ناقصة</string>
+    <string name="debt_result_reason_timing">بداية الدورة الشهرية غير مؤكدة</string>
+    <string name="debt_result_reason_accrual">احتساب يومي أو معدل غير اسمي</string>
+    <string name="debt_result_reason_flat_profit">أرباح ثابتة محسوبة مسبقاً</string>
+    <string name="debt_result_reason_variable_fees">رسوم متغيرة أو غير معلومة</string>
+    <string name="debt_result_reason_prepayment">قيود على السداد المبكر</string>
+
+    <!-- Invalid input -->
+    <string name="debt_result_invalid_title">مدخلات غير صالحة</string>
+    <string name="debt_result_invalid_body">راجع المدخلات ثم أعد الاحتساب.</string>
+
+    <!-- Saved exact-terms workflow (finish lane) -->
+    <string name="debt_saved_header">الخطط المحفوظة</string>
+    <string name="debt_saved_title_label">اسم الخطة</string>
+    <string name="debt_saved_save_new">حفظ كخطة جديدة</string>
+    <string name="debt_saved_update">تحديث المحمّلة</string>
+    <string name="debt_saved_working">جارٍ الحفظ…</string>
+    <string name="debt_saved_load">تحميل</string>
+    <string name="debt_saved_rename">إعادة تسمية</string>
+    <string name="debt_saved_delete">حذف</string>
+    <string name="debt_saved_confirm">تأكيد</string>
+    <string name="debt_saved_cancel">إلغاء</string>
+    <string name="debt_saved_dismiss">إخفاء</string>
+    <string name="debt_saved_empty">لا خطط محفوظة بعد.</string>
+    <string name="debt_saved_loaded_badge">محمّلة</string>
+    <string name="debt_saved_loaded" formatted="true">محمّلة: %1$s</string>
+    <string name="debt_saved_meta" formatted="true">%1$s · محفوظة %2$s</string>
+    <string name="debt_saved_unavailable" formatted="true">%1$s · غير مدعومة (بقيت محفوظة)</string>
+    <string name="debt_saved_rename_title">إعادة تسمية الخطة</string>
+    <string name="debt_saved_delete_title">حذف الخطة</string>
+    <string name="debt_saved_delete_body" formatted="true">حذف «%1$s» نهائيًا؟</string>
+    <string name="debt_saved_msg_saved">حُفظت كخطة جديدة.</string>
+    <string name="debt_saved_msg_updated">حُدّثت الخطة المحمّلة.</string>
+    <string name="debt_saved_msg_renamed">حُدّث الاسم.</string>
+    <string name="debt_saved_msg_deleted">حُذفت الخطة.</string>
+    <string name="debt_saved_msg_conflict">تغيّرت الخطة المحفوظة من مكان آخر؛ فُصل الارتباط ولم يُكتب فوق تعديل أحدث.</string>
+    <string name="debt_saved_msg_failed">تعذّر الحفظ؛ راجع المدخلات.</string>
+    <string name="debt_saved_msg_title">اكتب اسمًا للخطة.</string>
+    <string name="debt_saved_msg_unavailable">الوثيقة المحفوظة غير مدعومة أو تالفة؛ بقيت محفوظة دون تحميل.</string>
+    <string name="debt_saved_terms_note">تُحفظ المدخلات كما تُكتب حرفيًا؛ لا يُخزَّن أي ناتج محسوب كرصيد مالي.</string>
+    <string name="debt_schedule_terms_note">جدول مبني على الشروط المدخلة نفسها؛ ليس سجل أرصدة.</string>
+
+</resources>

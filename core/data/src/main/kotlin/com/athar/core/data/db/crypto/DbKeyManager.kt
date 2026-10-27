@@ -3,6 +3,7 @@ package com.athar.core.data.db.crypto
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import com.athar.core.data.db.AtharDatabase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.security.KeyStore
@@ -26,6 +27,10 @@ import javax.inject.Singleton
  *
  *      [iv 12B] [ciphertext 32B] [tag 16B inside ciphertext per GCM]
  *
+ * Creation only happens on a genuinely empty installation. If database artifacts
+ * exist while `db_key.bin` is missing, [RetainedDataPreflight] fails closed before
+ * any key material is generated or written (Master Brief §5.3 / WM028-13B0).
+ *
  * Master Brief §5.3 / ADR-003.
  */
 @Singleton
@@ -38,6 +43,15 @@ class DbKeyManager @Inject constructor(
         if (file.exists()) {
             return unwrap(file.readBytes())
         }
+        // WM028-13B0: a missing wrapped key next to retained database artifacts
+        // means the original key material is gone. Minting a replacement would
+        // make every retained file permanently unreadable, so fail closed BEFORE
+        // generating, wrapping or writing anything; recovery is an explicit later
+        // operation. The existing-key path above keeps failing unchanged (invalid
+        // key or lost Keystore key never regenerates or resets anything).
+        RetainedDataPreflight.requireNoRetainedDatabaseArtifacts(
+            databaseFile = context.getDatabasePath(AtharDatabase.NAME),
+        )
         ensureMasterKey()
         val rawDbKey = ByteArray(DB_KEY_BYTES).also { SecureRandom().nextBytes(it) }
         val wrapped = wrap(rawDbKey)

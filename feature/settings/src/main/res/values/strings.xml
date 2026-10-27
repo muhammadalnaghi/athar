@@ -235,6 +235,12 @@
     <string name="settings_hijri_pill_on">مفعّل</string>
     <string name="settings_hijri_pill_off">معطّل</string>
 
+    <string name="settings_recording_title">التسجيل التلقائي للمشتريات</string>
+    <string name="settings_recording_body_on">للمشتريات الواضحة الجديدة فقط، دون تغيير السجل السابق.</string>
+    <string name="settings_recording_body_off">متوقف للرسائل الجديدة. لا يغيّر السجل السابق.</string>
+    <string name="settings_recording_pill_on">مفعّل</string>
+    <string name="settings_recording_pill_off">معطّل</string>
+
     <!-- Own accounts card -->
     <string name="settings_own_accounts_title">حساباتك الخاصة</string>
     <string name="settings_own_accounts_body">اكتب آخر ٤ أرقام لكل حساب تملكه (مفصولة بفواصل، مثلاً: 0930, 4268). أي تحويل إلى أحد هذه الأرقام يُعتبر «تحويل داخلي · ادخار محتمل» بدلاً من مصروف.</string>
@@ -349,6 +355,7 @@
     <string name="settings_recurring_type_income">دخل</string>
     <string name="settings_recurring_cadence_monthly">شهري</string>
     <string name="settings_recurring_cadence_weekly">أسبوعي</string>
+    <string name="settings_recurring_cadence_quarterly">ربع سنوي</string>
     <string name="settings_recurring_cadence_yearly">سنوي</string>
     <string name="settings_recurring_save">حفظ القاعدة</string>
     <string name="settings_recurring_create_rule">إنشاء قاعدة</string>

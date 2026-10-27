@@ -216,10 +216,13 @@ class AddTransactionViewModel @Inject constructor(
                 amount = Money.of(BigDecimal(s.amount), currency),
                 date = s.date,
                 occurredAt = now,
+                // Blank merchant stays empty — never an invented payee or bank alias.
+                // Unassigned category keeps honest unassigned provenance (null source,
+                // per Transaction.categorySource KDoc); USER only when user assigned.
                 merchant = s.merchant.trim(),
                 merchantNormalized = s.merchant.lowercase().trim(),
                 categoryId = s.selectedCategoryId,
-                categorySource = CategorySource.USER,
+                categorySource = s.selectedCategoryId?.let { CategorySource.USER },
                 notes = s.notes.takeIf { it.isNotBlank() },
                 source = IngestSource.MANUAL,
                 sourceRefId = null,
@@ -265,8 +268,9 @@ class AddTransactionViewModel @Inject constructor(
         if (s.amount.isBlank()) return ValidationError.AMOUNT_REQUIRED
         val amt = runCatching { BigDecimal(s.amount) }.getOrNull() ?: return ValidationError.AMOUNT_INVALID
         if (amt.signum() <= 0) return ValidationError.AMOUNT_INVALID
-        if (s.merchant.isBlank()) return ValidationError.MERCHANT_REQUIRED
-        if (s.selectedCategoryId == null) return ValidationError.CATEGORY_REQUIRED
+        // Per ADR-010 / Master Brief §2.2 amendment (2026-10-20): an explicit manual
+        // financial declaration is not gated on category assignment or merchant name.
+        // Amount > 0 is the only financial Save gate.
         return null
     }
 

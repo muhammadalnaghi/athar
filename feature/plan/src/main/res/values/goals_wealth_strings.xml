@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic (default) strings for the Goals solver lane (WM028-P-goals), kept in a
+  dedicated file so this lane's additions never collide with the shared Plan file.
+  English overrides live in values-en/goals_wealth_strings.xml.
+
+  Copy rules: the scenario is labeled a temporary what-if everywhere; unreachable or
+  unsupported facts render as explicit states, never as fabricated dates, rates or zeros.
+-->
+<resources>
+
+    <string name="plan_goals_scenario_title">تخطيط هدف</string>
+    <string name="plan_goals_scenario_transient">احفظ افتراضات الهدف وأعد فتحها. لا يُحجز تمويل من حساباتك.</string>
+
+    <string name="plan_goals_scenario_target_amount">المبلغ المستهدف</string>
+    <string name="plan_goals_scenario_basis_nominal">مبلغ مستقبلي (اسمي)</string>
+    <string name="plan_goals_scenario_basis_today">بأسعار اليوم</string>
+    <string name="plan_goals_scenario_inflation">التضخم السنوي %</string>
+    <string name="plan_goals_scenario_inflation_convention">يُضخم المبلغ شهريًا بالمعدل المعلن حتى الأفق ولا يُخصم من العائد.</string>
+
+    <string name="plan_goals_scenario_allocation">التخصيص الحالي للهدف</string>
+    <string name="plan_goals_scenario_allocation_source">مبلغ تخطط لتخصيصه للهدف. لا يُحجز من رصيدك.</string>
+    <string name="plan_goals_scenario_contribution">الادخار الشهري</string>
+    <string name="plan_goals_scenario_contribution_source">أدخل مبلغًا شهريًا، أو ابدأ بمتوسط ادخارك من بياناتك.</string>
+    <string name="plan_goals_scenario_horizon">الأفق بالأشهر (من 1 إلى 1200)</string>
+
+    <string name="plan_goals_scenario_assumptions_cash">بدون عائد (نقدًا)</string>
+    <string name="plan_goals_scenario_assumptions_apr">عائد اسمي ثابت</string>
+    <string name="plan_goals_scenario_apr">العائد السنوي الاسمي %</string>
+    <string name="plan_goals_scenario_fee">الرسوم السنوية %</string>
+    <string name="plan_goals_scenario_fee_convention">الرسوم تُخصم من العائد قبل التحويل الشهري وليست خصمًا شهريًا من الرصيد.</string>
+    <string name="plan_goals_scenario_zero_return_convention">عائد صفري: كل نمو يأتي من ادخارك.</string>
+
+    <string name="plan_goals_scenario_timing_label">توقيت الإيداع الشهري</string>
+    <string name="plan_goals_scenario_timing_beginning">بداية الشهر (قبل النمو)</string>
+    <string name="plan_goals_scenario_timing_end">نهاية الشهر (بعد النمو)</string>
+
+    <string name="plan_goals_scenario_mode_label">ماذا تريد أن تحسب؟</string>
+    <string name="plan_goals_scenario_mode_project">المبلغ المتوقع</string>
+    <string name="plan_goals_scenario_mode_contribution">الادخار المطلوب</string>
+    <string name="plan_goals_scenario_mode_months">متى يتحقق</string>
+    <string name="plan_goals_scenario_mode_rate">العائد المطلوب</string>
+
+    <string name="plan_goals_scenario_compute">احسب</string>
+    <string name="plan_goals_scenario_reset">من بياناتي الفعلية</string>
+    <string name="plan_goals_scenario_empty_hint">أدخل مفترضاتك ثم احسب؛ لا نستنتج أي رقم لم تُدخله.</string>
+
+    <string name="plan_goals_scenario_result_future">الرصيد المتوقع عند الأفق</string>
+    <string name="plan_goals_scenario_result_contributions">إجمالي ما ستدخّره</string>
+    <string name="plan_goals_scenario_result_growth">النمو التراكمي</string>
+    <string name="plan_goals_scenario_result_nominal_target">الهدف اسميًا عند الأفق</string>
+    <string name="plan_goals_scenario_result_cash_baseline">للمقارنة: نفس السيناريو بدون عائد</string>
+    <string name="plan_goals_scenario_result_required_contribution">أصغر ادخار شهري يكفي</string>
+    <string name="plan_goals_scenario_result_reach_in" formatted="true">المدة بالأشهر: %1$d</string>
+    <string name="plan_goals_scenario_result_reach_month">الشهر المتوقع</string>
+    <string name="plan_goals_scenario_month_year" formatted="true">%1$s %2$d</string>
+    <string name="plan_goals_scenario_result_required_rate">أصغر عائد سنوي اسمي يكفي</string>
+    <string name="plan_goals_scenario_result_rate_value" formatted="true">%1$s%%</string>
+
+    <string name="plan_goals_scenario_already_funded">تخصيصك الحالي يغطي الهدف ضمن افتراضاتك بدون ادخار إضافي.</string>
+    <string name="plan_goals_scenario_not_reachable_horizon">بقيت الفجوة بعد نافذة الحساب التقنية (1200 شهر)؛ لا نستنتج ما بعدها.</string>
+    <string name="plan_goals_scenario_not_reachable_never">بهذه الافتراضات لا يقترب الرصيد من الهدف أبدًا؛ عدّل الادخار أو المفترضات.</string>
+    <string name="plan_goals_scenario_not_reachable_rate_bounds">العائد اللازم خارج حدود الحل (من -99.99% إلى 1000% سنويًا)؛ لا نعرض رقمًا خارج الحدود.</string>
+    <string name="plan_goals_scenario_invalid_summary">راجع المدخلات المعلّمة ثم أعد الحساب.</string>
+    <string name="plan_goals_scenario_field_invalid">قيمة غير صالحة</string>
+
+    <!-- Solver input-contract messages, one per GoalInputProblemCode. -->
+    <string name="plan_goals_problem_blank_name">اسم السيناريو مطلوب.</string>
+    <string name="plan_goals_problem_currency_mismatch">يجب أن يتشارك المبلغ والتخصيص والادخار عملة واحدة.</string>
+    <string name="plan_goals_problem_target_not_positive">المبلغ المستهدف يجب أن يكون أكبر من صفر.</string>
+    <string name="plan_goals_problem_negative_allocation">التخصيص الحالي لا يكون سالبًا.</string>
+    <string name="plan_goals_problem_negative_contribution">الادخار الشهري لا يكون سالبًا.</string>
+    <string name="plan_goals_problem_horizon_bounds">الأفق بين شهر واحد و1200 شهر (حد تقني للنموذج وليس حكمًا ماليًا).</string>
+    <string name="plan_goals_problem_apr_rate_range">المعدل الشهري الصافي يجب أن يبقى أعلى من -100%؛ عدّل العائد أو الرسوم.</string>
+    <string name="plan_goals_problem_negative_fee">الرسوم السنوية لا تكون سالبة.</string>
+    <string name="plan_goals_problem_inflation_range">التضخم الشهري يجب أن يبقى أعلى من -100%.</string>
+
+    <!-- نطاق العملة وحالة التحميل (WM028-P-goals): مجاميع البطاقات ورقم التجربة حرفية بعملة
+         العرض المرتبطة فقط؛ المبالغ بغير هذه العملة تُستبعد كما هي ولا يُحوَّل بين العملات. -->
+    <string name="plan_goals_totals_loading">جارٍ تحميل أرقامك الفعلية…</string>
+    <string name="plan_goals_totals_currency_scope" formatted="true">المبالغ أعلاه بعملة %1$s فقط؛ لا يُجرى أي تحويل بين العملات.</string>
+    <string name="plan_goals_totals_excluded" formatted="true">المبالغ أعلاه بعملة %1$s فقط؛ المبالغ بعملة %2$s مستبعدة كما هي بدون تحويل.</string>
+    <string name="plan_goals_scenario_loading_currency">جارٍ تحميل العملة. الحساب متاح بعد اكتمالها.</string>
+    <string name="plan_goals_scenario_currency_scope" formatted="true">عملة الحساب: %1$s. تغيير العملة يمسح افتراضات التجربة دون تحويل مبالغها.</string>
+
+</resources>

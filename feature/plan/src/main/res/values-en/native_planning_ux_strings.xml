@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_class_equity">Equity</string>
+    <string name="plan_portfolio_class_sukuk">Sukuk</string>
+    <string name="plan_portfolio_class_cash">Cash</string>
+    <string name="plan_portfolio_class_other">Other</string>
+</resources>

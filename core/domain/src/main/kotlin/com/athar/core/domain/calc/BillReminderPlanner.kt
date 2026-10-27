@@ -35,7 +35,15 @@ object BillReminderPlanner {
             .filter { it.isActive && it.type == TxType.EXPENSE }
             .flatMap { rule ->
                 RecurringSchedule
-                    .project(rule, today = today, horizonDays = UPCOMING_DAYS, maxOccurrences = 4)
+                    .projectBounded(
+                        rule,
+                        today = today,
+                        horizonDays = UPCOMING_DAYS,
+                        historyLookbackDays = 0,
+                        maxFutureOccurrences = MAX_FUTURE_OCCURRENCES,
+                        maxMissedOccurrences = 1,
+                    )
+                    .occurrences
                     .asSequence()
                     .filterNot { it.isOverdue }
                     .mapNotNull { occurrence ->
@@ -77,4 +85,12 @@ object BillReminderPlanner {
     }
 
     private const val UPCOMING_DAYS = 2
+
+    /**
+     * History is deliberately not projected here (lookback 0): missed obligations are
+     * disclosed from real pending RECURRING transactions only, never invented from
+     * schedule arithmetic, and a decades-stale anchor can no longer spend the whole
+     * occurrence budget on the past and suppress today/upcoming reminders.
+     */
+    private const val MAX_FUTURE_OCCURRENCES = 4
 }

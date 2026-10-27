@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal interface ActivityLogDao {
+    @Query("SELECT COUNT(*) FROM activity_log")
+    suspend fun count(): Long
+
     @Query("SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT :limit")
     fun observeRecent(limit: Int = 100): Flow<List<ActivityLogEntity>>
 

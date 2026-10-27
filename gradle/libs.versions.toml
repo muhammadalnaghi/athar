@@ -51,6 +51,12 @@ timber = "5.0.1"
 tink-android = "1.21.0"
 argon2-kt = "1.5.0"
 
+# Math — WM028 portfolio performance (XIRR fractional exponents).
+# ch.obermuhlner:big-math 2.3.2 — MIT. Parent-verified against the official
+# repo.maven.apache.org POM + maven-metadata (release 2.3.2, lastUpdated 2022-11-13);
+# see docs/dependencies/big-math-2.3.2-NOTICE.md.
+bigMath = "2.3.2"
+
 # Widgets — Glance for home-screen widgets (beta.21)
 glance = "1.1.1"
 
@@ -83,6 +89,7 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version = "1.3.1" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
@@ -144,6 +151,9 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 # Crypto
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink-android" }
 argon2-kt = { group = "com.lambdapioneer.argon2kt", name = "argon2kt", version.ref = "argon2-kt" }
+
+# Math — WM028 portfolio performance
+big-math = { group = "ch.obermuhlner", name = "big-math", version.ref = "bigMath" }
 
 # Testing
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit5" }

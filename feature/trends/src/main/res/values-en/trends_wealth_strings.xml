@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English strings added by the 028 trends lane (WM028-01 / F1T). Mirrors
+  values/trends_wealth_strings.xml; user-provided account/category names are never
+  machine-translated.
+-->
+<resources>
+    <!-- Operating semantics disclosure, shown in the evidence context. -->
+    <string name="trends_transfers_excluded">Figures count confirmed operating activity only; transfers between accounts are excluded from income and expenses.</string>
+</resources>

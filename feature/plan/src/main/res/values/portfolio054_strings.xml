@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_opening_date_label">تاريخ رأس المال (اختياري)</string>
+    <string name="plan_portfolio_opening_date_hint">لحساب العائد من تاريخ المبلغ، بصيغة YYYY-MM-DD.</string>
+    <string name="plan_portfolio_opening_date_invalid">أدخل تاريخا صحيحا بصيغة YYYY-MM-DD، أو اتركه فارغا.</string>
+    <string name="plan_portfolio_opening_date_saved">تاريخ رأس المال: %1$s</string>
+    <string name="plan_portfolio_opening_date_order">يجب أن يسبق تاريخ رأس المال أول عملية أو يوافقها.</string>
+</resources>

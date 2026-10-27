@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English overrides for the wealth-028 today-lane additions (WM028-P).
+-->
+<resources>
+    <string name="today_w_pending_total" formatted="true">Awaiting confirmation · %1$s</string>
+    <string name="today_w_cleanup_optional_badge">Optional · never affects amounts</string>
+</resources>

@@ -79,8 +79,6 @@ data class PendingReceiptUi(
 enum class ValidationError {
     AMOUNT_REQUIRED,
     AMOUNT_INVALID,
-    MERCHANT_REQUIRED,
-    CATEGORY_REQUIRED,
 }
 
 enum class QuickEntryError {

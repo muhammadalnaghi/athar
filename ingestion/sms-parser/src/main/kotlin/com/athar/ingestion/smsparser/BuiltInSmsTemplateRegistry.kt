@@ -95,6 +95,7 @@ object BuiltInSmsTemplateRegistry {
 
         // STC Pay wallet.
         StcPayIgnoreTemplate(),
+        com.athar.ingestion.smsparser.stcpay.StcPayOnlinePurchaseTemplate(),
         StcPayOutgoingTemplate(),
         StcPayIncomingTemplate(),
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic strings added by the WM028-fast trends lane. Kept in this uniquely named
+  file so lane deliveries never collide with sibling strings.xml edits. Arabic is
+  primary; English overrides live in values-en/fast_trends_strings.xml.
+-->
+<resources>
+    <!-- Intra-sheet drill back: returns to the previous evidence view. -->
+    <string name="trends_evidence_back">رجوع</string>
+
+    <!-- Target-vs-actual disclosure: the gap is explicitly the 12-month average vs the monthly target. -->
+    <string name="trends_variance_average_vs_target">المتوسط (١٢ شهرًا) مقابل الهدف %1$s</string>
+</resources>

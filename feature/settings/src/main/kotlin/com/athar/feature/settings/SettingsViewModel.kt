@@ -26,6 +26,7 @@ import com.athar.core.domain.repo.CsvImportResult
 import com.athar.core.domain.repo.CsvImportRowDecision
 import com.athar.core.domain.repo.CsvImportRowEdit
 import com.athar.core.domain.repo.CsvImportTrigger
+import com.athar.core.domain.repo.FinancialRecordingPreferences
 import com.athar.core.domain.repo.InvestmentImportPreview
 import com.athar.core.domain.repo.InvestmentImportPreviewResult
 import com.athar.core.domain.repo.InvestmentImportResult
@@ -207,6 +208,7 @@ class SettingsViewModel @Inject constructor(
     private val transactions: TransactionRepository,
     accounts: AccountRepository,
     private val merchantCatalogRepository: MerchantCatalogRepository,
+    private val recording: FinancialRecordingPreferences,
 ) : ViewModel() {
 
     private val _rescan = MutableStateFlow<RescanStatus>(RescanStatus.Idle)
@@ -276,6 +278,15 @@ class SettingsViewModel @Inject constructor(
     /** Shared merchant catalog (ENH-009): public, nonfinancial state only. */
     val merchantCatalog: StateFlow<MerchantCatalogState> = merchantCatalogRepository.state
 
+    /**
+     * WM033: prospective automatic recording of clearly evidenced completed
+     * purchases. Mirrors the rollout flag the canonical purchase path reads;
+     * writes persist exactly the user's choice (OFF always wins), and toggling
+     * never backfills or mass-confirms existing data.
+     */
+    val recordingEnabled: StateFlow<Boolean> = recording.enabled()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     init {
         viewModelScope.launch {
             statementImportAccounts.collectLatest { rows ->
@@ -289,6 +300,22 @@ class SettingsViewModel @Inject constructor(
 
     fun setHijriEnabled(enabled: Boolean) {
         viewModelScope.launch { prefs.setHijriEnabled(enabled) }
+    }
+
+    private val _recordingWriteFailed = MutableStateFlow(false)
+    val recordingWriteFailed: StateFlow<Boolean> = _recordingWriteFailed
+
+    fun setRecordingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            _recordingWriteFailed.value = false
+            try {
+                recording.setEnabled(enabled)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _recordingWriteFailed.value = true
+            }
+        }
     }
 
     fun setMerchantCatalogUpdates(enabled: Boolean) {
@@ -339,28 +366,40 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun export(resolver: ContentResolver, uri: Uri, passphrase: String) {
+        exportBackup(passphrase) { resolver.openOutputStream(uri) }
+    }
+
+    internal fun exportBackup(passphrase: String, openOutput: () -> java.io.OutputStream?) {
         viewModelScope.launch {
             _status.value = BackupStatus.Working
-            runCatching {
-                val output = resolver.openOutputStream(uri)
-                    ?: error("Couldn't open output stream for $uri")
-                backup.export(output, passphrase.toCharArray())
+            try {
+                BackupFileTransfer.export(backup, passphrase.toCharArray(), openOutput)
+                _status.value = BackupStatus.ExportSuccess
+            } catch (cancelled: CancellationException) {
+                _status.value = BackupStatus.Idle
+                throw cancelled
+            } catch (_: Exception) {
+                _status.value = BackupStatus.ExportFailure(null)
             }
-                .onSuccess { _status.value = BackupStatus.ExportSuccess }
-                .onFailure { _status.value = BackupStatus.ExportFailure(it.message) }
         }
     }
 
     fun import(resolver: ContentResolver, uri: Uri, passphrase: String) {
+        importBackup(passphrase) { resolver.openInputStream(uri) }
+    }
+
+    internal fun importBackup(passphrase: String, openInput: () -> java.io.InputStream?) {
         viewModelScope.launch {
             _status.value = BackupStatus.Working
-            runCatching {
-                val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
-                    ?: error("Couldn't open input stream for $uri")
-                backup.import(bytes, passphrase.toCharArray())
+            try {
+                BackupFileTransfer.import(backup, passphrase.toCharArray(), openInput)
+                _status.value = BackupStatus.ImportSuccess
+            } catch (cancelled: CancellationException) {
+                _status.value = BackupStatus.Idle
+                throw cancelled
+            } catch (_: Exception) {
+                _status.value = BackupStatus.ImportFailure(null)
             }
-                .onSuccess { _status.value = BackupStatus.ImportSuccess }
-                .onFailure { _status.value = BackupStatus.ImportFailure(it.message) }
         }
     }
 

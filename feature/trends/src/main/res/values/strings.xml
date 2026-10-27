@@ -58,7 +58,7 @@
 
     <!-- Top categories section -->
     <string name="trends_section_top_categories">أعلى التصنيفات</string>
-    <string name="trends_top_categories_hint">اضغط على بطاقة لرؤية تطور التصنيف خلال آخر ١٢ شهرًا.</string>
+    <string name="trends_top_categories_hint">اضغط على أي تصنيف لعرض الحركات التي تكوّنه.</string>
 
     <!-- Custom range banner -->
     <string name="trends_custom_range_label">النطاق المخصص: %1$s → %2$s</string>
@@ -77,4 +77,67 @@
     <string name="trends_over_last_12_months">خلال آخر ١٢ شهرًا</string>
     <string name="trends_monthly_target">الهدف الشهري</string>
     <string name="trends_average_12_months">المتوسط (١٢ شهرًا)</string>
+
+    <!-- Filters (WM028-01) -->
+    <string name="trends_filters">تصفية</string>
+    <string name="trends_filters_title">عوامل التصفية</string>
+    <string name="trends_filters_active">تصفية (%1$d)</string>
+    <string name="trends_filters_clear">مسح التصفية</string>
+    <string name="trends_filter_currency">عملة العرض</string>
+    <string name="trends_filter_currency_default">افتراضي</string>
+    <string name="trends_filter_accounts">الحسابات</string>
+    <string name="trends_filter_sources">المصدر</string>
+    <string name="trends_filter_type">النوع</string>
+    <string name="trends_filter_category">التصنيف</string>
+    <string name="trends_filter_merchant">التاجر</string>
+    <string name="trends_filter_merchant_hint">اسم التاجر</string>
+    <string name="trends_filter_merchant_apply">تطبيق على التاجر</string>
+    <string name="trends_filter_all">الكل</string>
+    <string name="trends_uncategorized">غير مصنّف</string>
+    <string name="trends_other">أخرى</string>
+    <string name="trends_unknown_account">حساب غير معروف</string>
+    <string name="trends_unknown_category">تصنيف غير معروف</string>
+    <string name="trends_open_evidence">عرض الحركات</string>
+    <string name="trends_open_details">عرض التفاصيل</string>
+    <string name="trends_zero_baseline">الفترة السابقة صفر أو سالبة، فالفرق معروض كقيمة مطلقة دون نسبة.</string>
+    <string name="trends_mixed_currency_note">تُحسب هذه النتائج بالعملة المحددة فقط؛ العملات الأخرى مستبعدة، دون تحويل الأسعار.</string>
+    <string name="trends_currency_line">عملة العرض: %1$s</string>
+    <string name="trends_month_year">%1$s %2$d</string>
+    <string name="trends_period_range">من %1$s إلى %2$s</string>
+    <string name="trends_comparison_matched_elapsed">نفس عدد الأيام من الفترة السابقة</string>
+    <string name="trends_comparison_previous_period">الفترة السابقة كاملة</string>
+    <string name="trends_comparison_custom">نطاق مخصص: من %1$s إلى %2$s</string>
+    <string name="trends_comparison_section">نطاق المقارنة</string>
+    <string name="trends_comparison_auto">تلقائي</string>
+    <string name="trends_comparison_apply">تطبيق نطاق المقارنة</string>
+    <string name="trends_period_comparison_legend_matched">الأعمدة الملوّنة = هذه الفترة حتى اليوم. الرمادية = نفس الأيام من الفترة السابقة.</string>
+    <string name="trends_evidence_context_period">الفترة: %1$s</string>
+    <string name="trends_evidence_context_comparison">المقارنة: %1$s</string>
+    <string name="trends_evidence_count">عدد الحركات: %1$d</string>
+    <string name="trends_evidence_row_meta">%1$s · %2$s · %3$s</string>
+    <string name="trends_empty_evidence">لا توجد حركات ضمن هذه الفلاتر.</string>
+    <string name="trends_empty_evidence_subtle">عدّل الفلاتر أو امسحها لعرض النتائج.</string>
+    <string name="trends_detail_title">تفاصيل الحركة</string>
+    <string name="trends_detail_merchant">التاجر</string>
+    <string name="trends_detail_date">التاريخ</string>
+    <string name="trends_label_amount">المبلغ</string>
+    <string name="trends_type_transfer">تحويل</string>
+    <string name="trends_detail_account">الحساب</string>
+    <string name="trends_detail_source">المصدر</string>
+    <string name="trends_detail_category">التصنيف</string>
+    <string name="trends_detail_notes">ملاحظات</string>
+    <string name="trends_action_close">إغلاق</string>
+    <string name="trends_source_manual">يدوي</string>
+    <string name="trends_source_sms">رسالة</string>
+    <string name="trends_source_notification">إشعار</string>
+    <string name="trends_source_share">مشاركة</string>
+    <string name="trends_source_import">استيراد</string>
+    <string name="trends_source_recurring">متكرر</string>
+
+    <!-- F1B: equal-population comparison + range validation -->
+    <string name="trends_error_future_start">تاريخ البداية في المستقبل. اختر نطاقًا بدأ فعلًا.</string>
+    <string name="trends_comparison_tail_excluded">الفرق يقارن حتى %1$s، وما بعده من الفترة الحالية مستبعد من المقارنة.</string>
+    <string name="trends_future_range_note">هذا النطاق لم يبدأ بعد، فلا توجد أرقام لعرضه.</string>
+    <string name="trends_evidence_comparison_current">النافذة المطابقة (الحالية): %1$s</string>
+    <string name="trends_evidence_comparison_prior">نافذة المقارنة (السابقة): %1$s</string>
 </resources>

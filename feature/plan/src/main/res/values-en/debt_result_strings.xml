@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English overrides for the debt scenario RESULT renderer (WM028-P).
+  Arabic defaults live in values/debt_result_strings.xml.
+-->
+<resources>
+
+    <!-- Compared -->
+    <string name="debt_result_compared_title">Strategies compared</string>
+    <string name="debt_result_strategy_avalanche">Highest rate first</string>
+    <string name="debt_result_strategy_snowball">Smallest balance first</string>
+    <string name="debt_result_cheaper_total">Lower total cost</string>
+    <string name="debt_result_total_interest">Total interest</string>
+    <string name="debt_result_total_fees">Total fees</string>
+    <string name="debt_result_total_paid">Total paid</string>
+    <string name="debt_result_payoff_date">Final payment date</string>
+    <string name="debt_result_payoff_date_value" formatted="true">%3$d %2$s %1$d</string>
+    <string name="debt_result_open_schedule">Open schedule</string>
+
+    <!-- Horizon exhausted -->
+    <string name="debt_result_horizon_title">Horizon ended before full payoff</string>
+    <string name="debt_result_horizon_body" formatted="true">The horizon (%1$d monthly cycles) ended before every debt was paid off.</string>
+    <string name="debt_result_horizon_partial">Figures cover the horizon only — not a final cost.</string>
+
+    <!-- Budget below minimums -->
+    <string name="debt_result_below_minimums_title">Budget below required minimums</string>
+    <string name="debt_result_below_minimums_body">The monthly budget does not cover the required minimum payments on your debts.</string>
+    <string name="debt_result_budget">Monthly budget</string>
+    <string name="debt_result_required_minimums">Required minimums</string>
+    <string name="debt_result_minimums_by_debt">Minimum payment per debt</string>
+
+    <!-- Unsupported terms -->
+    <string name="debt_result_unsupported_title">Unsupported terms</string>
+    <string name="debt_result_unsupported_body">These debts use terms outside the supported projection, so they cannot be forecast.</string>
+    <string name="debt_result_reason_missing_terms">Missing terms</string>
+    <string name="debt_result_reason_timing">Not a complete monthly cycle</string>
+    <string name="debt_result_reason_accrual">Non-nominal or daily accrual</string>
+    <string name="debt_result_reason_flat_profit">Fixed, precomputed profit</string>
+    <string name="debt_result_reason_variable_fees">Variable or unknown fees</string>
+    <string name="debt_result_reason_prepayment">Early payment restricted</string>
+
+    <!-- Invalid input -->
+    <string name="debt_result_invalid_title">Invalid input</string>
+    <string name="debt_result_invalid_body">Review the inputs, then run the calculation again.</string>
+
+    <!-- Saved exact-terms workflow (finish lane) -->
+    <string name="debt_saved_header">Saved plans</string>
+    <string name="debt_saved_title_label">Plan name</string>
+    <string name="debt_saved_save_new">Save as new plan</string>
+    <string name="debt_saved_update">Update loaded plan</string>
+    <string name="debt_saved_working">Saving…</string>
+    <string name="debt_saved_load">Load</string>
+    <string name="debt_saved_rename">Rename</string>
+    <string name="debt_saved_delete">Delete</string>
+    <string name="debt_saved_confirm">Confirm</string>
+    <string name="debt_saved_cancel">Cancel</string>
+    <string name="debt_saved_dismiss">Dismiss</string>
+    <string name="debt_saved_empty">No saved plans yet.</string>
+    <string name="debt_saved_loaded_badge">Loaded</string>
+    <string name="debt_saved_loaded" formatted="true">Loaded: %1$s</string>
+    <string name="debt_saved_meta" formatted="true">%1$s · saved %2$s</string>
+    <string name="debt_saved_unavailable" formatted="true">%1$s · unsupported (kept saved)</string>
+    <string name="debt_saved_rename_title">Rename plan</string>
+    <string name="debt_saved_delete_title">Delete plan</string>
+    <string name="debt_saved_delete_body" formatted="true">Permanently delete “%1$s”?</string>
+    <string name="debt_saved_msg_saved">Saved as a new plan.</string>
+    <string name="debt_saved_msg_updated">The loaded plan was updated.</string>
+    <string name="debt_saved_msg_renamed">The name was updated.</string>
+    <string name="debt_saved_msg_deleted">The plan was deleted.</string>
+    <string name="debt_saved_msg_conflict">The saved plan changed elsewhere; the link was detached and no newer edit was overwritten.</string>
+    <string name="debt_saved_msg_failed">Saving failed; review the inputs.</string>
+    <string name="debt_saved_msg_title">Enter a name for the plan.</string>
+    <string name="debt_saved_msg_unavailable">The saved document is unsupported or damaged; it remains saved and was not loaded.</string>
+    <string name="debt_saved_terms_note">Inputs are stored exactly as typed; no computed result is stored as a financial balance.</string>
+    <string name="debt_schedule_terms_note">This schedule is built from the same entered terms; it is not a balance record.</string>
+
+</resources>

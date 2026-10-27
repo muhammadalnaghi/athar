@@ -54,9 +54,14 @@ class GlanceWidgetRefresher @Inject constructor(
     }
 }
 
-suspend fun updateAtharWidgets(context: Context) {
-    MonthlyWidget().updateAll(context)
-    TodayWidget().updateAll(context)
+private val publicationGate = WidgetPublicationGate()
+
+suspend fun updateAtharWidgets(context: Context) = publicationGate.publish {
+    WidgetRefreshSignal.invalidate()
+    val report = WidgetSyncPublisher.publishAtharWidgets(context)
+    // Do not enqueue another render over a successful synchronous frame.
+    if (needsWidgetSessionFallback(report.monthly)) MonthlyWidget().updateAll(context)
+    if (needsWidgetSessionFallback(report.today)) TodayWidget().updateAll(context)
     PendingWidget().updateAll(context)
 }
 

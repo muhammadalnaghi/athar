@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_position_section_title">أرصدتك والتزاماتك</string>
+    <string name="plan_position_section_hint">أرصدة والتزامات أدخلتها بتاريخها، دون اتصال بالبنك.</string>
+    <string name="plan_position_add">إضافة أرصدة</string>
+    <string name="plan_position_empty">لا أرصدة محفوظة بعد.</string>
+    <string name="plan_position_row_hint">البنود: %1$d · %3$s · نسخة %2$d</string>
+    <string name="plan_position_state_unavailable">تعذر قراءة الأرصدة المحفوظة</string>
+    <string name="plan_position_open">فتح</string>
+    <string name="plan_position_close">إغلاق</string>
+    <string name="plan_position_update">تحديث</string>
+    <string name="plan_position_delete">حذف</string>
+    <string name="plan_position_delete_title">حذف الأرصدة؟</string>
+    <string name="plan_position_delete_body">ستُحذف هذه الأرصدة فقط، دون حذف الحركات المسجلة.</string>
+    <string name="plan_position_edit_create_title">أرصدة جديدة</string>
+    <string name="plan_position_edit_update_title">تعديل الأرصدة</string>
+    <string name="plan_position_edit_doc_title">الاسم</string>
+    <string name="plan_position_edit_asof">تاريخ الأرصدة (YYYY-MM-DD)</string>
+    <string name="plan_position_edit_note">ملاحظة (اختياري)</string>
+    <string name="plan_position_entry_add">إضافة بند</string>
+    <string name="plan_position_entry_remove">حذف البند</string>
+    <string name="plan_position_entry_label">الوصف</string>
+    <string name="plan_position_entry_side">النوع: %1$s (اضغط للتبديل)</string>
+    <string name="plan_position_entry_side_asset">أصل</string>
+    <string name="plan_position_entry_side_liability">التزام</string>
+    <string name="plan_position_entry_currency">العملة</string>
+    <string name="plan_position_entry_amount">المبلغ</string>
+    <string name="plan_position_entry_scope">نطاق الملكية (اختياري)</string>
+    <string name="plan_position_save">حفظ</string>
+    <string name="plan_position_cancel">إلغاء</string>
+    <string name="plan_position_totals_title">القيم التي أدخلتها</string>
+    <string name="plan_position_currency_line">%1$s — أصول %2$s · التزامات %3$s · الصافي %4$s</string>
+    <string name="plan_position_disclosure_today">الأرصدة كما أُعلنت اليوم %1$s.</string>
+    <string name="plan_position_disclosure_freshness">الأرصدة كما أُعلنت في %1$s (منذ %2$d يومًا).</string>
+    <string name="plan_position_disclosure_declared">القيم من إدخالك فقط؛ لا تشمل بقية حساباتك تلقائيًا.</string>
+    <string name="plan_position_disclosure_no_fx">كل عملة على حدة، دون تحويل.</string>
+    <string name="plan_position_problem_invalid">أكمل الاسم والتاريخ والوصف والمبلغ لكل بند.</string>
+    <string name="plan_position_problem_unsupported">تعذر حفظ هذه القيم. لم تتغير الأرصدة المحفوظة.</string>
+    <string name="plan_position_problem_conflict">تغيّر المستند في التخزين أثناء العملية. حاول مجددًا بعد التحديث.</string>
+    <string name="plan_position_problem_storage">تعذّر الحفظ. حاول مجددًا.</string>
+    <string name="plan_position_assets">الأصول المدخلة</string>
+    <string name="plan_position_liabilities">الالتزامات المدخلة</string>
+    <string name="plan_position_net">صافي القيم المدخلة</string>
+    <string name="plan_position_saving">جارٍ الحفظ</string>
+</resources>

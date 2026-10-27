@@ -17,6 +17,8 @@ import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.model.TxType
 import com.athar.core.domain.model.specificMerchantKey
+import com.athar.core.domain.model.position.latestDeclaredPosition
+import com.athar.core.domain.repo.DeclaredPositionRepository
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
@@ -51,6 +53,7 @@ class TodayViewModel @Inject constructor(
     private val prefs: UserPreferencesRepository,
     private val accounts: AccountRepository,
     private val clock: Clock,
+    private val declaredPositions: DeclaredPositionRepository,
 ) : ViewModel() {
 
     private val month = MutableStateFlow(currentMonth())
@@ -98,6 +101,16 @@ class TodayViewModel @Inject constructor(
                     }
                 }
             }
+            .combine(declaredPositions.observeSnapshots()) { today, positions ->
+                val currency = today.totalExpense.currency
+                today.copy(declaredPosition = latestDeclaredPosition(positions, currency)?.let { position ->
+                    TodayDeclaredPosition(
+                        id = position.id, revision = position.revision, title = position.title,
+                        asOfDate = position.asOfDate,
+                        net = Money.of(position.netByCurrency.getValue(currency), currency),
+                    )
+                })
+            }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayState.empty(currentMonth()))
 
     fun onEvent(event: TodayEvent) {
@@ -139,7 +152,7 @@ class TodayViewModel @Inject constructor(
                 existing.categoryId != tx.categoryId -> tx.categoryId?.let { CategorySource.USER }
                 else -> existing.categorySource
             }
-            val confirmed = tx.copy(status = TxStatus.CONFIRMED, updatedAt = now, categorySource = provenance)
+            val confirmed = tx.copy(status = existing?.status ?: tx.status, updatedAt = now, categorySource = provenance)
             transactions.upsert(confirmed)
             val categoryId = confirmed.categoryId
             val merchantKey = specificMerchantKey(
@@ -152,10 +165,8 @@ class TodayViewModel @Inject constructor(
                     categoryId = categoryId,
                     patternType = PatternType.SUBSTRING,
                 )
-                // Backfill: apply the same category to every other PENDING/DISMISSED
-                // row whose merchant matches. Otherwise picking "Always categorize Hemmah
-                // as Home maintenance" would only fix the one row the user just edited,
-                // leaving every other Hemmah charge stranded in the dismissed tray.
+                // Classification-only backfill fills unassigned compatible categories.
+                // It never posts pending money, revives dismissed rows or replaces a personal category.
                 val backfilled = transactions.applyCategoryToMatching(
                     pattern = merchantKey,
                     categoryId = categoryId,
@@ -189,7 +200,7 @@ class TodayViewModel @Inject constructor(
             tx.copy(
                 categoryId = category.id,
                 categorySource = CategorySource.USER,
-                status = TxStatus.CONFIRMED,
+                // Optional classification is not a financial posting decision.
                 updatedAt = clock.now(),
             ),
         )
@@ -230,14 +241,16 @@ class TodayViewModel @Inject constructor(
         categoryLabels: ImmutableMap<String, CategoryLabel>,
         goalNudge: TodayGoalNudge?,
     ): TodayState {
+        val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        // A calendar-month query can include future observations; actual activity is as of today.
+        val confirmedAsOfToday = confirmed.filter { it.date <= today }
         // Operating = confirmed, non-reconciliation rows via the shared domain
         // selector; transfers are money movement, never operating expense.
-        val operating = selectOperatingTransactions(confirmed)
+        val operating = selectOperatingTransactions(confirmedAsOfToday.filter { it.amount.currency == currency })
         val incomeSum = Money.sumAmounts(operating.income.map { it.amount }, currency)
         val expenseSum = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
-        val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val (todayTxns, monthTxns) = confirmed.partition { it.date == today }
-        val todayOperating = selectOperatingTransactions(todayTxns)
+        val (todayTxns, monthTxns) = confirmedAsOfToday.partition { it.date == today }
+        val todayOperating = selectOperatingTransactions(todayTxns.filter { it.amount.currency == currency })
         val todayNet = Money.sumAmounts(todayOperating.income.map { it.amount }, currency) -
             Money.sumAmounts(todayOperating.expenses.map { it.amount }, currency)
         val dismissedToday = dismissed.filter { it.date == today }
@@ -275,7 +288,7 @@ class TodayViewModel @Inject constructor(
         savingsTarget: Int,
         emergencyMonths: Int,
     ): TodayGoalNudge {
-        val operating = selectOperatingTransactions(transactions)
+        val operating = selectOperatingTransactions(transactions.filter { it.amount.currency == currency })
         val totalIncome = Money.sumAmounts(operating.income.map { it.amount }, currency)
         val totalExpense = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
         val monthlyIncome = GoalCalc.averageMonthly(totalIncome, LOOKBACK_MONTHS)
@@ -299,7 +312,7 @@ class TodayViewModel @Inject constructor(
     private fun liquidBalance(balances: List<AccountBalance>, currency: String): Money =
         Money.sumAmounts(
             balances
-                .filter { it.account.type in LIQUID_ACCOUNT_TYPES }
+                .filter { it.account.type in LIQUID_ACCOUNT_TYPES && it.current.currency == currency }
                 .map { it.current },
             currency,
         ).let { if (it.amount.signum() < 0) Money.zero(currency) else it }

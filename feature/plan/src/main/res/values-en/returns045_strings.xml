@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WM045: fixed no-evidence sentence for a structural missing-boundary undefined
+         return when the engine names no unpriced securities. -->
+    <string name="plan_portfolio_return045_boundary_missing_no_evidence">Unavailable: insufficient dated valuation evidence.</string>
+</resources>

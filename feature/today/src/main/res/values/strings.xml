@@ -18,11 +18,11 @@
     <!-- Summary pills -->
     <string name="today_pill_income">الدخل</string>
     <string name="today_pill_expense">المصاريف</string>
-    <string name="today_pill_net_worth">صافي الثروة</string>
+    <string name="today_pill_net_worth">الرصيد المسجّل</string>
 
     <!-- Captions -->
     <string name="today_caption_savings_rate" formatted="true">معدّل الادخار · %1$s٪</string>
-    <string name="today_caption_net_worth_mixed">الثروة بعملات متعددة · بدون تحويل</string>
+    <string name="today_caption_net_worth_mixed">أرصدة بعملات مختلفة، دون إجمالي موحّد.</string>
     <string name="today_goals_nudge_title">فحص الأهداف</string>
     <string name="today_goals_savings_on_track" formatted="true">هدف الادخار مكتمل · %1$s٪ / %2$d٪</string>
     <string name="today_goals_savings_below" formatted="true">هدف الادخار · %1$s٪ / %2$d٪</string>
@@ -100,17 +100,15 @@
     <string name="category_backfill_applied" formatted="true">حُدّثت الحركات المطابقة لـ«%2$s»: %1$d.</string>
     <string name="category_backfill_future" formatted="true">سيُصنّف أثر الحركات القادمة المطابقة لـ«%1$s» تلقائيًا.</string>
 
-    <!-- Pending attention banner -->
-    <string name="today_pending_banner" formatted="true">%1$d حركة بانتظار المراجعة</string>
-    <string name="today_pending_banner_cta">انقر للمراجعة ←</string>
-
-    <!-- Dismissed-today banner (parser auto-discarded — user may want to recover) -->
-    <string name="today_dismissed_banner" formatted="true">%1$d رسالة تم تجاهلها اليوم — راجعها</string>
-    <string name="today_dismissed_banner_cta">انقر للمراجعة ←</string>
-
-    <!-- Repeated uncategorized backlog nudge -->
-    <string name="today_repeated_backlog_banner" formatted="true">%1$d حركة بلا تصنيف في %2$d مجموعات متكررة · أكبرها %3$d</string>
-    <string name="today_repeated_backlog_banner_cta">مراجعة المجموعات ←</string>
+    <!-- Compact review entries (replace the old attention-demanding banners).
+         Pending money stays visible in the tray; these rows only route to History. -->
+    <string name="today_review_history_title">المراجعة الكاملة في السجل</string>
+    <string name="today_review_open">فتح السجل</string>
+    <string name="today_review_counts_pending" formatted="true">%1$d بانتظار التأكيد</string>
+    <string name="today_review_counts_dismissed" formatted="true">%1$d متجاهَلة اليوم</string>
+    <string name="today_review_cleanup_title">تنظيف التصنيف</string>
+    <string name="today_review_cleanup_detail" formatted="true">%1$d حركة بلا تصنيف في %2$d مجموعات · أكبرها %3$d</string>
+    <string name="today_review_cleanup_open">مراجعة المجموعات</string>
 
     <!-- Pending tray -->
     <string name="today_pending_title" formatted="true">بانتظار التأكيد · %1$d</string>
@@ -148,6 +146,7 @@
     <string name="add_tx_placeholder_merchant">مثال: ستاربكس</string>
     <string name="add_tx_error_merchant_required">أدخل اسم التاجر</string>
     <string name="add_tx_label_category">التصنيف</string>
+    <string name="add_tx_label_category_optional">التصنيف (اختياري)</string>
     <string name="add_tx_error_category_required">اختر تصنيفًا</string>
     <string name="add_tx_label_notes">ملاحظات</string>
     <string name="add_tx_receipt_title">الإيصالات</string>
@@ -191,4 +190,7 @@
     <string name="edit_tx_receipt_preview_error">تعذرت معاينة الصورة، ويمكنك تصديرها كملف.</string>
     <string name="edit_tx_receipt_close">إغلاق</string>
 
+    <string name="today_caption_recorded_balance">أرصدة افتتاحية وحركات مسجّلة، دون تحقق مصرفي.</string>
+    <string name="today_goals_emergency_needs_balance">تغطية الطوارئ تحتاج رصيدًا موثّقًا.</string>
+    <string name="today_loading">جارٍ تحميل الحركات</string>
 </resources>

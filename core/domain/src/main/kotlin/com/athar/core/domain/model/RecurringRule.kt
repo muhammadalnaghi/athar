@@ -40,5 +40,6 @@ data class RecurringRule(
 enum class Cadence {
     MONTHLY,
     WEEKLY,
+    QUARTERLY,
     YEARLY,
 }

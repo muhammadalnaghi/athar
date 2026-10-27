@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debt041_more">تفاصيل الحساب</string>
+    <string name="debt041_less">إخفاء التفاصيل</string>
+    <string name="debt041_horizon_summary">مدة المقارنة بالأشهر: %1$s</string>
+    <string name="debt041_edit_inputs">تعديل المدخلات</string>
+    <string name="debt041_result_scope">تقدير وفق المدخلات، وليس رصيدًا مصرفيًا.</string>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_bills035_summary_30_days">Due over the next 30 days</string>
+    <string name="plan_bills035_reminders_body">Optional reminders two days before a due date and on the day.</string>
+</resources>

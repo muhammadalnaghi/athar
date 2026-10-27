@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -15,9 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.athar.core.common.money.Money
+import com.athar.core.designsystem.R
+import com.athar.core.designsystem.display.currentUiLocale
 import com.athar.core.designsystem.theme.AtharTheme
 
 /**
@@ -43,19 +48,33 @@ fun AtharBarChart(
     val theme = AtharTheme
     if (items.isEmpty()) return
     val max = items.maxOfOrNull { it.value.amount } ?: java.math.BigDecimal.ONE
+    val locale = currentUiLocale()
 
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(theme.spacing.s),
     ) {
         items.forEach { item ->
-            val fraction = (item.value.amount.toDouble() / max.toDouble())
-                .coerceIn(0.0, 1.0)
-                .toFloat()
+            val itemLabel = if (locale.language == "ar") item.labelAr else item.labelEn ?: item.labelAr
+            // BigDecimal-exact, sign-faithful share; Float is only the drawn fraction.
+            val fraction = AtharMonthlyChartGeometry.barShareFraction(item.value.amount, max)
             val rowModifier = if (onItemClick != null) {
                 Modifier
                     .fillMaxWidth()
-                    .clickable { onItemClick(item.key) }
+                    .heightIn(min = 48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        // Localized tap affordance: category + exact recorded value.
+                        onClickLabel = stringResource(
+                            R.string.chart_bar_row_a11y,
+                            itemLabel,
+                            AtharMonthlyChartGeometry.amountLabel(
+                                item.value.amount,
+                                item.value.currency,
+                                locale,
+                            ),
+                        ),
+                    ) { onItemClick(item.key) }
                     .padding(vertical = theme.spacing.xs)
             } else {
                 Modifier.fillMaxWidth()
@@ -69,7 +88,7 @@ fun AtharBarChart(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    AtharText(text = item.labelAr, style = theme.typography.body)
+                    AtharText(text = itemLabel, style = theme.typography.body)
                     AtharNumber(money = item.value)
                 }
                 Box(

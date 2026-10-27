@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  028-P-CHARTS lane-owned chart strings (Arabic default).
+  Existing chart_* keys remain in values/strings.xml (integration-owned); this file
+  carries ONLY the new exact-money / selected-point accessibility strings.
+-->
+<resources>
+    <!-- Accessible point name: localized month/date + exact recorded value. -->
+    <string name="chart_point_a11y">الشهر %1$s، القيمة %2$s</string>
+    <!-- Series overview: month span + bar count; optional target/average/selected parts follow. -->
+    <string name="chart_series_a11y">مخطط شهري من %1$s إلى %2$s، %3$d أشهر</string>
+    <string name="chart_series_target_a11y">خط الهدف %1$s</string>
+    <string name="chart_series_average_a11y">خط المتوسط %1$s</string>
+    <!-- Selected point: real recorded identity (exact month + exact amount), never interpolated. -->
+    <string name="chart_series_selected_a11y">المحدد: %1$s، القيمة %2$s</string>
+    <!-- Localized joiner between series-description parts. -->
+    <string name="chart_series_join">، </string>
+    <!-- Category bar row (AtharBarChart) tap affordance: category + exact value. -->
+    <string name="chart_bar_row_a11y">تصنيف %1$s، القيمة %2$s</string>
+</resources>

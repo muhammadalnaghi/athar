@@ -39,7 +39,9 @@ class SmsIngestionPipelineTest {
 
     private val now: Instant = Instant.parse("2026-10-16T12:00:00Z")
 
-    private val transactions = mockk<TransactionRepository>(relaxed = true)
+    private val transactions = mockk<TransactionRepository>(relaxed = true) {
+        coEvery { upsertIngest(any()) } answers { firstArg<Transaction>().id }
+    }
     private val audit = mockk<SmsAuditRepository>(relaxed = true)
     private val accounts = mockk<AccountRepository> {
         coEvery { resolveForIngest(any(), any(), any()) } returns null
@@ -50,13 +52,14 @@ class SmsIngestionPipelineTest {
         categories: CategoryRepository,
         catalog: FakePipelineCatalog,
         ownAccounts: List<String> = emptyList(),
+        parserOverride: SmsParser? = null,
     ): SmsIngestionPipeline {
         val prefs = mockk<UserPreferencesRepository> {
             every { ownAccountNumbers() } returns flowOf(ownAccounts)
         }
         val resolver = MerchantCategoryResolver(rules, categories, catalog)
         return SmsIngestionPipeline(
-            parser = parserFake(),
+            parser = parserOverride ?: parserFake(),
             transactions = transactions,
             accounts = accounts,
             resolver = resolver,
@@ -168,6 +171,50 @@ class SmsIngestionPipelineTest {
         assertThat(tx.categorySource).isNull()
     }
 
+    @Test
+    fun `audit links the stored source owner rather than a fresh replay uuid`() = runTest {
+        coEvery { transactions.upsertIngest(any()) } returns "original-source-owner"
+        coEvery { audit.record(any()) } returns "replay-audit"
+        val (rules, categories) = emptyRules()
+        pipeline(rules, categories, FakePipelineCatalog(emptyList())).process(event())
+        coVerify(exactly = 1) {
+            audit.updateParseResult("replay-audit", com.athar.core.domain.model.SmsParseStatus.PARSED, "original-source-owner", null)
+        }
+        coVerify(exactly = 0) { transactions.upsert(any()) }
+    }
+
+    @Test
+    fun `local category rule cannot confirm held money while rollout is off`() = runTest {
+        val categories = mockCategories()
+        val rules = mockk<CategoryRuleRepository> {
+            coEvery { findMatching("starbucks") } returns listOf(rule("user-1", "starbucks", priority = 200, learnedFromUser = true))
+        }
+        val held = SmsParser { event -> (parserFake().parse(event) as ParseResult.Success).copy(
+            posting = com.athar.core.domain.model.financial.PostingEvidence(
+                com.athar.core.domain.model.financial.PostingState.AUTHORIZED,
+                com.athar.core.domain.model.financial.PostingSupport.HEURISTIC_ONLY,
+            ),
+        ) }
+        pipeline(rules, categories, FakePipelineCatalog(emptyList()), parserOverride = held).process(event())
+        assertThat(capturedTransaction().status).isEqualTo(TxStatus.PENDING)
+    }
+
+    @Test
+    fun `local category rule cannot confirm declined money while rollout is off`() = runTest {
+        val categories = mockCategories()
+        val rules = mockk<CategoryRuleRepository> {
+            coEvery { findMatching("starbucks") } returns listOf(rule("user-1", "starbucks", priority = 200, learnedFromUser = true))
+        }
+        val declined = SmsParser { event -> (parserFake().parse(event) as ParseResult.Success).copy(
+            posting = com.athar.core.domain.model.financial.PostingEvidence(
+                com.athar.core.domain.model.financial.PostingState.DECLINED,
+                com.athar.core.domain.model.financial.PostingSupport.HEURISTIC_ONLY,
+            ),
+        ) }
+        pipeline(rules, categories, FakePipelineCatalog(emptyList()), parserOverride = declined).process(event())
+        assertThat(capturedTransaction().status).isEqualTo(TxStatus.PENDING)
+    }
+
     // ---- helpers ----
 
     private fun parserFake(): SmsParser = SmsParser { event ->
@@ -228,7 +275,7 @@ class SmsIngestionPipelineTest {
 
     private fun capturedTransaction(): Transaction {
         val slot = slot<Transaction>()
-        coVerify(exactly = 1) { transactions.upsert(capture(slot)) }
+        coVerify(exactly = 1) { transactions.upsertIngest(capture(slot)) }
         return slot.captured
     }
 

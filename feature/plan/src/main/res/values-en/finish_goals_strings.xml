@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM028 finish-goals lane-only strings (English). -->
+<resources>
+    <string name="plan_goals_compare_title">Compare saved goal with current</string>
+    <string name="plan_goals_compare_open_short">Compare</string>
+    <string name="plan_goals_compare_open">Compare with current</string>
+    <string name="plan_goals_compare_close">Close</string>
+    <string name="plan_goals_compare_basis">Basis</string>
+    <string name="plan_goals_compare_assumptions">Assumptions</string>
+    <string name="plan_goals_compare_saved_inputs" formatted="true">Saved literal inputs in %1$s</string>
+    <string name="plan_goals_compare_live_inputs">Current form inputs</string>
+    <string name="plan_goals_compare_allocation_assumption">The allocation is an in-scenario assumption, not money reserved from a real balance.</string>
+    <string name="plan_goals_saved_allocations_note">Each goal carries independent allocation assumptions: the same real balance may appear in more than one scenario, and the app deducts no amounts and reserves no actual funding.</string>
+    <string name="plan_goals_saved_working">Saving</string>
+    <string name="plan_goals_saved_delete_title">Delete goal?</string>
+    <string name="plan_goals_saved_delete_body">The saved inputs for %1$s will be deleted. Your accounts and transactions will not change.</string>
+</resources>

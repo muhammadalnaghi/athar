@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +41,7 @@ import com.athar.core.designsystem.component.AtharPickerItem
 import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.component.AtharTextField
 import com.athar.core.designsystem.theme.AtharTheme
+import com.athar.core.designsystem.theme.MinTouchTarget
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
@@ -293,20 +295,21 @@ private fun TxRow(
     onClick: () -> Unit,
 ) {
     val theme = AtharTheme
-    val typeChip = when (tx.type) {
-        TxType.INCOME -> "+"
-        TxType.EXPENSE -> "-"
-        TxType.TRANSFER -> "<>"
+    val typeLabel = when (tx.type) {
+        TxType.INCOME -> stringResource(R.string.history_row_type_income)
+        TxType.EXPENSE -> stringResource(R.string.history_row_type_expense)
+        TxType.TRANSFER -> stringResource(R.string.history_row_type_transfer)
     }
+    val title = tx.merchant.ifBlank { typeLabel }
     AtharListRow(
         title = if (selectionMode) {
-            "${if (selected) "✓" else "○"} ${tx.merchant}"
+            "${if (selected) "✓" else "○"} $title"
         } else {
-            tx.merchant
+            title
         },
         subtitle = historyRowSubtitle(
             tx = tx,
-            typeChip = typeChip,
+            typeLabel = typeLabel,
             categoryLabel = categoryLabel,
             repeatedBacklogCount = repeatedBacklogCount,
         ),
@@ -318,18 +321,17 @@ private fun TxRow(
 @Composable
 private fun historyRowSubtitle(
     tx: Transaction,
-    typeChip: String,
+    typeLabel: String,
     categoryLabel: String,
     repeatedBacklogCount: Int,
 ): String {
-    val base = stringResource(
-        R.string.history_row_subtitle,
+    val base = listOf(
         tx.date.toString(),
-        typeChip,
+        typeLabel,
         statusLabel(tx.status),
         sourceLabel(tx.source),
         categoryLabel,
-    )
+    ).filter { it.isNotBlank() }.joinToString(" · ")
     return if (repeatedBacklogCount > 1) {
         stringResource(
             R.string.history_row_subtitle_with_repeated_count,
@@ -612,10 +614,12 @@ private fun <T> FilterChipRow(
             val isSel = key == selected
             Box(
                 modifier = Modifier
+                    .defaultMinSize(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
                     .clip(RoundedCornerShape(theme.spacing.s))
                     .background(if (isSel) theme.colors.ember else theme.colors.surface)
                     .clickable { onSelect(key) }
                     .padding(horizontal = theme.spacing.s, vertical = theme.spacing.xs),
+                contentAlignment = Alignment.Center,
             ) {
                 AtharText(
                     text = label,
@@ -648,10 +652,12 @@ private fun HistoryActionChip(
     }
     Box(
         modifier = modifier
+            .defaultMinSize(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
             .clip(RoundedCornerShape(theme.spacing.s))
             .background(background)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = theme.spacing.s, vertical = theme.spacing.xs),
+        contentAlignment = Alignment.Center,
     ) {
         AtharText(
             text = text,
@@ -683,10 +689,12 @@ private fun BackChip(onBack: () -> Unit) {
     val theme = AtharTheme
     Box(
         modifier = Modifier
+            .defaultMinSize(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
             .clip(RoundedCornerShape(theme.spacing.s))
             .background(theme.colors.surface)
             .clickable(onClick = onBack)
             .padding(horizontal = theme.spacing.s, vertical = theme.spacing.xs),
+        contentAlignment = Alignment.Center,
     ) {
         AtharText(
             text = stringResource(R.string.history_back),

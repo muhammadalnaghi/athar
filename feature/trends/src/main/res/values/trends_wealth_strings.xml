@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic strings added by the 028 trends lane (WM028-01 / F1T). Kept in a dedicated
+  file so sibling lanes' strings.xml edits never collide. Arabic is primary.
+-->
+<resources>
+    <!-- Operating semantics disclosure, shown in the evidence context. -->
+    <string name="trends_transfers_excluded">تُحتسب الأرقام من النشاط التشغيلي المؤكد فقط؛ التحويلات بين الحسابات مستبعدة من الدخل والمصاريف.</string>
+</resources>

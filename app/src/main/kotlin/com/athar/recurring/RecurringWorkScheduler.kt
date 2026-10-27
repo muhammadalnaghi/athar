@@ -18,6 +18,12 @@ object RecurringWorkScheduler {
         val workManager = WorkManager.getInstance(appContext)
 
         val startup = OneTimeWorkRequestBuilder<RecurringMaterializeWorker>()
+            // Keep the launch window free of DB work: the eager startup pass used to
+            // contend with first composition on the SQLCipher connection pool
+            // (cold-start first frame measured ~3.8s late on API35). Materializing
+            // due recurring instances 20s after process start is still prompt and
+            // runs identically; the 24h periodic pass is unchanged.
+            .setInitialDelay(20, TimeUnit.SECONDS)
             .addTag(TAG)
             .build()
         workManager.enqueueUniqueWork(STARTUP_WORK_NAME, ExistingWorkPolicy.KEEP, startup)

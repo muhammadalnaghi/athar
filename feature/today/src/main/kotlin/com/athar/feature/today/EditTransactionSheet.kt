@@ -348,6 +348,7 @@ fun EditTransactionSheet(
             AtharAmountField(
                 value = s.amount,
                 onValueChange = { viewModel.setAmount(it) },
+                label = stringResource(R.string.editor035_amount_currency, s.original.amount.currency),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -469,14 +470,14 @@ fun EditTransactionSheet(
     }
 }
 
-private fun commit(
+internal fun commit(
     s: EditTransactionState,
     learnRule: Boolean,
     onSave: (Transaction, Boolean) -> Unit,
 ) {
     val amount = runCatching { BigDecimal(s.amount) }.getOrNull() ?: s.original.amount.amount
     val updated = s.original.copy(
-        amount = com.athar.core.common.money.Money.of(amount),
+        amount = com.athar.core.common.money.Money.of(amount, s.original.amount.currency),
         merchant = s.merchant.trim(),
         merchantNormalized = s.merchant.lowercase().trim(),
         notes = s.notes.takeIf { it.isNotBlank() },

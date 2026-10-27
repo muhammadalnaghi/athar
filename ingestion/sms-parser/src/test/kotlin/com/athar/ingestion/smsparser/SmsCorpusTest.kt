@@ -53,7 +53,11 @@ class SmsCorpusTest {
             Balance:2973.79 SAR
         """.trimIndent()
         val r = parser().parse(event("AlRajhiBank", body)) as ParseResult.Success
-        assertThat(r.amount.amount).isEqualTo(BigDecimal("60.96"))
+        // Preserve this inherited case identity. The booked expense includes the stated fee once;
+        // 60.96 is settlement principal, while the source explicitly states total due of 62.36.
+        assertThat(r.amount.amount).isEqualTo(BigDecimal("60.96").add(BigDecimal("1.40")))
+        assertThat(r.amount.currency).isEqualTo("SAR")
+        assertThat(r.amount.amount.subtract(BigDecimal("60.96"))).isEqualTo(BigDecimal("1.40"))
         assertThat(r.merchant).isEqualTo("HARVARD B")
     }
 

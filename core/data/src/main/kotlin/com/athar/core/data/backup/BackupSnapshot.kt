@@ -9,6 +9,7 @@ import com.athar.core.data.db.entity.SmsMessageEntity
 import com.athar.core.data.db.entity.TransactionEntity
 import com.athar.core.data.db.entity.TransactionReceiptEntity
 import com.athar.core.data.db.entity.WishlistEntity
+import com.athar.core.data.ledger.backup.CanonicalBackupSection
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -35,12 +36,20 @@ internal data class BackupSnapshot(
     val investmentContributions: List<BackupInvestmentContribution>,
     val smsAudit: List<BackupSmsMessage>,
     val receiptAttachments: List<BackupReceiptAttachment> = emptyList(),
+    // v4 (WM028-13C3): the canonical ledger travels with the legacy tables. Null
+    // is only legal for v1–v3 payloads; v4 requires it present (possibly
+    // all-empty) so canonical data is never silently omitted or silently mixed.
+    val canonicalLedger: CanonicalBackupSection? = null,
+    // Required for the unpublished complete v4 envelope; legacy v1–v3 decode as null.
+    val auxiliaryTables: BackupAuxiliarySection? = null,
 ) {
     companion object {
         // v2 (G-4): BackupAccount gained openingBalanceMinor/Currency, notes, sortOrder,
         // archivedAt, updatedAt. All optional with safe defaults so v1 payloads still restore.
         // v3 (G-8): encrypted receipt attachments are included in backups.
-        const val CURRENT_VERSION = 3
+        // v4 (WM028-13C3): canonicalLedger section. Version handling is explicit and
+        // fail-closed — see BackupRestoreValidator (missing/unsupported versions fail).
+        const val CURRENT_VERSION = 4
     }
 }
 

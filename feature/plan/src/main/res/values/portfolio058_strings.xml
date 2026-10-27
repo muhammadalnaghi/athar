@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_opening_date_edit">تعديل تاريخ رأس المال</string>
+    <string name="plan_portfolio_opening_date_edit_title">تعديل تاريخ رأس المال</string>
+    <string name="plan_portfolio_opening_date_none">بدون تاريخ لرأس المال</string>
+    <string name="plan_portfolio_opening_date_clear_note">اتركه فارغًا لحذف التاريخ. لن يتاح العائد السنوي دون تاريخ رأس المال.</string>
+    <string name="plan_portfolio_opening_date_unchanged">التاريخ لم يتغير. عدّله أو أغلق النافذة.</string>
+    <string name="plan_portfolio_opening_date_review">مراجعة</string>
+    <string name="plan_portfolio_opening_date_preview_title">مراجعة تعديل التاريخ قبل الحفظ</string>
+    <string name="plan_portfolio_opening_date_preview_current">التاريخ الحالي: %1$s</string>
+    <string name="plan_portfolio_opening_date_preview_new">التاريخ الجديد: %1$s</string>
+</resources>

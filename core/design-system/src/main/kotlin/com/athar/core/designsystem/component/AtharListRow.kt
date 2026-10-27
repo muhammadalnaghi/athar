@@ -37,7 +37,7 @@ fun AtharListRow(
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = theme.spacing.m, vertical = theme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(theme.spacing.s),
     ) {
         Column(modifier = Modifier.weight(1f)) {
             AtharText(text = title, style = theme.typography.headline)

@@ -1,7 +1,7 @@
 package com.athar.core.designsystem.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,16 +18,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.athar.core.designsystem.theme.AtharTheme
 import com.athar.core.designsystem.theme.MinTouchTarget
+import com.athar.core.designsystem.display.currentUiLocale
+import java.util.Locale
 
 /**
  * The single bottom navigation primitive for Athar — three thin labels, an ember dot
  * under the active label. No icons. (Master Brief §3.)
  */
-data class AtharBottomBarItem(val key: String, val labelEn: String, val labelAr: String)
+data class AtharBottomBarItem(val key: String, val labelEn: String, val labelAr: String) {
+    fun labelFor(locale: Locale): String = if (locale.language == "ar") labelAr else labelEn
+}
 
 @Composable
 fun AtharBottomBar(
@@ -70,31 +75,17 @@ private fun BottomBarLabel(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .defaultMinSize(minHeight = MinTouchTarget)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .defaultMinSize(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
             .padding(horizontal = theme.spacing.s, vertical = theme.spacing.xs),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(theme.spacing.xs),
-        ) {
-            AtharText(
-                text = item.labelAr,
-                style = theme.typography.body,
-                color = if (selected) theme.colors.ink else theme.colors.muted,
-            )
-            AtharText(
-                text = "·",
-                color = theme.colors.muted,
-            )
-            AtharText(
-                text = item.labelEn,
-                style = theme.typography.caption,
-                color = if (selected) theme.colors.ink else theme.colors.muted,
-            )
-        }
+        AtharText(
+            text = item.labelFor(currentUiLocale()),
+            style = theme.typography.body,
+            color = if (selected) theme.colors.ink else theme.colors.muted,
+        )
         Box(
             modifier = Modifier
                 .size(4.dp)
@@ -105,6 +96,7 @@ private fun BottomBarLabel(
 }
 
 @Preview
+@Preview(widthDp = 320, fontScale = 1.3f, locale = "ar")
 @Composable
 private fun PreviewBottomBar() {
     AtharTheme {

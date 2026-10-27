@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.athar.core.data.db.entity.AccountBalanceRow
 import com.athar.core.data.db.entity.AccountEntity
 import com.athar.core.data.db.entity.CategoryRuleEntity
@@ -28,7 +29,7 @@ internal interface AccountDao {
     @Query("SELECT * FROM account ORDER BY name")
     suspend fun all(): List<AccountEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(account: AccountEntity)
 
     @Query("UPDATE account SET archivedAt = :archivedAt, active = :active, updatedAt = :now WHERE id = :id")
@@ -106,7 +107,8 @@ internal interface InvestmentDao {
     @Query("SELECT * FROM investment_contribution")
     suspend fun allContributions(): List<InvestmentContributionEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // REPLACE would delete this parent and cascade all contributor records.
+    @Upsert
     suspend fun upsertPool(pool: InvestmentPoolEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -162,6 +164,12 @@ internal data class SmsStatusCount(
 
 @Dao
 internal interface RecurringRuleDao {
+    @Query("SELECT * FROM recurring_rule ORDER BY isActive DESC, nextRunDate ASC")
+    suspend fun all(): List<RecurringRuleEntity>
+
+    @Query("SELECT COUNT(*) FROM recurring_rule")
+    suspend fun count(): Long
+
     @Query("SELECT * FROM recurring_rule ORDER BY isActive DESC, nextRunDate ASC")
     fun observeAll(): Flow<List<RecurringRuleEntity>>
 

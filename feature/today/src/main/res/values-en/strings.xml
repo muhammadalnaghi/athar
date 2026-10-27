@@ -17,11 +17,11 @@
     <!-- Summary pills -->
     <string name="today_pill_income">Income</string>
     <string name="today_pill_expense">Expenses</string>
-    <string name="today_pill_net_worth">Net Worth</string>
+    <string name="today_pill_net_worth">Recorded balance</string>
 
     <!-- Captions -->
     <string name="today_caption_savings_rate" formatted="true">Savings rate · %1$s%%</string>
-    <string name="today_caption_net_worth_mixed">Net worth spans multiple currencies · not converted</string>
+    <string name="today_caption_net_worth_mixed">Separate currencies; no combined balance.</string>
     <string name="today_goals_nudge_title">Goals check</string>
     <string name="today_goals_savings_on_track" formatted="true">Savings target met · %1$s%% / %2$d%%</string>
     <string name="today_goals_savings_below" formatted="true">Savings target · %1$s%% / %2$d%%</string>
@@ -99,17 +99,15 @@
     <string name="category_backfill_applied" formatted="true">Updated matching transactions for "%2$s": %1$d.</string>
     <string name="category_backfill_future" formatted="true">Future transactions matching "%1$s" will be categorized automatically.</string>
 
-    <!-- Pending attention banner -->
-    <string name="today_pending_banner" formatted="true">%1$d transactions awaiting review</string>
-    <string name="today_pending_banner_cta">Tap to review →</string>
-
-    <!-- Dismissed-today banner (parser auto-discarded — user may want to recover) -->
-    <string name="today_dismissed_banner" formatted="true">%1$d messages dismissed today — review them</string>
-    <string name="today_dismissed_banner_cta">Tap to review →</string>
-
-    <!-- Repeated uncategorized backlog nudge -->
-    <string name="today_repeated_backlog_banner" formatted="true">%1$d uncategorized rows in %2$d repeated groups · top group %3$d</string>
-    <string name="today_repeated_backlog_banner_cta">Review groups →</string>
+    <!-- Compact review entries (replace the old attention-demanding banners).
+         Pending money stays visible in the tray; these rows only route to History. -->
+    <string name="today_review_history_title">Full review in History</string>
+    <string name="today_review_open">Open History</string>
+    <string name="today_review_counts_pending" formatted="true">%1$d pending</string>
+    <string name="today_review_counts_dismissed" formatted="true">%1$d dismissed today</string>
+    <string name="today_review_cleanup_title">Category cleanup</string>
+    <string name="today_review_cleanup_detail" formatted="true">%1$d uncategorized rows in %2$d repeated groups · largest %3$d</string>
+    <string name="today_review_cleanup_open">Review groups</string>
 
     <!-- Pending tray -->
     <string name="today_pending_title" formatted="true">Pending · %1$d</string>
@@ -147,6 +145,7 @@
     <string name="add_tx_placeholder_merchant">e.g. Starbucks</string>
     <string name="add_tx_error_merchant_required">Enter a merchant name</string>
     <string name="add_tx_label_category">Category</string>
+    <string name="add_tx_label_category_optional">Category (optional)</string>
     <string name="add_tx_error_category_required">Pick a category</string>
     <string name="add_tx_label_notes">Notes</string>
     <string name="add_tx_receipt_title">Receipts</string>
@@ -190,4 +189,7 @@
     <string name="edit_tx_receipt_preview_error">Could not preview the image. You can still export it as a file.</string>
     <string name="edit_tx_receipt_close">Close</string>
 
+    <string name="today_caption_recorded_balance">Opening balances and recorded activity, not a live bank balance.</string>
+    <string name="today_goals_emergency_needs_balance">Emergency coverage needs a verified balance.</string>
+    <string name="today_loading">Loading recorded activity</string>
 </resources>

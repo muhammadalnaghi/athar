@@ -32,7 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -40,18 +40,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.athar.core.common.money.Money
 import com.athar.core.designsystem.component.AtharCard
 import com.athar.core.designsystem.component.AtharEmptyState
 import com.athar.core.designsystem.component.AtharNumber
 import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.theme.AtharTheme
 import com.athar.core.designsystem.theme.MinTouchTarget
+import com.athar.core.domain.model.RecurringSuggestion
+import com.athar.feature.plan.bills.ManualRuleEditorSheet
+import com.athar.feature.plan.scenarios.ScenarioTextAction
 import com.athar.core.domain.model.TxType
 import kotlinx.datetime.LocalDate
 import java.time.temporal.ChronoUnit
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun BillsContent(viewModel: BillsViewModel = hiltViewModel()) {
+fun BillsContent(viewModel: BillsViewModel = hiltViewModel(), onOpenDebtScenario: (() -> Unit)? = null,
+    onOpenCashScenario: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val theme = AtharTheme
     val context = LocalContext.current
@@ -61,11 +67,13 @@ fun BillsContent(viewModel: BillsViewModel = hiltViewModel()) {
         notificationsGranted = granted
         viewModel.onEvent(BillsEvent.SetRemindersEnabled(granted))
     }
+    var detailItem by remember { mutableStateOf<BillItem?>(null) }
 
     DisposableEffect(lifecycleOwner, context) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 notificationsGranted = hasPostNotificationsPermission(context)
+                viewModel.onEvent(BillsEvent.RefreshDate)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -74,6 +82,46 @@ fun BillsContent(viewModel: BillsViewModel = hiltViewModel()) {
 
     Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.l)) {
         BillsSummaryCard(state = state)
+        // Explicit manual-commitment entry point — always reachable from the Bills list.
+        ReminderButton(
+            text = stringResource(R.string.plan_bills033_add_commitment),
+            onClick = { viewModel.onEvent(BillsEvent.OpenManualRuleEditor) },
+            primary = false,
+        )
+        BillsCalendarStrip(days = state.calendarDays)
+        // Honest bounded-view disclosure: the list covers a window around today. This
+        // never claims anything about payment — older occurrences simply aren't listed.
+        if (state.coverage?.uiHistoryTruncated == true) {
+            AtharText(
+                text = stringResource(R.string.plan_bills_coverage_bounded),
+                style = theme.typography.caption,
+                color = theme.colors.muted,
+            )
+        }
+        if (state.suggestedCommitments.isNotEmpty()) {
+            SuggestedCommitmentsCard(
+                commitments = state.suggestedCommitments,
+                onCreateRule = { viewModel.onEvent(BillsEvent.CreateRuleFromSuggestion(it)) },
+            )
+        }
+        if (state.items.isEmpty() && !state.isLoading) {
+            AtharEmptyState(
+                text = stringResource(R.string.plan_bills_empty_text),
+                subtle = stringResource(R.string.plan_bills_empty_subtle),
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.xs)) {
+                state.items.forEach { item ->
+                    BillRow(item = item, today = state.today, onOpenDetail = { detailItem = it })
+                }
+            }
+        }
+        onOpenDebtScenario?.let { open ->
+            ScenarioTextAction(stringResource(R.string.debt_scenario_entry), onClick = open)
+        }
+        onOpenCashScenario?.let { open ->
+            ScenarioTextAction(stringResource(R.string.cash_scenario_entry), onClick = open)
+        }
         BillReminderCard(
             enabled = state.remindersEnabled,
             notificationsGranted = notificationsGranted,
@@ -87,19 +135,31 @@ fun BillsContent(viewModel: BillsViewModel = hiltViewModel()) {
             },
             onDisable = { viewModel.onEvent(BillsEvent.SetRemindersEnabled(false)) },
         )
-        BillsCalendarStrip(days = state.calendarDays)
-        if (state.items.isEmpty() && !state.isLoading) {
-            AtharEmptyState(
-                text = stringResource(R.string.plan_bills_empty_text),
-                subtle = stringResource(R.string.plan_bills_empty_subtle),
-            )
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.xs)) {
-                state.items.forEach { item ->
-                    BillRow(item = item, today = state.today)
-                }
-            }
-        }
+    }
+
+    detailItem?.let { item ->
+        BillDetailSheet(
+            item = item,
+            today = state.today,
+            onDismiss = { detailItem = null },
+            onPause = {
+                viewModel.onEvent(BillsEvent.SetRuleActive(item.ruleId, active = false))
+                detailItem = null
+            },
+            onDelete = {
+                viewModel.onEvent(BillsEvent.CancelRule(item.ruleId))
+                detailItem = null
+            },
+        )
+    }
+
+    state.manualRuleEditor?.let { editor ->
+        ManualRuleEditorSheet(
+            editor = editor,
+            onUpdateDraft = { viewModel.onEvent(BillsEvent.UpdateManualRuleDraft(it)) },
+            onSubmit = { viewModel.onEvent(BillsEvent.SubmitManualRule) },
+            onDismiss = { viewModel.onEvent(BillsEvent.DismissManualRuleEditor) },
+        )
     }
 }
 
@@ -128,9 +188,9 @@ private fun BillReminderCard(
             AtharText(
                 text = stringResource(
                     when {
-                        active -> R.string.plan_bills_reminders_on_body
+                        active -> R.string.plan_bills035_reminders_body
                         enabled && !notificationsGranted -> R.string.plan_bills_reminders_permission_body
-                        else -> R.string.plan_bills_reminders_body
+                        else -> R.string.plan_bills035_reminders_body
                     },
                 ),
                 style = theme.typography.body,
@@ -178,11 +238,17 @@ private fun BillsSummaryCard(state: BillsState) {
     AtharCard {
         Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.s)) {
             AtharText(
-                text = stringResource(R.string.plan_bills_summary_title),
+                text = stringResource(R.string.plan_bills035_summary_30_days),
                 style = theme.typography.caption,
                 color = theme.colors.muted,
             )
-            AtharNumber(money = state.outgoingNext30Days, color = theme.colors.ember)
+            // One row per currency — amounts are never merged across currencies.
+            state.outgoingNext30ByCurrency.forEach { currencyTotal ->
+                AtharNumber(money = currencyTotal.total, color = theme.colors.ember)
+            }
+            if (state.outgoingNext30ByCurrency.isEmpty()) {
+                AtharNumber(money = Money.zero(), color = theme.colors.ember)
+            }
             AtharText(
                 text = stringResource(
                     R.string.plan_bills_summary_subtitle,
@@ -192,6 +258,60 @@ private fun BillsSummaryCard(state: BillsState) {
                 style = theme.typography.caption,
                 color = theme.colors.muted,
             )
+        }
+    }
+}
+
+@Composable
+private fun SuggestedCommitmentsCard(
+    commitments: List<SuggestedCommitment>,
+    onCreateRule: (RecurringSuggestion) -> Unit,
+) {
+    val theme = AtharTheme
+    AtharCard {
+        Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.s)) {
+            AtharText(
+                text = stringResource(R.string.plan_bills_suggestions_title),
+                style = theme.typography.caption,
+                color = theme.colors.muted,
+            )
+            AtharText(
+                text = stringResource(R.string.plan_bills_suggestions_subtitle),
+                style = theme.typography.body,
+                color = theme.colors.ink,
+            )
+            commitments.forEach { commitment ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(theme.spacing.m),
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
+                    ) {
+                        AtharText(
+                            text = commitment.merchant,
+                            style = theme.typography.headline,
+                            color = theme.colors.ink,
+                        )
+                        AtharText(
+                            text = cadenceLabel(commitment.cadence),
+                            style = theme.typography.caption,
+                            color = theme.colors.muted,
+                        )
+                    }
+                    AtharNumber(
+                        money = commitment.amount,
+                        color = theme.colors.muted,
+                    )
+                }
+                ReminderButton(
+                    text = stringResource(R.string.plan_bills_suggestions_create),
+                    onClick = { onCreateRule(commitment.source) },
+                    primary = false,
+                )
+            }
         }
     }
 }
@@ -241,21 +361,15 @@ private fun CalendarDayChip(day: BillCalendarDay) {
             modifier = Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(
-                    when {
-                        day.hasOverdue -> theme.colors.crimson
-                        hasBills -> theme.colors.ember
-                        else -> theme.colors.divider
-                    },
-                ),
+                .background(if (hasBills) theme.colors.ember else theme.colors.divider),
         )
     }
 }
 
 @Composable
-private fun BillRow(item: BillItem, today: LocalDate?) {
+private fun BillRow(item: BillItem, today: LocalDate?, onOpenDetail: (BillItem) -> Unit) {
     val theme = AtharTheme
-    AtharCard {
+    AtharCard(modifier = Modifier.clickable { onOpenDetail(item) }) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -274,12 +388,160 @@ private fun BillRow(item: BillItem, today: LocalDate?) {
                 AtharText(
                     text = itemSubtitle(item),
                     style = theme.typography.caption,
-                    color = if (item.isOverdue) theme.colors.crimson else theme.colors.muted,
+                    color = theme.colors.muted,
                 )
             }
             AtharNumber(
                 money = item.amount,
                 color = if (item.type == TxType.INCOME) theme.colors.olive else theme.colors.ember,
+            )
+        }
+    }
+}
+
+/**
+ * One-tap detail for an expected occurrence: status truth, and for paid items the
+ * real matching evidence (charge date and transaction id) — a genuine trace source
+ * two taps deep from the Bills list. Offers pause (reversible) and a confirmed
+ * permanent cancel of the underlying rule.
+ */
+@androidx.compose.material3.ExperimentalMaterial3Api
+@Composable
+private fun BillDetailSheet(
+    item: BillItem,
+    today: LocalDate?,
+    onDismiss: () -> Unit,
+    onPause: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val theme = AtharTheme
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var confirmDelete by remember(item.id) { mutableStateOf(false) }
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = theme.colors.parchment,
+        contentColor = theme.colors.ink,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(theme.spacing.m),
+            verticalArrangement = Arrangement.spacedBy(theme.spacing.m),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.xs)) {
+                AtharText(
+                    text = item.title.ifBlank { stringResource(R.string.plan_bills_unknown_title) },
+                    style = theme.typography.title,
+                )
+                item.detail.takeIf { it.isNotBlank() }?.let {
+                    AtharText(text = it, style = theme.typography.caption, color = theme.colors.muted)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(theme.spacing.s)) {
+                    AtharNumber(
+                        money = item.amount,
+                        color = if (item.type == TxType.INCOME) theme.colors.olive else theme.colors.ember,
+                    )
+                    item.cadence?.let {
+                        AtharText(text = cadenceLabel(it), style = theme.typography.caption, color = theme.colors.muted)
+                    }
+                }
+                AtharText(
+                    text = stringResource(R.string.plan_bills_detail_due, item.dueDate.toString()),
+                    style = theme.typography.caption,
+                    color = theme.colors.muted,
+                )
+                AtharText(
+                    text = statusLabel(item, today),
+                    style = theme.typography.body,
+                    color = when (item.status) {
+                        BillStatus.PAID -> theme.colors.olive
+                        BillStatus.UNCONFIRMED -> theme.colors.dust
+                        BillStatus.DUE_TODAY -> theme.colors.ember
+                        BillStatus.UPCOMING -> theme.colors.muted
+                    },
+                )
+            }
+
+            // Real evidence trace: the exact confirmed charge that settled this
+            // occurrence — the matcher's own bound transaction record (date, amount,
+            // currency, account, merchant). Never a synthesized or capped row.
+            val evidence = item.evidence
+            if (item.status == BillStatus.PAID && evidence != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(theme.spacing.s))
+                        .background(theme.colors.surface)
+                        .padding(theme.spacing.s),
+                    verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
+                ) {
+                    AtharText(
+                        text = stringResource(R.string.plan_bills_detail_evidence_title),
+                        style = theme.typography.caption,
+                        color = theme.colors.olive,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(theme.spacing.s),
+                    ) {
+                        AtharText(
+                            text = stringResource(R.string.plan_bills033_evidence_charged),
+                            style = theme.typography.caption,
+                            color = theme.colors.muted,
+                        )
+                        AtharNumber(money = evidence.amount, color = theme.colors.ink)
+                    }
+                    AtharText(
+                        text = stringResource(R.string.plan_bills_detail_evidence_date, evidence.date.toString()),
+                        style = theme.typography.body,
+                        color = theme.colors.ink,
+                    )
+                    AtharText(
+                        text = stringResource(R.string.plan_bills033_evidence_account, evidence.accountId),
+                        style = theme.typography.caption,
+                        color = theme.colors.muted,
+                    )
+                    AtharText(
+                        text = stringResource(R.string.plan_bills033_evidence_merchant, evidence.merchant),
+                        style = theme.typography.caption,
+                        color = theme.colors.muted,
+                    )
+                    AtharText(
+                        text = stringResource(R.string.plan_bills_detail_evidence_ref, evidence.transactionId),
+                        style = theme.typography.caption,
+                        color = theme.colors.muted,
+                    )
+                }
+            } else {
+                AtharText(
+                    text = stringResource(R.string.plan_bills_detail_evidence_missing),
+                    style = theme.typography.caption,
+                    color = theme.colors.muted,
+                )
+            }
+
+            ReminderButton(
+                text = stringResource(R.string.plan_bills_detail_pause),
+                onClick = onPause,
+                primary = false,
+            )
+            ReminderButton(
+                text = stringResource(
+                    if (confirmDelete) {
+                        R.string.plan_bills_detail_confirm_delete
+                    } else {
+                        R.string.plan_bills_detail_delete
+                    },
+                ),
+                onClick = {
+                    if (confirmDelete) {
+                        onDelete()
+                    } else {
+                        confirmDelete = true
+                    }
+                },
+                primary = false,
             )
         }
     }
@@ -293,52 +555,59 @@ private fun DateBadge(item: BillItem, today: LocalDate?) {
             .width(58.dp)
             .height(MinTouchTarget)
             .clip(RoundedCornerShape(theme.spacing.s))
-            .background(if (item.isOverdue) theme.colors.crimson else theme.colors.divider),
+            .background(theme.colors.divider),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         AtharText(
             text = item.dueDate.dayOfMonth.toString(),
             style = theme.typography.body,
-            color = if (item.isOverdue) theme.colors.parchment else theme.colors.ink,
+            color = theme.colors.ink,
         )
         AtharText(
-            text = dateStatusLabel(item.dueDate, today, item.isOverdue),
+            text = statusLabel(item, today),
             style = theme.typography.caption,
-            color = if (item.isOverdue) theme.colors.parchment else theme.colors.muted,
+            color = when (item.status) {
+                BillStatus.PAID -> theme.colors.olive
+                BillStatus.UNCONFIRMED -> theme.colors.dust
+                BillStatus.DUE_TODAY -> theme.colors.ember
+                BillStatus.UPCOMING -> theme.colors.muted
+            },
             maxLines = 1,
         )
     }
 }
 
 @Composable
-private fun itemSubtitle(item: BillItem): String {
-    val source = when (item.kind) {
-        BillKind.RECURRING -> item.cadence?.let { cadenceLabel(it) }.orEmpty()
-        BillKind.PENDING_REVIEW -> stringResource(R.string.plan_bills_pending_review)
-    }
-    return listOfNotNull(
-        source.takeIf { it.isNotBlank() },
+private fun itemSubtitle(item: BillItem): String =
+    listOfNotNull(
+        item.cadence?.let { cadenceLabel(it) }?.takeIf { it.isNotBlank() },
         item.detail.takeIf { it.isNotBlank() },
     ).joinToString(" · ")
-}
 
 @Composable
 private fun cadenceLabel(cadence: BillCadenceLabel): String = when (cadence) {
     BillCadenceLabel.MONTHLY -> stringResource(R.string.plan_bills_cadence_monthly)
     BillCadenceLabel.WEEKLY -> stringResource(R.string.plan_bills_cadence_weekly)
+    BillCadenceLabel.QUARTERLY -> stringResource(R.string.plan_bills_cadence_quarterly)
     BillCadenceLabel.YEARLY -> stringResource(R.string.plan_bills_cadence_yearly)
 }
 
 @Composable
-private fun dateStatusLabel(date: LocalDate, today: LocalDate?, isOverdue: Boolean): String {
-    if (isOverdue) return stringResource(R.string.plan_bills_overdue)
-    if (today == null) return date.monthNumber.toString()
-    val days = ChronoUnit.DAYS.between(today.toJava(), date.toJava()).toInt()
-    return when (days) {
-        0 -> stringResource(R.string.plan_bills_today)
-        in 1..6 -> stringResource(R.string.plan_bills_in_days_short, days)
-        else -> date.monthNumber.toString()
+private fun statusLabel(item: BillItem, today: LocalDate?): String = when (item.status) {
+    BillStatus.PAID -> stringResource(R.string.plan_bills_status_paid)
+    BillStatus.UNCONFIRMED -> stringResource(R.string.plan_bills_status_unconfirmed)
+    BillStatus.DUE_TODAY -> stringResource(R.string.plan_bills_today)
+    BillStatus.UPCOMING -> {
+        if (today == null) {
+            item.dueDate.monthNumber.toString()
+        } else {
+            val days = ChronoUnit.DAYS.between(today.toJava(), item.dueDate.toJava()).toInt()
+            when {
+                days in 1..6 -> stringResource(R.string.plan_bills_in_days_short, days)
+                else -> item.dueDate.monthNumber.toString()
+            }
+        }
     }
 }
 

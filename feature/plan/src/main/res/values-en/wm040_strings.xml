@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plan_portfolio_evidence_toggle">How are these results computed?</string>
+    <string name="plan_portfolio_evidence_hide">Hide explanation</string>
+    <string name="plan_portfolio_evidence_recomputed">Results use your saved entries and quotes, without fetching external prices or inventing missing prices.</string>
+    <string name="plan_portfolio_evidence_money_gain">Value gain or loss can include unrealised valuations. It is not cash received or an annualised rate.</string>
+    <string name="plan_portfolio_evidence_xirr_requires">XIRR uses dated external flows and the terminal valuation. The bounded calculation does not guarantee a unique rate.</string>
+    <string name="plan_portfolio_evidence_twr_requires">Time-weighted return requires observed valuations before and after flows; daily closing prices are insufficient.</string>
+    <string name="plan_portfolio_evidence_undefined_note">A return may be unavailable because inputs are missing or no reliable result can be calculated. Values are not invented.</string>
+    <string name="plan_portfolio_evidence_inputs_title">Saved dated inputs</string>
+    <string name="plan_portfolio_evidence_counts">Entries: %1$d · Dated quotes: %2$d</string>
+    <string name="plan_portfolio_evidence_span">Span: %1$s to %2$s</string>
+    <string name="plan_portfolio_evidence_empty">No dated entries or quotes saved yet.</string>
+    <string name="plan_portfolio_evidence_unpriced">Securities without a usable quote: %1$s</string>
+    <string name="plan_portfolio_evidence_gain_not_replayable">Money gain not computed: the saved inputs are currently rejected.</string>
+    <string name="plan_portfolio_perf_scope">Results computed through %1$s</string>
+</resources>

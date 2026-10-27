@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Arabic (default) strings for the Bills/commitments lane (WM028-02), kept in a
+  dedicated file so this lane's additions never collide with the shared Plan file.
+  English overrides live in values-en/bills_wealth_strings.xml.
+-->
+<resources>
+
+    <string name="plan_bills_cadence_quarterly">ربع سنوي</string>
+    <string name="plan_bills_status_paid">مدفوعة</string>
+    <!-- Neutral review state: Athar never asserts that a charge was missed or left unpaid. -->
+    <string name="plan_bills_status_unconfirmed">بانتظار تأكيد الدفع</string>
+    <string name="plan_bills_suggestions_title">التزامات محتملة</string>
+    <string name="plan_bills_suggestions_subtitle">اكتشفنا نمطًا متكررًا في سجلّك. راجِعه، وعند تأكيدك يصبح التزامًا بتاريخ متوقع.</string>
+    <string name="plan_bills_suggestions_create">إنشاء التزام</string>
+    <string name="plan_bills_detail_due">تاريخ الاستحقاق: %1$s</string>
+    <string name="plan_bills_detail_evidence_title">دفعة مطابقة</string>
+    <string name="plan_bills_detail_evidence_date">تاريخ الدفعة: %1$s</string>
+    <string name="plan_bills_detail_evidence_ref">مرجع الحركة: %1$s</string>
+    <string name="plan_bills_detail_evidence_missing">لا توجد دفعة مطابقة بعد. عند تأكيد دفعة مطابقة ستظهر تفاصيلها هنا.</string>
+    <string name="plan_bills_detail_pause">إيقاف الالتزام</string>
+    <string name="plan_bills_detail_delete">حذف الالتزام</string>
+    <string name="plan_bills_detail_confirm_delete">تأكيد الحذف نهائيًا</string>
+    <!-- Bounded-view disclosure only: it never claims a bill was missed or left unpaid. -->
+    <string name="plan_bills_coverage_bounded">تُعرض الالتزامات في نافذة زمنية محدودة حول اليوم، وقد توجد التزامات أقدم لا تُدرج في هذه القائمة.</string>
+
+</resources>

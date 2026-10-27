@@ -21,8 +21,14 @@ data class RecurringSuggestion(
     val occurrenceCount: Int,
     /** The day-of-month at which most occurrences happened (median-ish). */
     val typicalDayOfMonth: Int,
+    /** Observed cadence of the pattern (weekly, monthly, quarterly, yearly). */
+    val cadence: Cadence = Cadence.MONTHLY,
+    /** Day-of-week anchor for [Cadence.WEEKLY] (1=Monday … 7=Sunday), when observed. */
+    val dayOfWeek: Int? = null,
+    /** Month anchor for [Cadence.YEARLY] (1..12), when observed. */
+    val monthOfYear: Int? = null,
     /** The most recent occurrence — used to seed the new rule's nextRunDate. */
     val lastSeen: LocalDate,
-    /** Estimated nextRunDate: same day-of-month next month, clamped. */
+    /** Estimated nextRunDate: same cadence and anchor after [lastSeen], clamped, always after today. */
     val suggestedNextRun: LocalDate,
 )

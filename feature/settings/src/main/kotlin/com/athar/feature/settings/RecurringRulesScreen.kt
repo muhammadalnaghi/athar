@@ -1,5 +1,7 @@
 package com.athar.feature.settings
 
+import com.athar.core.designsystem.display.currentUiLocale
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -253,12 +255,14 @@ fun RecurringRulesScreen(
                 categories = categoriesAll,
                 accounts = accounts,
                 onDismiss = { confirming = null },
-                onConfirm = { cadence, dayOfMonth, accountId, categoryId ->
+                onConfirm = { cadence, dayOfMonth, dayOfWeek, monthOfYear, accountId, categoryId ->
                     viewModel.acceptSuggestion(
                         suggestion = suggestion,
                         notes = notesText,
                         cadence = cadence,
                         dayOfMonth = dayOfMonth,
+                        dayOfWeek = dayOfWeek,
+                        monthOfYear = monthOfYear,
                         accountId = accountId,
                         categoryId = categoryId,
                     )
@@ -337,10 +341,12 @@ private fun AddRuleForm(
                     onClick = { cadence = Cadence.MONTHLY })
                 Chip(label = stringResource(R.string.settings_recurring_cadence_weekly), selected = cadence == Cadence.WEEKLY, accent = theme.colors.ember,
                     onClick = { cadence = Cadence.WEEKLY })
+                Chip(label = stringResource(R.string.settings_recurring_cadence_quarterly), selected = cadence == Cadence.QUARTERLY, accent = theme.colors.ember,
+                    onClick = { cadence = Cadence.QUARTERLY })
                 Chip(label = stringResource(R.string.settings_recurring_cadence_yearly), selected = cadence == Cadence.YEARLY, accent = theme.colors.ember,
                     onClick = { cadence = Cadence.YEARLY })
             }
-            if (cadence == Cadence.MONTHLY) {
+            if (cadence != Cadence.WEEKLY) {
                 AtharTextField(
                     value = dayOfMonth,
                     onValueChange = { dayOfMonth = it.filter { c -> c.isDigit() }.take(2) },
@@ -353,7 +359,7 @@ private fun AddRuleForm(
                 text = stringResource(R.string.settings_recurring_save),
                 onClick = {
                     val dom = dayOfMonth.toIntOrNull()
-                    val startDate = if (cadence == Cadence.MONTHLY && dom != null) {
+                    val startDate = if (cadence != Cadence.WEEKLY && dom != null) {
                         val jt = java.time.LocalDate.of(today.year, today.monthNumber, 1)
                             .let { firstOfMonth ->
                                 val safeDom = dom.coerceIn(1, firstOfMonth.lengthOfMonth())
@@ -649,6 +655,7 @@ private fun SuggestionRow(
 private fun cadenceLabel(c: Cadence): String = when (c) {
     Cadence.MONTHLY -> stringResource(R.string.settings_recurring_cadence_monthly)
     Cadence.WEEKLY -> stringResource(R.string.settings_recurring_cadence_weekly)
+    Cadence.QUARTERLY -> stringResource(R.string.settings_recurring_cadence_quarterly)
     Cadence.YEARLY -> stringResource(R.string.settings_recurring_cadence_yearly)
 }
 
@@ -697,11 +704,11 @@ private fun ConfirmSuggestionSheet(
     categories: List<com.athar.core.domain.model.Category>,
     accounts: List<Account>,
     onDismiss: () -> Unit,
-    onConfirm: (Cadence, Int?, String, String?) -> Unit,
+    onConfirm: (Cadence, Int?, Int?, Int?, String, String?) -> Unit,
 ) {
     val theme = AtharTheme
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var cadence by remember { mutableStateOf(Cadence.MONTHLY) }
+    var cadence by remember { mutableStateOf(suggestion.cadence) }
     var dayOfMonth by remember { mutableStateOf(suggestion.typicalDayOfMonth.toString()) }
     val expectedKind = if (suggestion.type == TxType.INCOME) {
         com.athar.core.domain.model.CategoryKind.INCOME
@@ -764,7 +771,7 @@ private fun ConfirmSuggestionSheet(
                 }
             }
 
-            if (cadence == Cadence.MONTHLY) {
+            if (cadence != Cadence.WEEKLY) {
                 AtharTextField(
                     value = dayOfMonth,
                     onValueChange = { dayOfMonth = it.filter { ch -> ch.isDigit() }.take(2) },
@@ -819,7 +826,9 @@ private fun ConfirmSuggestionSheet(
                         .background(theme.colors.ember)
                         .clickable {
                             val dom = dayOfMonth.toIntOrNull()?.coerceIn(1, 31)
-                            onConfirm(cadence, dom, selectedAccountId, selectedCategoryId)
+                            val dow = if (cadence == Cadence.WEEKLY) suggestion.dayOfWeek else null
+                            val moy = if (cadence == Cadence.YEARLY) suggestion.monthOfYear else null
+                            onConfirm(cadence, dom, dow, moy, selectedAccountId, selectedCategoryId)
                         }
                         .padding(theme.spacing.m),
                     contentAlignment = Alignment.Center,
@@ -858,7 +867,7 @@ private fun recurringCategoryDisplayName(categoryId: String?, categories: List<C
     }
     val category = categories.firstOrNull { it.id == categoryId }
         ?: return stringResource(R.string.settings_recurring_row_unknown_category, categoryId)
-    val isArabic = Locale.getDefault().language.equals("ar", ignoreCase = true)
+    val isArabic = currentUiLocale().language.equals("ar", ignoreCase = true)
     return if (isArabic) {
         category.nameAr.ifBlank { category.name }
     } else {

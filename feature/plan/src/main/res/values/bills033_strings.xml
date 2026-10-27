@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WM033 — Bills manual commitment + evidence drilldown (Arabic, default locale). -->
+<resources>
+    <string name="plan_bills033_add_commitment">إضافة التزام</string>
+    <string name="plan_bills033_editor_title">التزام جديد</string>
+    <string name="plan_bills033_field_name">الاسم</string>
+    <string name="plan_bills033_field_amount">المبلغ</string>
+    <string name="plan_bills033_field_currency">العملة</string>
+    <string name="plan_bills033_field_next_date">أقرب استحقاق</string>
+    <string name="plan_bills033_field_notes">تفاصيل اختيارية</string>
+    <string name="plan_bills033_cadence_title">التكرار</string>
+    <string name="plan_bills033_save">حفظ</string>
+    <string name="plan_bills033_cancel">إلغاء</string>
+    <string name="plan_bills033_error_name">أدخل اسمًا.</string>
+    <string name="plan_bills033_error_amount">أدخل مبلغًا صحيحًا.</string>
+    <string name="plan_bills033_error_amount_positive">المبلغ يجب أن يتجاوز صفرًا.</string>
+    <string name="plan_bills033_error_precision">تعذّر حفظ مبلغ بدقة تتجاوز منزلتين عشريتين. عدّل المبلغ.</string>
+    <string name="plan_bills033_error_currency">رمز العملة ثلاثة أحرف لاتينية، مثل SAR.</string>
+    <string name="plan_bills033_error_date">أدخل تاريخًا بصيغة 2026-12-01.</string>
+    <string name="plan_bills033_error_save">تعذّر الحفظ. أعد المحاولة أو ألغِ.</string>
+    <string name="plan_bills033_evidence_charged">المبلغ المدفوع</string>
+    <string name="plan_bills033_evidence_account" formatted="true">الحساب: %1$s</string>
+    <string name="plan_bills033_evidence_merchant" formatted="true">التاجر: %1$s</string>
+</resources>
