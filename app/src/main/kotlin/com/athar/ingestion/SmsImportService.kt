@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Telephony
 import androidx.core.content.ContextCompat
-import com.athar.core.data.db.dao.TransactionDao
 import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.RawIngestDispatcher
 import com.athar.core.domain.model.RawIngestEvent
 import com.athar.core.domain.repo.BackfillProgress
 import com.athar.core.domain.repo.SmsImportController
 import com.athar.core.domain.repo.SmsImportPreferencesRepository
+import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.smsimport.DiscoveredSmsSender
 import com.athar.core.domain.smsimport.SmsImportFilterGate
 import com.athar.core.domain.smsimport.SmsImportPreview
@@ -41,7 +41,7 @@ class SmsImportService @Inject constructor(
     private val prefs: SmsImportPreferencesRepository,
     private val dispatcher: RawIngestDispatcher,
     private val parser: SmsParser,
-    private val transactions: TransactionDao,
+    private val transactions: TransactionRepository,
 ) : SmsImportController {
 
     private val _progress = MutableStateFlow<BackfillProgress>(BackfillProgress.Idle)
@@ -82,6 +82,8 @@ class SmsImportService @Inject constructor(
         var parseable = 0
         var duplicates = 0
         var skipped = 0
+        // ponytail: one snapshot for duplicate counts; upsertIngest still enforces uniqueness.
+        val existingRefs = existingSourceRefIds()
         forEachMatching(settings) { sender, body, receivedAt, rawId ->
             matching += 1
             val event = RawIngestEvent(
@@ -95,7 +97,7 @@ class SmsImportService @Inject constructor(
             when (val result = parser.parse(event)) {
                 is ParseResult.Success -> {
                     parseable += 1
-                    if (transactions.findBySourceRefId(rawId) != null) duplicates += 1
+                    if (rawId in existingRefs) duplicates += 1
                 }
                 ParseResult.Ignored, is ParseResult.Failed -> skipped += 1
             }
@@ -130,6 +132,7 @@ class SmsImportService @Inject constructor(
         var duplicates = 0
         var skipped = 0
         return runCatching {
+            val existingRefs = existingSourceRefIds()
             forEachMatching(settings) { sender, body, receivedAt, rawId ->
                 scanned += 1
                 if (scanned % 25 == 0) _progress.value = BackfillProgress.Running(scanned)
@@ -144,7 +147,7 @@ class SmsImportService @Inject constructor(
                 when (val result = parser.parse(event)) {
                     is ParseResult.Success -> {
                         parseable += 1
-                        if (transactions.findBySourceRefId(rawId) != null) duplicates += 1
+                        if (rawId in existingRefs) duplicates += 1
                     }
                     ParseResult.Ignored, is ParseResult.Failed -> skipped += 1
                 }
@@ -208,6 +211,9 @@ class SmsImportService @Inject constructor(
             }
         }
     }
+
+    private suspend fun existingSourceRefIds(): Set<String> =
+        transactions.observeAll().first().mapNotNull { it.sourceRefId }.toHashSet()
 
     private fun hasReadSms(): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) ==
