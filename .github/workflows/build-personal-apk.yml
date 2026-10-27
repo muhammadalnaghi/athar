@@ -1,7 +1,7 @@
-# Builds the sideload personalFullSms debug APK (SMS permissions intact).
-# No keystore secrets required: AGP signs with the runner's debug keystore.
-# That key is NOT stable across fresh runners — see release-signing plan before
-# putting real financial data on device.
+# Signed personalFullSms release APK → GitHub ZIP artifact → extract APK → Google Drive.
+#
+# Signing uses a persistent keystore stored only in repo secrets (never committed).
+# Untrusted pull_request runs: unit tests only (no signing secrets, no deploy).
 name: Build personal APK
 
 on:
@@ -11,18 +11,24 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 concurrency:
   group: build-personal-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  test-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+      apk_sha256: ${{ steps.verify.outputs.apk_sha256 }}
+      cert_sha256: ${{ steps.verify.outputs.cert_sha256 }}
+      version_code: ${{ steps.verify.outputs.version_code }}
+      version_name: ${{ steps.verify.outputs.version_name }}
+      package_id: ${{ steps.verify.outputs.package_id }}
+      apk_bytes: ${{ steps.verify.outputs.apk_bytes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -51,32 +57,222 @@ jobs:
           :feature:today:testDebugUnitTest
           --no-daemon --stacktrace
 
-      - name: Assemble personalFullSms debug APK
-        run: ./gradlew :app:assemblePersonalFullSmsDebug --no-daemon --stacktrace
+      - name: Decide signed release eligibility
+        id: gate
+        run: |
+          set -euo pipefail
+          # Never load signing secrets on pull_request (including same-repo PRs).
+          SIGNED=false
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            SIGNED=true
+          fi
+          echo "signed=$SIGNED" >> "$GITHUB_OUTPUT"
+          echo "Signed release build enabled: $SIGNED"
 
-      - name: Upload APK artifact
+      - name: Materialize release keystore from secrets
+        if: steps.gate.outputs.signed == 'true'
+        env:
+          ATHAR_KEYSTORE_BASE64: ${{ secrets.ATHAR_KEYSTORE_BASE64 }}
+          ATHAR_STORE_PASSWORD: ${{ secrets.ATHAR_STORE_PASSWORD }}
+          ATHAR_KEY_ALIAS: ${{ secrets.ATHAR_KEY_ALIAS }}
+          ATHAR_KEY_PASSWORD: ${{ secrets.ATHAR_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p keystore
+          printf '%s' "$ATHAR_KEYSTORE_BASE64" | base64 -d > keystore/athar-release.keystore
+          test -s keystore/athar-release.keystore
+          # Write without leading YAML indentation (Properties parser is strict).
+          {
+            echo "storeFile=keystore/athar-release.keystore"
+            echo "storePassword=${ATHAR_STORE_PASSWORD}"
+            echo "keyAlias=${ATHAR_KEY_ALIAS}"
+            echo "keyPassword=${ATHAR_KEY_PASSWORD}"
+          } > keystore.properties
+          # Do not print secret values.
+          echo "keystore ready ($(wc -c < keystore/athar-release.keystore) bytes)"
+
+      - name: Assemble personalFullSms release APK
+        if: steps.gate.outputs.signed == 'true'
+        run: ./gradlew :app:assemblePersonalFullSmsRelease --no-daemon --stacktrace
+
+      - name: Verify APK signature and identity
+        id: verify
+        if: steps.gate.outputs.signed == 'true'
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/personalFullSms/release/app-personalFullSms-release.apk"
+          test -f "$APK"
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          APKSIGNER="$BUILD_TOOLS/apksigner"
+          AAPT="$BUILD_TOOLS/aapt"
+          "$APKSIGNER" verify --verbose "$APK"
+          BADGING=$("$AAPT" dump badging "$APK")
+          PACKAGE=$(echo "$BADGING" | sed -n "s/.*package: name='\([^']*\)'.*/\1/p" | head -1)
+          VCODE=$(echo "$BADGING" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" | head -1)
+          VNAME=$(echo "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p" | head -1)
+          test "$PACKAGE" = "com.athar.personal"
+          test -n "$VCODE"
+          test -n "$VNAME"
+          APK_SHA=$(sha256sum "$APK" | awk '{print $1}')
+          CERT_SHA=$("$APKSIGNER" verify --print-certs "$APK" 2>/dev/null \
+            | awk -F': ' '/SHA-256 digest/{print $2; exit}')
+          test -n "$CERT_SHA"
+          {
+            echo "apk_sha256=$APK_SHA"
+            echo "cert_sha256=$CERT_SHA"
+            echo "version_code=$VCODE"
+            echo "version_name=$VNAME"
+            echo "package_id=$PACKAGE"
+            echo "apk_bytes=$(wc -c < "$APK")"
+          } >> "$GITHUB_OUTPUT"
+          echo "package=$PACKAGE versionCode=$VCODE versionName=$VNAME"
+          echo "apk_sha256=$APK_SHA"
+          echo "cert_sha256=$CERT_SHA"
+
+      - name: Upload GitHub Actions ZIP artifact (APK inside)
+        if: steps.gate.outputs.signed == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: athar-personalFullSms-debug
-          path: app/build/outputs/apk/personalFullSms/debug/*.apk
+          name: athar-personalFullSms-release
+          path: app/build/outputs/apk/personalFullSms/release/app-personalFullSms-release.apk
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload APK to Google Drive
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      - name: Record artifact name
+        id: meta
+        if: steps.gate.outputs.signed == 'true'
+        run: echo "artifact_name=athar-personalFullSms-release" >> "$GITHUB_OUTPUT"
+
+  deploy-drive:
+    name: Extract ZIP artifact and upload APK to Google Drive
+    needs: test-and-build
+    if: >
+      always() &&
+      needs.test-and-build.result == 'success' &&
+      needs.test-and-build.outputs.artifact_name != '' &&
+      github.event_name != 'pull_request' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/main' ||
+       startsWith(github.ref, 'refs/heads/feat/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Set up Android SDK tools (validate APK)
+        uses: android-actions/setup-android@v4
+        with:
+          packages: build-tools;35.0.0 platform-tools
+
+      - name: Download ZIP artifact from THIS run via GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: ${{ needs.test-and-build.outputs.artifact_name }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/artifact-zip"
+          ARTIFACT_ID=$(gh api "repos/${REPO}/actions/runs/${RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name==\"${ARTIFACT_NAME}\") | .id" | head -1)
+          if [ -z "${ARTIFACT_ID}" ]; then
+            echo "::error::Artifact ${ARTIFACT_NAME} not found on run ${RUN_ID}"
+            exit 1
+          fi
+          echo "Downloading artifact id=${ARTIFACT_ID} as ZIP"
+          # Explicit ZIP download (not auto-extract).
+          gh api "repos/${REPO}/actions/artifacts/${ARTIFACT_ID}/zip" > "$RUNNER_TEMP/artifact-zip/artifact.zip"
+          test -s "$RUNNER_TEMP/artifact-zip/artifact.zip"
+          # Reject if the download is somehow already a lone APK mislabeled as zip.
+          file "$RUNNER_TEMP/artifact-zip/artifact.zip" | tee /tmp/zip-file-type.txt
+          grep -qiE 'Zip archive|zip compressed' /tmp/zip-file-type.txt
+          echo "zip_bytes=$(wc -c < "$RUNNER_TEMP/artifact-zip/artifact.zip")"
+
+      - name: Extract ZIP and locate single APK
+        id: extract
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/extracted-apk"
+          unzip -q "$RUNNER_TEMP/artifact-zip/artifact.zip" -d "$RUNNER_TEMP/extracted-apk"
+          echo "Extracted tree:"
+          find "$RUNNER_TEMP/extracted-apk" -type f -print
+          mapfile -t APKS < <(find "$RUNNER_TEMP/extracted-apk" -type f -name '*.apk' | sort)
+          if [ "${#APKS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one APK in ZIP, found ${#APKS[@]}"
+            printf '%s\n' "${APKS[@]:-}"
+            exit 1
+          fi
+          APK="${APKS[0]}"
+          BASE=$(basename "$APK")
+          case "$BASE" in
+            *personalFullSms*release*.apk|app-personalFullSms-release.apk) ;;
+            *)
+              echo "::error::Unexpected APK name: $BASE"
+              exit 1
+              ;;
+          esac
+          # Must be an APK, never a ZIP renamed with .apk
+          file "$APK" | tee /tmp/apk-file-type.txt
+          if grep -qiE 'Zip archive|zip compressed' /tmp/apk-file-type.txt; then
+            # Android APKs are ZIP containers — require Android package markers.
+            if ! unzip -l "$APK" | grep -q 'AndroidManifest.xml'; then
+              echo "::error::File looks like a plain ZIP, not an Android APK"
+              exit 1
+            fi
+          fi
+          echo "apk_path=$APK" >> "$GITHUB_OUTPUT"
+          echo "apk_name=$BASE" >> "$GITHUB_OUTPUT"
+          echo "Extracted APK: $BASE ($(wc -c < "$APK") bytes)"
+
+      - name: Validate extracted APK (package, signature, checksum)
+        id: validate
+        env:
+          EXPECT_PACKAGE: ${{ needs.test-and-build.outputs.package_id }}
+          EXPECT_APK_SHA: ${{ needs.test-and-build.outputs.apk_sha256 }}
+          EXPECT_CERT_SHA: ${{ needs.test-and-build.outputs.cert_sha256 }}
+          EXPECT_VCODE: ${{ needs.test-and-build.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          APK="${{ steps.extract.outputs.apk_path }}"
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
+          BADGING=$("$BUILD_TOOLS/aapt" dump badging "$APK")
+          PACKAGE=$(echo "$BADGING" | sed -n "s/.*package: name='\([^']*\)'.*/\1/p" | head -1)
+          VCODE=$(echo "$BADGING" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" | head -1)
+          VNAME=$(echo "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p" | head -1)
+          APK_SHA=$(sha256sum "$APK" | awk '{print $1}')
+          CERT_SHA=$("$BUILD_TOOLS/apksigner" verify --print-certs "$APK" 2>/dev/null \
+            | awk -F': ' '/SHA-256 digest/{print $2; exit}')
+          test "$PACKAGE" = "com.athar.personal"
+          test "$PACKAGE" = "$EXPECT_PACKAGE"
+          test "$VCODE" = "$EXPECT_VCODE"
+          test "$APK_SHA" = "$EXPECT_APK_SHA"
+          test "$CERT_SHA" = "$EXPECT_CERT_SHA"
+          {
+            echo "apk_sha256=$APK_SHA"
+            echo "cert_sha256=$CERT_SHA"
+            echo "version_code=$VCODE"
+            echo "version_name=$VNAME"
+            echo "package_id=$PACKAGE"
+            echo "apk_bytes=$(wc -c < "$APK")"
+          } >> "$GITHUB_OUTPUT"
+          echo "Validated $PACKAGE v$VNAME ($VCODE) sha256=$APK_SHA"
+
+      - name: Upload extracted APK to Google Drive (NOT the ZIP)
+        id: drive
         env:
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
           GDRIVE_FOLDER_ID: 1BQbIGFI0i9RXAnTOnkclyoFsblKXHxfv
+          APK_PATH: ${{ steps.extract.outputs.apk_path }}
+          EXPECT_SHA: ${{ steps.validate.outputs.apk_sha256 }}
         run: |
           set -euo pipefail
-          APK="app/build/outputs/apk/personalFullSms/debug/app-personalFullSms-debug.apk"
-          NAME="app-personalFullSms-debug.apk"
-          test -f "$APK"
+          test -f "$APK_PATH"
           if [ -z "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
             echo "::error::Missing secret GDRIVE_SERVICE_ACCOUNT_JSON."
             exit 1
           fi
-
           SA_FILE="$RUNNER_TEMP/gdrive-sa.json"
           printf '%s' "$GDRIVE_SERVICE_ACCOUNT_JSON" > "$SA_FILE"
           if ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SA_FILE" 2>/dev/null; then
@@ -89,22 +285,116 @@ jobs:
           fi
           python3 -c 'import json,sys; e=json.load(open(sys.argv[1]))["client_email"]; print(f"service account: {e}")' "$SA_FILE"
 
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rclone
+          python3 -m pip install --quiet --disable-pip-version-check \
+            'google-api-python-client==2.169.0' 'google-auth==2.40.1'
 
-          export RCLONE_CONFIG_GDRIVE_TYPE=drive
-          export RCLONE_CONFIG_GDRIVE_SCOPE=drive
-          export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$SA_FILE"
+          DEST_NAME=athar-latest.apk
+          export SA_FILE APK_PATH GDRIVE_FOLDER_ID DEST_NAME EXPECT_SHA
+          python3 <<'PY'
+          import hashlib, os, sys
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
 
-          rclone delete "gdrive:" \
-            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            --include "$NAME" \
-            --drive-use-trash=false \
-            || true
+          sa = os.environ["SA_FILE"]
+          apk = os.environ["APK_PATH"]
+          folder = os.environ["GDRIVE_FOLDER_ID"]
+          name = os.environ["DEST_NAME"]
+          expect_sha = os.environ["EXPECT_SHA"].lower()
 
-          rclone copy "$APK" "gdrive:" \
-            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            --retries 5 \
-            -v
+          with open(apk, "rb") as f:
+              local_sha = hashlib.sha256(f.read()).hexdigest()
+          if local_sha != expect_sha:
+              print(f"::error::Local APK sha mismatch before upload: {local_sha} != {expect_sha}", file=sys.stderr)
+              sys.exit(1)
 
-          echo "Uploaded $NAME to Google Drive folder $GDRIVE_FOLDER_ID"
+          creds = service_account.Credentials.from_service_account_file(
+              sa, scopes=["https://www.googleapis.com/auth/drive"],
+          )
+          service = build("drive", "v3", credentials=creds, cache_discovery=False)
+          q = f"name='{name}' and '{folder}' in parents and trashed=false"
+          existing = service.files().list(
+              q=q, spaces="drive", fields="files(id,name,size,md5Checksum)",
+              pageSize=10, supportsAllDrives=True, includeItemsFromAllDrives=True,
+          ).execute().get("files", [])
+
+          media = MediaFileUpload(
+              apk,
+              mimetype="application/vnd.android.package-archive",
+              resumable=True,
+          )
+          updated_existing = False
+          if existing:
+              file_id = existing[0]["id"]
+              for dup in existing[1:]:
+                  service.files().delete(fileId=dup["id"], supportsAllDrives=True).execute()
+              meta = service.files().update(
+                  fileId=file_id,
+                  media_body=media,
+                  fields="id,name,size,md5Checksum,webViewLink,mimeType",
+                  supportsAllDrives=True,
+              ).execute()
+              updated_existing = True
+          else:
+              meta = service.files().create(
+                  body={"name": name, "parents": [folder]},
+                  media_body=media,
+                  fields="id,name,size,md5Checksum,webViewLink,mimeType",
+                  supportsAllDrives=True,
+              ).execute()
+
+          # Re-fetch to confirm.
+          confirmed = service.files().get(
+              fileId=meta["id"],
+              fields="id,name,size,md5Checksum,webViewLink,mimeType",
+              supportsAllDrives=True,
+          ).execute()
+          size = int(confirmed.get("size") or 0)
+          local_size = os.path.getsize(apk)
+          if size != local_size:
+              print(f"::error::Drive size {size} != local {local_size}", file=sys.stderr)
+              sys.exit(1)
+          mime = confirmed.get("mimeType") or ""
+          if "zip" in mime and "android.package" not in mime:
+              print(f"::error::Drive MIME looks like a ZIP: {mime}", file=sys.stderr)
+              sys.exit(1)
+          if not name.endswith(".apk"):
+              print("::error::Destination name must end with .apk", file=sys.stderr)
+              sys.exit(1)
+
+          out = os.environ["GITHUB_OUTPUT"]
+          with open(out, "a", encoding="utf-8") as fh:
+              fh.write(f"file_id={confirmed['id']}\n")
+              fh.write(f"file_name={confirmed['name']}\n")
+              fh.write(f"file_size={size}\n")
+              fh.write(f"mime_type={mime}\n")
+              fh.write(f"web_view_link={confirmed.get('webViewLink','')}\n")
+              fh.write(f"updated_existing={'true' if updated_existing else 'false'}\n")
+              fh.write(f"local_sha256={local_sha}\n")
+          print(
+              f"Uploaded {confirmed['name']} id={confirmed['id']} "
+              f"size={size} updated_existing={updated_existing}"
+          )
+          PY
+
+      - name: Deployment summary
+        run: |
+          set -euo pipefail
+          cat <<EOF
+          === Deployment verified ===
+          GitHub ZIP artifact: ${{ needs.test-and-build.outputs.artifact_name }}
+          Extracted APK: ${{ steps.extract.outputs.apk_name }}
+          package: ${{ steps.validate.outputs.package_id }}
+          versionName: ${{ steps.validate.outputs.version_name }}
+          versionCode: ${{ steps.validate.outputs.version_code }}
+          apk_sha256: ${{ steps.validate.outputs.apk_sha256 }}
+          cert_sha256: ${{ steps.validate.outputs.cert_sha256 }}
+          Drive file: ${{ steps.drive.outputs.file_name }}
+          Drive id: ${{ steps.drive.outputs.file_id }}
+          Drive size: ${{ steps.drive.outputs.file_size }}
+          Drive MIME: ${{ steps.drive.outputs.mime_type }}
+          Updated existing: ${{ steps.drive.outputs.updated_existing }}
+          Drive link: ${{ steps.drive.outputs.web_view_link }}
+          EOF
+          test -n "${{ steps.drive.outputs.file_id }}"
+          test "${{ steps.drive.outputs.file_name }}" = "athar-latest.apk"
