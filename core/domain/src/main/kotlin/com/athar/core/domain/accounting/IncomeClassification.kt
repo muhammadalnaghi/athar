@@ -8,11 +8,14 @@ import com.athar.core.domain.smsimport.SmsSenderIds
  *
  * Sender selection only establishes eligibility. Direction, transfer matching,
  * refunds, and user overrides still apply downstream.
+ *
+ * Never promotes an incoming credit to [INTERNAL_TRANSFER] solely because its
+ * sender is outside the income-source list — that case is [NEEDS_REVIEW].
  */
 enum class IncomeDecision {
     /** Count as confirmed income when the row is CONFIRMED. */
     COUNT_AS_INCOME,
-    /** Own-account move — never income. */
+    /** Own-account move — never income. Requires ownership match or user force. */
     INTERNAL_TRANSFER,
     /** Merchant refund / reversal — not salary or new income. */
     REFUND_OR_REVERSAL,
@@ -34,7 +37,9 @@ object IncomeClassification {
     /**
      * @param incomeEligibleSenders exact SMS sender IDs the user selected as income sources.
      *        Empty means no automatic income — every credit needs review.
-     * @param ownedAccountIds accounts belonging to the same person (for transfer demotion).
+     * @param ownedAccountIds accounts belonging to the same person.
+     * @param matchedAsInternalTransfer true only after ownership pairing or own-account
+     *        number evidence — never from "sender not in income sources" alone.
      */
     fun decide(
         parsedType: TxType,
@@ -60,6 +65,8 @@ object IncomeClassification {
         }
 
         if (parsedType == TxType.TRANSFER) {
+            // Parser already identified a transfer. On an owned account this is an
+            // ownership-mapped move candidate; otherwise it needs review.
             return if (accountId in ownedAccountIds) {
                 IncomeDecision.INTERNAL_TRANSFER
             } else {
@@ -72,12 +79,8 @@ object IncomeClassification {
             return IncomeDecision.NEEDS_REVIEW
         }
         if (!SmsSenderIds.matches(sender, incomeEligibleSenders)) {
-            // Incoming credit from a non-income sender (e.g. D360 funding from ANB).
-            return if (accountId in ownedAccountIds) {
-                IncomeDecision.INTERNAL_TRANSFER
-            } else {
-                IncomeDecision.NEEDS_REVIEW
-            }
+            // Not an income source → ambiguous credit, NOT an automatic internal transfer.
+            return IncomeDecision.NEEDS_REVIEW
         }
 
         // Eligible sender: salary-like language can count; otherwise still needs review

@@ -66,24 +66,56 @@ class MonthlyAccountingExampleTest {
     }
 
     @Test
-    fun `d360 sender is not an income source even for incoming credits`() {
+    fun `unpaired credit on spending account needs review and is not income`() {
         val rows = listOf(
             row("credit", d360, TxType.INCOME, "500", "D360 Bank", "Account Funding", t(0)),
         )
         val summary = MonthlyAccounting.summarize(rows, config)
         assertThat(summary.totalIncome).isEqualTo(Money.zero())
+        assertThat(summary.internalTransfers).isEqualTo(Money.zero())
         assertThat(summary.needsReviewIds).contains("credit")
     }
 
     @Test
-    fun `unselected income sender never auto-counts`() {
-        val openConfig = config.copy(incomeEligibleSenders = emptySet())
+    fun `confirmed salary on income account counts without transfer pairing`() {
         val rows = listOf(
-            row("maybe", anb, TxType.INCOME, "12000", "ANB", "Salary credited", t(0)),
+            row("salary", anb, TxType.INCOME, "12000", "ANB", "Salary credited", t(0)),
         )
-        val summary = MonthlyAccounting.summarize(rows, openConfig)
-        assertThat(summary.totalIncome).isEqualTo(Money.zero())
-        assertThat(summary.needsReviewIds).contains("maybe")
+        val summary = MonthlyAccounting.summarize(rows, config)
+        assertThat(summary.totalIncome).isEqualTo(Money.of("12000"))
+        assertThat(summary.needsReviewIds).isEmpty()
+    }
+
+    @Test
+    fun `missing incoming counterpart leaves outgoing transfer in review`() {
+        val rows = listOf(
+            row("orphan-out", anb, TxType.TRANSFER, "1000", "ANB", "transfer", t(0)),
+            row("anb-buy", anb, TxType.EXPENSE, "400", "ANB", "purchase", t(1)),
+        )
+        val summary = MonthlyAccounting.summarize(rows, config)
+        assertThat(summary.internalTransfers).isEqualTo(Money.zero())
+        assertThat(summary.totalExpenses).isEqualTo(Money.of("400"))
+        assertThat(summary.needsReviewIds).contains("orphan-out")
+    }
+
+    @Test
+    fun `refunds are excluded from income and expenses`() {
+        val rows = listOf(
+            row("salary", anb, TxType.INCOME, "12000", "ANB", "Salary", t(0)),
+            AccountingRow(
+                id = "refund",
+                accountId = anb,
+                type = TxType.INCOME,
+                amount = Money.of("50"),
+                status = TxStatus.CONFIRMED,
+                occurredAt = t(1),
+                sender = "ANB",
+                bodyHints = "Refund",
+                isRefund = true,
+            ),
+        )
+        val summary = MonthlyAccounting.summarize(rows, config)
+        assertThat(summary.totalIncome).isEqualTo(Money.of("12000"))
     }
 
     private fun t(hourOffset: Long): Instant =

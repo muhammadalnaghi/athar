@@ -38,7 +38,7 @@ class IncomeClassificationTest {
     }
 
     @Test
-    fun `d360 credit is internal transfer not income`() {
+    fun `d360 credit without ownership match needs review not auto-transfer`() {
         val d = IncomeClassification.decide(
             parsedType = TxType.INCOME,
             sender = "D360 Bank",
@@ -47,6 +47,20 @@ class IncomeClassificationTest {
             incomeEligibleSenders = incomeSenders,
             ownedAccountIds = owned,
             matchedAsInternalTransfer = false,
+        )
+        assertThat(d).isEqualTo(IncomeDecision.NEEDS_REVIEW)
+    }
+
+    @Test
+    fun `ownership-matched transfer is internal transfer`() {
+        val d = IncomeClassification.decide(
+            parsedType = TxType.INCOME,
+            sender = "D360 Bank",
+            body = "Incoming Transfer SAR 1000",
+            accountId = "d360",
+            incomeEligibleSenders = incomeSenders,
+            ownedAccountIds = owned,
+            matchedAsInternalTransfer = true,
         )
         assertThat(d).isEqualTo(IncomeDecision.INTERNAL_TRANSFER)
     }

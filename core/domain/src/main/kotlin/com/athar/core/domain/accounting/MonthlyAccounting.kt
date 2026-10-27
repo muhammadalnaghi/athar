@@ -3,7 +3,6 @@ package com.athar.core.domain.accounting
 import com.athar.core.common.money.Money
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.model.TxType
-import com.athar.core.domain.smsimport.SmsSenderIds
 import kotlinx.datetime.Instant
 
 /**
@@ -32,9 +31,13 @@ data class MonthlyAccountingConfig(
     val ownedAccountIds: Set<String>,
     /** Account IDs whose purchases count as expenses (typically all owned). */
     val expenseAccountIds: Set<String>,
-    /** Account IDs allowed to contribute confirmed income. */
+    /**
+     * Account IDs treated as income landing accounts (e.g. ANB).
+     * Credits on other owned accounts may pair as transfer-IN when an owned
+     * TRANSFER-OUT counterpart exists — ownership mapping, not sender demotion.
+     */
     val incomeAccountIds: Set<String>,
-    /** Exact SMS senders eligible for income (empty = none automatic). */
+    /** Exact SMS senders eligible for income (empty = none automatic at ingest). */
     val incomeEligibleSenders: Set<String> = emptySet(),
     val transferWindowMillis: Long = InternalTransferMatcher.DEFAULT_WINDOW_MILLIS,
 )
@@ -54,6 +57,10 @@ data class MonthlyAccountingSummary(
  *
  * Matched internal transfers are excluded from income and expenses.
  * Net cash flow = income − expenses (distinct from bank balances).
+ *
+ * Persistence limitation: pairs are recomputed in memory each call. No
+ * `linkedTransferGroupId` is stored yet — identical amounts outside the time
+ * window, or missing counterparts, stay in [MonthlyAccountingSummary.needsReviewIds].
  */
 object MonthlyAccounting {
 
@@ -66,7 +73,7 @@ object MonthlyAccounting {
         val confirmed = rows.filter { it.status == TxStatus.CONFIRMED && !it.isReconciliation }
 
         val legs = mutableListOf<TransferLeg>()
-        val preExcluded = mutableSetOf<String>() // refunds / forced transfers without pair yet
+        val preExcluded = mutableSetOf<String>()
 
         for (row in confirmed) {
             if (row.isRefund) {
@@ -74,15 +81,10 @@ object MonthlyAccounting {
                 continue
             }
             if (row.userForcedTransfer) {
-                val direction = if (row.accountId in config.incomeAccountIds) {
-                    TransferDirection.OUT
-                } else {
-                    TransferDirection.IN
-                }
                 legs += TransferLeg(
                     id = row.id,
                     accountId = row.accountId,
-                    direction = direction,
+                    direction = directionForForced(row, config),
                     amount = row.amount,
                     occurredAt = row.occurredAt,
                     type = row.type,
@@ -93,15 +95,14 @@ object MonthlyAccounting {
             when (row.type) {
                 TxType.TRANSFER -> {
                     if (row.accountId !in config.ownedAccountIds) continue
-                    val direction = if (row.accountId in config.incomeAccountIds) {
-                        TransferDirection.OUT
-                    } else {
-                        TransferDirection.IN
-                    }
                     legs += TransferLeg(
                         id = row.id,
                         accountId = row.accountId,
-                        direction = direction,
+                        direction = if (row.accountId in config.incomeAccountIds) {
+                            TransferDirection.OUT
+                        } else {
+                            TransferDirection.IN
+                        },
                         amount = row.amount,
                         occurredAt = row.occurredAt,
                         type = row.type,
@@ -109,13 +110,13 @@ object MonthlyAccounting {
                     )
                 }
                 TxType.INCOME -> {
-                    // Incoming credit on a non-income account (e.g. D360 funded from ANB)
-                    // is a transfer-IN candidate, never operating income.
-                    val senderOk = row.sender != null &&
-                        SmsSenderIds.matches(row.sender, config.incomeEligibleSenders)
-                    val onIncomeAccount = row.accountId in config.incomeAccountIds
-                    if (!row.userForcedIncome && (!senderOk || !onIncomeAccount) &&
-                        row.accountId in config.ownedAccountIds
+                    // Ownership-mapped transfer-IN candidate: credit on an owned
+                    // non-income account (e.g. D360). Requires incomeAccountIds to be
+                    // configured so we do not treat every owned credit as a transfer.
+                    if (!row.userForcedIncome &&
+                        config.incomeAccountIds.isNotEmpty() &&
+                        row.accountId in config.ownedAccountIds &&
+                        row.accountId !in config.incomeAccountIds
                     ) {
                         legs += TransferLeg(
                             id = row.id,
@@ -140,12 +141,13 @@ object MonthlyAccounting {
         val matchedIds = matchResult.matches
             .flatMap { listOf(it.outgoingId, it.incomingId) }
             .toSet()
+        val unmatchedLegIds = matchResult.unmatchedNeedsReviewIds.toSet()
 
         var income = zero
         var expenses = zero
         var transfers = zero
         val byAccount = mutableMapOf<String, Money>()
-        val needsReview = matchResult.unmatchedNeedsReviewIds.toMutableList()
+        val needsReview = unmatchedLegIds.toMutableList()
 
         for (pair in matchResult.matches) {
             transfers += pair.amount
@@ -153,6 +155,8 @@ object MonthlyAccounting {
 
         for (row in confirmed) {
             if (row.id in matchedIds || row.id in preExcluded || row.userForcedTransfer) continue
+            // Unpaired ownership-mapped transfer candidates stay out of operating totals.
+            if (row.id in unmatchedLegIds) continue
 
             when (row.type) {
                 TxType.INCOME -> {
@@ -160,31 +164,9 @@ object MonthlyAccounting {
                         income += row.amount
                         continue
                     }
-                    val decision = IncomeClassification.decide(
-                        parsedType = TxType.INCOME,
-                        sender = row.sender.orEmpty(),
-                        body = row.bodyHints,
-                        accountId = row.accountId,
-                        incomeEligibleSenders = config.incomeEligibleSenders,
-                        ownedAccountIds = config.ownedAccountIds,
-                        matchedAsInternalTransfer = false,
-                        userForcedIncome = false,
-                        userForcedTransfer = false,
-                    )
-                    when (decision) {
-                        IncomeDecision.COUNT_AS_INCOME -> {
-                            if (row.accountId in config.incomeAccountIds) {
-                                income += row.amount
-                            } else {
-                                needsReview += row.id
-                            }
-                        }
-                        IncomeDecision.NEEDS_REVIEW -> needsReview += row.id
-                        IncomeDecision.INTERNAL_TRANSFER,
-                        IncomeDecision.REFUND_OR_REVERSAL,
-                        IncomeDecision.NOT_INCOME,
-                        -> Unit
-                    }
+                    // CONFIRMED income that was not a transfer candidate counts.
+                    // Ambiguous credits should remain PENDING at ingest and never reach here.
+                    income += row.amount
                 }
                 TxType.EXPENSE -> {
                     if (row.accountId in config.expenseAccountIds) {
@@ -207,4 +189,11 @@ object MonthlyAccounting {
             matchedTransferPairs = matchResult.matches,
         )
     }
+
+    private fun directionForForced(
+        row: AccountingRow,
+        config: MonthlyAccountingConfig,
+    ): TransferDirection =
+        if (row.accountId in config.incomeAccountIds) TransferDirection.OUT
+        else TransferDirection.IN
 }

@@ -24,3 +24,9 @@ Make Athar’s personal-finance math correct for owned multi-account setups (e.g
 - Domain tests assert Income=12000, Expenses=2800, Transfers=3000, Net=9200.
 - Empty income sources ⇒ no automatic income.
 - Live tracking off / no senders ⇒ live SMS not ingested.
+
+## Phase 2 follow-up (dashboard wire)
+
+- `selectAccountedOperating` is the single Today/Trends headline path.
+- IncomeClassification: non-income senders → Needs Review (never auto internal transfer).
+- Transfer pairing is recomputed in memory; no `linkedTransferGroupId` persistence yet.
