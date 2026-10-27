@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         applicationId = "com.athar"
-        versionCode = 11
+        versionCode = 12
         versionName = providers.gradleProperty("athar.version").orNull ?: "0.1.0"
         buildConfigField("boolean", "SEED_ON_FIRST_LAUNCH", atharSeed.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

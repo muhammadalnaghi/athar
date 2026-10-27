@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet.
 
+## [0.1.0-beta.27] — 2026-10-27
+
+Full page-per-page UX audit pass (WM081): Arabic-Indic numerals everywhere in Bills (calendar strip, due badges, horizon date, "next 30 days" label), Arabic percent symbol ٪ in Goals, the Plan comparison toggle is now properly labeled for screen readers with a 48dp touch row, the period segmented control and Settings language rows meet the 48dp touch-target floor, and several copy refinements (voice input label, active-voice language note, hamza fix).
+
 ## [0.1.0-beta.26] — 2026-10-26
 
 The complete local wealth-manager release: 22 benchmarked TMOAP/workbook capabilities in one Arabic-first app, evidenced automatic payment recording, a much faster and 61% smaller build.

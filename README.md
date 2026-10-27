@@ -49,6 +49,10 @@ Other tools force a trade-off:
 
 ## Features
 
+### beta.27 update
+
+- Page-per-page UX audit fixes: Arabic-Indic numerals across Bills (calendar, due dates, horizon), Arabic ٪ in Goals, screen-reader-labeled comparison toggle, 48dp touch targets on the period control and language rows, and copy polish.
+
 ### beta.26 update
 
 - Complete local wealth manager: dated positions, liquidity, portfolio ledger with returns/XIRR/allocation targets, debt payoff strategies, cash-forecast scenarios, saved goal plans, budgets, bills matching, and family investment pools — the full TMOAP/workbook replacement, all local and encrypted.
