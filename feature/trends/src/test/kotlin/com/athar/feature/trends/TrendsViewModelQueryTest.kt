@@ -77,6 +77,12 @@ class TrendsViewModelQueryTest {
         transactions = transactionsRepo ?: FakeTransactionRepository(txs),
         categories = FakeCategoryRepository(cats),
         prefs = FakePreferencesRepository(displayCurrency),
+        incomeSources = object : com.athar.core.domain.repo.IncomeSourcePreferencesRepository {
+            override fun settings() = kotlinx.coroutines.flow.flowOf(
+                com.athar.core.domain.repo.IncomeSourceSettings(),
+            )
+            override suspend fun update(settings: com.athar.core.domain.repo.IncomeSourceSettings) = Unit
+        },
         accounts = accountsRepo ?: FakeAccountRepository(accounts),
         clock = FixedClock(now),
     )

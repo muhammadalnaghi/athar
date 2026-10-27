@@ -23,6 +23,8 @@ import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
 import com.athar.core.domain.repo.ReconcileResult
 import com.athar.core.domain.repo.TransactionRepository
+import com.athar.core.domain.repo.IncomeSourcePreferencesRepository
+import com.athar.core.domain.repo.IncomeSourceSettings
 import com.athar.core.domain.repo.UserPreferencesRepository
 import com.athar.core.testing.Fixtures
 import com.google.common.truth.Truth.assertThat
@@ -77,6 +79,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -105,6 +108,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -131,6 +135,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -148,6 +153,7 @@ class TodayViewModelTest {
             rules = rules,
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -195,6 +201,7 @@ class TodayViewModelTest {
             rules = rules,
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -241,6 +248,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(listOf(archivedCoffee)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -284,6 +292,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(listOf(cafe)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -461,6 +470,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -518,6 +528,7 @@ class TodayViewModelTest {
             rules = rules,
             categories = TodayFakeCategoryRepository(listOf(cafe)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -604,6 +615,7 @@ class TodayViewModelTest {
             rules = rules,
             categories = TodayFakeCategoryRepository(listOf(cafe, grocery)),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -641,6 +653,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -673,6 +686,7 @@ class TodayViewModelTest {
             rules = RecordingCategoryRuleRepository(),
             categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")),
             clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
@@ -703,6 +717,7 @@ class TodayViewModelTest {
             )),
             rules = RecordingCategoryRuleRepository(), categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")), clock = FixedClock, declaredPositions = EmptyDeclaredPositions,
         )
         val state = viewModel.state.first { !it.isLoading }
@@ -729,6 +744,7 @@ class TodayViewModelTest {
             )),
             rules = RecordingCategoryRuleRepository(), categories = TodayFakeCategoryRepository(),
             prefs = FakeUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+            incomeSources = FakeIncomeSourcePreferencesRepository(),
             accounts = FakeAccountRepository(liquidBalance = Money.of("5000")), clock = FixedClock,
             declaredPositions = object : DeclaredPositionRepository {
                 override fun observeSnapshots() = flowOf(listOf(position))
@@ -837,6 +853,14 @@ private class TodayFakeCategoryRepository(
     override suspend fun upsert(category: Category) = Unit
     override suspend fun archive(id: String) = Unit
     override suspend fun reorder(ids: List<String>) = Unit
+}
+
+
+private class FakeIncomeSourcePreferencesRepository(
+    private val senders: Set<String> = emptySet(),
+) : IncomeSourcePreferencesRepository {
+    override fun settings() = kotlinx.coroutines.flow.flowOf(IncomeSourceSettings(senders))
+    override suspend fun update(settings: IncomeSourceSettings) = Unit
 }
 
 private class FakeUserPreferencesRepository(

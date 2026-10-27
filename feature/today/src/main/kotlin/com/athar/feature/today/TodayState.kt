@@ -16,6 +16,8 @@ data class TodayState(
     val netFlow: Money,
     val totalExpense: Money,
     val totalIncome: Money,
+    /** Confirmed internal transfers (excluded from income/expense). Distinct from net worth. */
+    val internalTransfers: Money = Money.zero(),
     val todayNet: Money,
     val netWorth: Money,
     val netWorthIsMixed: Boolean,
@@ -42,6 +44,7 @@ data class TodayState(
             netFlow = Money.zero(),
             totalExpense = Money.zero(),
             totalIncome = Money.zero(),
+            internalTransfers = Money.zero(),
             todayNet = Money.zero(),
             netWorth = Money.zero(),
             netWorthIsMixed = false,

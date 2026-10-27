@@ -3,8 +3,10 @@ package com.athar.feature.trends
 import com.athar.core.common.money.Money
 import com.athar.core.common.time.Period
 import com.athar.core.common.time.previous
+import com.athar.core.domain.accounting.MonthlyAccountingConfig
+import com.athar.core.domain.accounting.accountingConfig
+import com.athar.core.domain.accounting.selectAccountedOperating
 import com.athar.core.domain.calc.OperatingTransactions
-import com.athar.core.domain.calc.selectOperatingTransactions
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
 import com.athar.core.domain.model.Transaction
@@ -54,6 +56,8 @@ data class TrendsAggregates(
     val previousIncome: Money,
     val savings: Money,
     val previousSavings: Money,
+    /** Confirmed internal transfers in the current window (excluded from income/expense). */
+    val internalTransfers: Money,
     /** Comparison-side totals: the equal-elapsed CURRENT population the deltas actually use. */
     val comparisonExpense: Money,
     val comparisonIncome: Money,
@@ -143,9 +147,9 @@ fun periodCovering(months: List<YearMonth>): Period {
 
 /**
  * Pure aggregation: filters apply first (persisted fields only), then the shared
- * Plan001 [selectOperatingTransactions] parity selector — confirmed, non-reconciliation
- * rows only, transfers never counted as income or spend. Uncategorized expenses stay
- * in every total and breakdown under [UNCATEGORIZED_KEY].
+ * [selectAccountedOperating] path (MonthlyAccounting) — confirmed, non-reconciliation
+ * rows only; matched internal transfers never counted as income or spend.
+ * Uncategorized expenses stay in every total and breakdown under [UNCATEGORIZED_KEY].
  */
 fun aggregateTrends(
     currentTxs: List<Transaction>,
@@ -157,6 +161,10 @@ fun aggregateTrends(
     reportingCurrency: String,
     windows: TrendsWindows,
     topN: Int = DEFAULT_TOP_N,
+    accounting: MonthlyAccountingConfig = accountingConfig(
+        ownedAccountIds = (currentTxs + priorTxs + monthlyTxs).map { it.accountId }.toSet(),
+        incomeAccountIds = emptySet(),
+    ),
 ): TrendsAggregates {
     val currentFiltered = currentTxs.filter(filters::matches)
     val priorFiltered = priorTxs.filter(filters::matches)
@@ -167,20 +175,38 @@ fun aggregateTrends(
     val inReportingCurrency = { tx: Transaction -> tx.amount.currency == reportingCurrency }
     // As-of bound: future-dated actuals are excluded from every population, consistently.
     val inAsOf = { tx: Transaction -> windows.asOfExclusive == null || tx.date < windows.asOfExclusive }
-    val currentOp = selectOperatingTransactions(currentFiltered.filter(inReportingCurrency).filter(inAsOf))
-    val priorOp = selectOperatingTransactions(priorFiltered.filter(inReportingCurrency).filter(inAsOf))
-    val monthlyOp = selectOperatingTransactions(monthlyFiltered.filter(inReportingCurrency).filter(inAsOf))
+    val currentAccounted = selectAccountedOperating(
+        currentFiltered.filter(inReportingCurrency).filter(inAsOf),
+        accounting,
+        reportingCurrency,
+    )
+    val priorAccounted = selectAccountedOperating(
+        priorFiltered.filter(inReportingCurrency).filter(inAsOf),
+        accounting,
+        reportingCurrency,
+    )
+    val monthlyAccounted = selectAccountedOperating(
+        monthlyFiltered.filter(inReportingCurrency).filter(inAsOf),
+        accounting,
+        reportingCurrency,
+    )
+    val currentOp = currentAccounted.operating
+    val priorOp = priorAccounted.operating
+    val monthlyOp = monthlyAccounted.operating
     // Equal-elapsed current side of the comparison; the headline above stays full.
     val comparisonPeriod = windows.comparisonCurrent
     val comparisonOp = if (comparisonPeriod == null) currentOp else
-        selectOperatingTransactions(
-            currentFiltered.filter(inReportingCurrency).filter(inAsOf).filter { comparisonPeriod.contains(it.date) },
-        )
+        selectAccountedOperating(
+            currentFiltered.filter(inReportingCurrency).filter(inAsOf)
+                .filter { comparisonPeriod.contains(it.date) },
+            accounting,
+            reportingCurrency,
+        ).operating
 
-    val totalExpense = sumOf(currentOp.expenses, reportingCurrency)
-    val totalIncome = sumOf(currentOp.income, reportingCurrency)
-    val previousExpense = sumOf(priorOp.expenses, reportingCurrency)
-    val previousIncome = sumOf(priorOp.income, reportingCurrency)
+    val totalExpense = currentAccounted.summary.totalExpenses
+    val totalIncome = currentAccounted.summary.totalIncome
+    val previousExpense = priorAccounted.summary.totalExpenses
+    val previousIncome = priorAccounted.summary.totalIncome
     val comparisonExpense = sumOf(comparisonOp.expenses, reportingCurrency)
     val comparisonIncome = sumOf(comparisonOp.income, reportingCurrency)
 
@@ -216,6 +242,7 @@ fun aggregateTrends(
         previousIncome = previousIncome,
         savings = totalIncome - totalExpense,
         previousSavings = previousIncome - previousExpense,
+        internalTransfers = currentAccounted.summary.internalTransfers,
         comparisonExpense = comparisonExpense,
         comparisonIncome = comparisonIncome,
         comparisonSavings = comparisonIncome - comparisonExpense,

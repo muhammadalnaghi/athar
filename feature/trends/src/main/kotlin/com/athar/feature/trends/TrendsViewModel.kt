@@ -7,6 +7,7 @@ import com.athar.core.common.money.Money
 import com.athar.core.common.time.Period
 import com.athar.core.designsystem.component.AtharBarItem
 import com.athar.core.designsystem.component.AtharSplitSegment
+import com.athar.core.domain.accounting.buildAccountingConfig
 import com.athar.core.domain.model.Account
 import com.athar.core.domain.model.Category
 import com.athar.core.domain.model.CategoryKind
@@ -14,6 +15,7 @@ import com.athar.core.domain.model.Transaction
 import com.athar.core.domain.model.TxStatus
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
+import com.athar.core.domain.repo.IncomeSourcePreferencesRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +46,7 @@ class TrendsViewModel @Inject constructor(
     private val categories: CategoryRepository,
     private val accounts: AccountRepository,
     private val prefs: UserPreferencesRepository,
+    private val incomeSources: IncomeSourcePreferencesRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -63,15 +66,23 @@ class TrendsViewModel @Inject constructor(
                 val monthlyPeriod = periodCovering(months)
                 // Account names ride the SAME single pipeline: renames re-derive the
                 // whole immutable state while keys and totals stay untouched.
-                val reference = combine(categories.observeAll(), accounts.observeAll()) { cats, accts -> cats to accts }
+                val reference = combine(
+                    categories.observeAll(),
+                    accounts.observeAll(),
+                    incomeSources.settings(),
+                ) { cats, accts, income -> Triple(cats, accts, income.eligibleSenders) }
                 combine(
                     reference,
                     transactions.observeByPeriod(windows.current, status = TxStatus.CONFIRMED),
                     transactions.observeByPeriod(windows.previous ?: windows.current, status = TxStatus.CONFIRMED),
                     transactions.observeByPeriod(monthlyPeriod, status = TxStatus.CONFIRMED),
                     prefs.displayCurrency(),
-                ) { (cats, accts), currentTxs, priorTxs, monthlyTxs, prefCurrency ->
+                ) { (cats, accts, incomeSenders), currentTxs, priorTxs, monthlyTxs, prefCurrency ->
                     val currency = q.currencyOverride ?: prefCurrency
+                    val accounting = buildAccountingConfig(
+                        activeAccounts = accts.filterNot { it.archived },
+                        incomeSenders = incomeSenders,
+                    )
                     val aggregates = aggregateTrends(
                         currentTxs = currentTxs,
                         priorTxs = priorTxs,
@@ -81,6 +92,7 @@ class TrendsViewModel @Inject constructor(
                         filters = q.filters,
                         reportingCurrency = currency,
                         windows = windows,
+                        accounting = accounting,
                     )
                     val request = stack.lastOrNull()
                     val evidence = request?.let { buildEvidence(it, aggregates, cats, currency) }
@@ -223,6 +235,7 @@ class TrendsViewModel @Inject constructor(
             previousIncome = aggregates.previousIncome,
             savings = aggregates.savings,
             previousSavings = aggregates.previousSavings,
+            internalTransfers = aggregates.internalTransfers,
             categories = bars,
             categoryDeltas = aggregates.deltaRows.toImmutableList(),
             categorySplit = split,

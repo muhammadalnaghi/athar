@@ -17,6 +17,7 @@
     <!-- Summary pills -->
     <string name="today_pill_income">Income</string>
     <string name="today_pill_expense">Expenses</string>
+    <string name="today_pill_internal_transfers">Internal transfers</string>
     <string name="today_pill_net_worth">Recorded balance</string>
 
     <!-- Captions -->

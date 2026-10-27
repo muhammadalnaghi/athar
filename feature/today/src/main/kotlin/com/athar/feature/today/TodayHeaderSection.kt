@@ -59,6 +59,7 @@ internal fun Header(state: TodayState, onOpenHistory: () -> Unit = {}) {
             totalExpense = state.totalExpense,
             netWorth = state.netWorth,
             netWorthIsMixed = state.netWorthIsMixed,
+            internalTransfers = state.internalTransfers,
         )
         SavingsRateCaption(state)
         if (state.netWorthIsMixed) {
@@ -128,14 +129,19 @@ internal fun SummaryPills(
     totalExpense: Money,
     netWorth: Money,
     netWorthIsMixed: Boolean = false,
+    internalTransfers: Money = Money.zero(),
 ) {
     val theme = AtharTheme
     val incomeLabel = stringResource(R.string.today_pill_income)
     val expenseLabel = stringResource(R.string.today_pill_expense)
     val balanceLabel = stringResource(R.string.today_pill_net_worth)
+    val transferLabel = stringResource(R.string.today_pill_internal_transfers)
     val pills = buildList {
         add(PillSpec(incomeLabel, totalIncome, theme.colors.olive))
         add(PillSpec(expenseLabel, totalExpense, theme.colors.ember))
+        if (!internalTransfers.isZero()) {
+            add(PillSpec(transferLabel, internalTransfers, theme.colors.muted))
+        }
         if (!netWorthIsMixed) add(PillSpec(balanceLabel, netWorth, theme.colors.ink))
     }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {

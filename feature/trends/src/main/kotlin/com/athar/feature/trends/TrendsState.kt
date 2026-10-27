@@ -83,6 +83,8 @@ data class TrendsState(
     val previousIncome: Money,
     val savings: Money,
     val previousSavings: Money,
+    /** Confirmed internal transfers in the current window; not part of savings. */
+    val internalTransfers: Money = Money.zero(),
     val categories: ImmutableList<AtharBarItem>,
     val categoryDeltas: ImmutableList<CategoryDeltaRow>,
     val categorySplit: ImmutableList<AtharSplitSegment>,

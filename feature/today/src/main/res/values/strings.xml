@@ -18,6 +18,7 @@
     <!-- Summary pills -->
     <string name="today_pill_income">الدخل</string>
     <string name="today_pill_expense">المصاريف</string>
+    <string name="today_pill_internal_transfers">تحويلات داخلية</string>
     <string name="today_pill_net_worth">الرصيد المسجّل</string>
 
     <!-- Captions -->

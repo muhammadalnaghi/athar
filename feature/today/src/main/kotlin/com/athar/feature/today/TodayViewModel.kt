@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athar.core.common.money.Money
 import com.athar.core.common.time.Period
+import com.athar.core.domain.accounting.MonthlyAccountingConfig
+import com.athar.core.domain.accounting.buildAccountingConfig
+import com.athar.core.domain.accounting.selectAccountedOperating
 import com.athar.core.domain.calc.GoalCalc
-import com.athar.core.domain.calc.selectOperatingTransactions
 import com.athar.core.domain.model.AccountBalance
 import com.athar.core.domain.model.AccountType
 import com.athar.core.domain.model.Category
@@ -22,6 +24,7 @@ import com.athar.core.domain.repo.DeclaredPositionRepository
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
+import com.athar.core.domain.repo.IncomeSourcePreferencesRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,6 +54,7 @@ class TodayViewModel @Inject constructor(
     private val rules: CategoryRuleRepository,
     private val categories: CategoryRepository,
     private val prefs: UserPreferencesRepository,
+    private val incomeSources: IncomeSourcePreferencesRepository,
     private val accounts: AccountRepository,
     private val clock: Clock,
     private val declaredPositions: DeclaredPositionRepository,
@@ -75,11 +79,19 @@ class TodayViewModel @Inject constructor(
                         ) { confirmed, pending, dismissed, allTransactions, netWorth ->
                             TodayInputs(confirmed, pending, dismissed, allTransactions, netWorth)
                         },
-                        categories.observeAll(kind = null, includeArchived = true),
+                        combine(
+                            categories.observeAll(kind = null, includeArchived = true),
+                            accounts.observeActive(),
+                            incomeSources.settings(),
+                        ) { cats, activeAccounts, incomeSettings ->
+                            Triple(cats, activeAccounts, incomeSettings.eligibleSenders)
+                        },
                         transactions.observeByPeriod(goalsPeriod, status = TxStatus.CONFIRMED),
                         prefs.savingsRateTargetPercent(),
                         prefs.emergencyFundTargetMonths(),
-                    ) { inputs, allCategories, goalTransactions, savingsTarget, emergencyMonths ->
+                    ) { inputs, refs, goalTransactions, savingsTarget, emergencyMonths ->
+                        val (allCategories, activeAccounts, incomeSenders) = refs
+                        val accounting = buildAccountingConfig(activeAccounts, incomeSenders)
                         deriveState(
                             month = m,
                             confirmed = inputs.confirmed,
@@ -90,12 +102,14 @@ class TodayViewModel @Inject constructor(
                             netWorth = inputs.netWorth,
                             categories = allCategories,
                             categoryLabels = allCategories.toCategoryLabels(),
+                            accounting = accounting,
                             goalNudge = deriveGoalNudge(
                                 transactions = goalTransactions,
                                 netWorth = inputs.netWorth,
                                 currency = currency,
                                 savingsTarget = savingsTarget,
                                 emergencyMonths = emergencyMonths,
+                                accounting = accounting,
                             ),
                         )
                     }
@@ -239,20 +253,19 @@ class TodayViewModel @Inject constructor(
         netWorth: NetWorth,
         categories: List<Category>,
         categoryLabels: ImmutableMap<String, CategoryLabel>,
+        accounting: MonthlyAccountingConfig,
         goalNudge: TodayGoalNudge?,
     ): TodayState {
         val today = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         // A calendar-month query can include future observations; actual activity is as of today.
         val confirmedAsOfToday = confirmed.filter { it.date <= today }
-        // Operating = confirmed, non-reconciliation rows via the shared domain
-        // selector; transfers are money movement, never operating expense.
-        val operating = selectOperatingTransactions(confirmedAsOfToday.filter { it.amount.currency == currency })
-        val incomeSum = Money.sumAmounts(operating.income.map { it.amount }, currency)
-        val expenseSum = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
+        // Shared MonthlyAccounting path (same as Trends) — transfers never inflate income/expense.
+        val accounted = selectAccountedOperating(confirmedAsOfToday, accounting, currency)
+        val incomeSum = accounted.summary.totalIncome
+        val expenseSum = accounted.summary.totalExpenses
         val (todayTxns, monthTxns) = confirmedAsOfToday.partition { it.date == today }
-        val todayOperating = selectOperatingTransactions(todayTxns.filter { it.amount.currency == currency })
-        val todayNet = Money.sumAmounts(todayOperating.income.map { it.amount }, currency) -
-            Money.sumAmounts(todayOperating.expenses.map { it.amount }, currency)
+        val todayAccounted = selectAccountedOperating(todayTxns, accounting, currency)
+        val todayNet = todayAccounted.summary.netCashFlow
         val dismissedToday = dismissed.filter { it.date == today }
         val pendingCategorySuggestions = buildPendingCategorySuggestions(
             pending = pending,
@@ -262,9 +275,10 @@ class TodayViewModel @Inject constructor(
         val repeatedBacklogNudge = buildTodayRepeatedBacklogNudge(allTransactions)
         return TodayState(
             month = month,
-            netFlow = incomeSum - expenseSum,
+            netFlow = accounted.summary.netCashFlow,
             totalExpense = expenseSum,
             totalIncome = incomeSum,
+            internalTransfers = accounted.summary.internalTransfers,
             todayNet = todayNet,
             netWorth = netWorth.total,
             netWorthIsMixed = netWorth.isMixedCurrency,
@@ -287,8 +301,9 @@ class TodayViewModel @Inject constructor(
         currency: String,
         savingsTarget: Int,
         emergencyMonths: Int,
+        accounting: MonthlyAccountingConfig,
     ): TodayGoalNudge {
-        val operating = selectOperatingTransactions(transactions.filter { it.amount.currency == currency })
+        val operating = selectAccountedOperating(transactions, accounting, currency).operating
         val totalIncome = Money.sumAmounts(operating.income.map { it.amount }, currency)
         val totalExpense = Money.sumAmounts(operating.expenses.map { it.amount }, currency)
         val monthlyIncome = GoalCalc.averageMonthly(totalIncome, LOOKBACK_MONTHS)
@@ -345,6 +360,7 @@ class TodayViewModel @Inject constructor(
             AccountType.SAVINGS,
             AccountType.CASH,
         )
+
     }
 }
 
