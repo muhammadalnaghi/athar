@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet.
 
+## [0.1.0-beta.26] — 2026-10-26
+
+The complete local wealth-manager release: 22 benchmarked TMOAP/workbook capabilities in one Arabic-first app, evidenced automatic payment recording, a much faster and 61% smaller build.
+
+### Added
+
+- Full wealth manager: dated positions, liquidity, portfolio ledger with returns/XIRR/allocation targets, debt payoff strategies, cash-forecast scenarios, goals engine with saved plans, budgets with safe targets, bills matching, wishes, and family investment pools (WM028–WM054).
+- Evidenced automatic payment recording (off by default): clearly evidenced completed purchases and card repayments are recorded without prompts; bank-event dates are only ever read from explicit textual evidence, never invented (WM062–WM067, WM073).
+- Canonical ledger with admission bounds and graph snapshot codec; encrypted backup now covers all 21 tables with integrity validation and revision advance, verified by full backup → wipe → restore round-trip on the minified release binary (WM078).
+- Trends as-of analytics, uncategorized bucket scope, comparison charts, and localized Arabic-Indic percentages (WM068–WM072).
+- Today declared-position card, calm pending tray, history rows with LTR-isolated exact money (WM030, WM069).
+
+### Changed
+
+- Startup: recurring materialization deferred off the launch path and RuleSeed gains a steady-state marker — cold start ~6.8s → ~4.1s (debug), ~2.0s → ~1.7s (release) (WM074).
+- Release builds now minify with R8 + resource shrinking: 81.6 MB → 32.1 MB (−61%); profileinstaller pinned at 1.3.1 (WM075/WM076).
+- All caption numerals in Arabic UI (Today/Trends/Plan month labels, percentages, custom ranges) render Arabic-Indic deterministically via AtharNumerals; money stays on the LTR-isolated exact path (WM077, WM079).
+- Advanced Android versionCode to 11 for in-place updates from versionCode 10.
+
+### Verified
+
+- Real-data acceptance: 5,458 real bank messages replayed with 0 failures; 981 transactions auto-confirmed, 485 pending are genuine ambiguities; 996 money/notice oracle checks, 0 failures; automatic recording verified OFF after every acceptance run.
+- Update chain product20 → 25 with encrypted pre-update archives at every step; per-module fresh test suites green (parser 656, plan 383, core-data 420, domain 497, trends, today, design-system).
+
 ## [0.1.0-beta.25] — 2026-10-19
 
 - Personal category choices now take precedence over downloaded merchant knowledge, and explicit corrections retain USER provenance without training on catalog-only suggestions.

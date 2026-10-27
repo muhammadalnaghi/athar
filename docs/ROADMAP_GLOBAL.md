@@ -8,6 +8,10 @@ Tier 1 — required to ship as a global app — is **complete**. Tiers 2–4 are
 
 > **For future AI / developers:** every shipped row below carries a *Why* and a *How* line so you can read this in 2 minutes and understand the entire design rationale without re-reading the diffs. When you ship something new, add `Why:` and `How:` to its row — the next person to touch this will thank you.
 
+## Release integration status — beta.26 (2026-10-26)
+
+The complete local wealth-manager release (WM028–WM079): 22 benchmarked capabilities, evidenced automatic payment recording (default OFF, dates never invented), deferred-startup cold-start fix (~6.8s → ~4.1s debug, ~2.0s → ~1.7s release), R8 + resource shrinking (81.6 → 32.1 MB, −61%), and deterministic Arabic-Indic caption numerals on all three screens. Real-data acceptance on the owned emulator: 5,458 real bank messages, 0 failures, 981 auto-confirmed, 996 money/notice oracle checks 0 fail; full backup → wipe → restore round-trip verified on the minified release binary; update chain product20 → 25 with encrypted pre-update archives. VersionCode advances 10 → 11. Publication via the established GitHub/Obtainium channel.
+
 ## Release integration status — beta.25 candidate (2026-10-19)
 
 The accepted operating-selection correction, personal category provenance, signed opt-in merchant catalog and bundled offline English OCR are prepared for the next signed, unseeded Obtainium update. VersionCode advances from 9 to 10. Local unit/native/flavor/lint and English/Arabic/StoreSafe/real-offline UI gates passed; publication requires the release spec's certificate, upgrade and remote asset readbacks. No production merchant AI is claimed. See `specs/REL-beta25-catalog-ocr.md`.

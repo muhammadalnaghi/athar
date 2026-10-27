@@ -49,6 +49,14 @@ Other tools force a trade-off:
 
 ## Features
 
+### beta.26 update
+
+- Complete local wealth manager: dated positions, liquidity, portfolio ledger with returns/XIRR/allocation targets, debt payoff strategies, cash-forecast scenarios, saved goal plans, budgets, bills matching, and family investment pools — the full TMOAP/workbook replacement, all local and encrypted.
+- Evidenced automatic payment recording (off by default): clearly evidenced completed purchases and card repayments record themselves; on a 5,458-message real archive — 0 failures, 981 auto-confirmed, no invented dates.
+- Faster and smaller: cold start ~2–3 s quicker; R8-minified release 81.6 → 32.1 MB (−61%), with backup → wipe → restore verified on the minified binary.
+- Consistent Arabic-Indic numerals across Today/Trends/Plan captions; money stays exact and LTR-isolated.
+- Android versionCode advances to 11; updates continue through the existing GitHub/Obtainium channel. Financial data remains local.
+
 ### beta.25 update
 
 - Personal category corrections win over shared knowledge. FullSMS users can opt in to a signed public merchant catalog with offline cache, cancellation and reset; no transaction data or merchant queries are uploaded.
