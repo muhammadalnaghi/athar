@@ -54,3 +54,51 @@ jobs:
           path: app/build/outputs/apk/personalFullSms/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      # Publishes the same filename into the public Drive folder so the share link
+      # stays stable. Requires secret GDRIVE_SERVICE_ACCOUNT_JSON (raw JSON or
+      # base64). Share the folder with the service-account client_email as Editor.
+      # Folder: https://drive.google.com/drive/folders/1BQbIGFI0i9RXAnTOnkclyoFsblKXHxfv
+      - name: Upload APK to Google Drive
+        env:
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_FOLDER_ID: 1BQbIGFI0i9RXAnTOnkclyoFsblKXHxfv
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/personalFullSms/debug/app-personalFullSms-debug.apk"
+          NAME="app-personalFullSms-debug.apk"
+          test -f "$APK"
+          if [ -z "${GDRIVE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "::error::Missing secret GDRIVE_SERVICE_ACCOUNT_JSON. Add the Google service-account key (raw JSON or base64) under Settings → Secrets → Actions, and share folder $GDRIVE_FOLDER_ID with that account as Editor."
+            exit 1
+          fi
+
+          SA_FILE="$RUNNER_TEMP/gdrive-sa.json"
+          printf '%s' "$GDRIVE_SERVICE_ACCOUNT_JSON" > "$SA_FILE"
+          if ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SA_FILE" 2>/dev/null; then
+            base64 -d "$SA_FILE" > "$RUNNER_TEMP/gdrive-sa.decoded.json"
+            mv "$RUNNER_TEMP/gdrive-sa.decoded.json" "$SA_FILE"
+            python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SA_FILE"
+          fi
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rclone
+
+          export RCLONE_CONFIG_GDRIVE_TYPE=drive
+          export RCLONE_CONFIG_GDRIVE_SCOPE=drive
+          export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$SA_FILE"
+
+          # Drive allows duplicate names; delete prior copies so the public folder
+          # keeps a single stable APK entry.
+          rclone delete "gdrive:" \
+            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
+            --include "$NAME" \
+            --drive-use-trash=false \
+            || true
+
+          rclone copy "$APK" "gdrive:" \
+            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
+            --retries 5 \
+            -v
+
+          echo "Uploaded $NAME to Google Drive folder $GDRIVE_FOLDER_ID"
