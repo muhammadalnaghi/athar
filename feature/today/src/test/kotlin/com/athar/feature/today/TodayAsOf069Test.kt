@@ -19,6 +19,8 @@ import com.athar.core.domain.repo.DeclaredPositionRepository
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
+import com.athar.core.domain.repo.IncomeSourcePreferencesRepository
+import com.athar.core.domain.repo.IncomeSourceSettings
 import com.athar.core.domain.repo.ReconcileResult
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
@@ -78,6 +80,7 @@ class TodayAsOf069Test {
         rules = AsOfCategoryRuleRepository(),
         categories = AsOfCategoryRepository(),
         prefs = AsOfUserPreferencesRepository(savingsTarget = 30, emergencyMonths = 6),
+        incomeSources = AsOfIncomeSourcePreferencesRepository(),
         accounts = AsOfAccountRepository(liquidBalance = Money.of("5000")),
         clock = clock,
         declaredPositions = AsOfEmptyDeclaredPositions,
@@ -141,6 +144,13 @@ private fun fixedClock(instant: String): Clock = object : Clock {
 
 private object AsOfEmptyDeclaredPositions : DeclaredPositionRepository {
     override fun observeSnapshots(): Flow<List<DeclaredPositionSnapshot>> = flowOf(emptyList())
+}
+
+private class AsOfIncomeSourcePreferencesRepository(
+    private val senders: Set<String> = emptySet(),
+) : IncomeSourcePreferencesRepository {
+    override fun settings(): Flow<IncomeSourceSettings> = flowOf(IncomeSourceSettings(senders))
+    override suspend fun update(settings: IncomeSourceSettings) = Unit
 }
 
 private class AsOfTransactionRepository(
