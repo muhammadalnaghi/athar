@@ -331,13 +331,11 @@ jobs:
             | awk -F';' -v n="$DEST_NAME" '$1==n {print $2; exit}')
           test -n "${FILE_ID:-}"
 
-          REMOTE_META=$(rclone lsjson "gdrive:" \
-            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            --files-only \
-            | python3 -c 'import json,sys; n="'"$DEST_NAME"'"; files=json.load(sys.stdin); hit=[f for f in files if f.get("Name")==n];
-print(json.dumps(hit[0] if hit else {}))')
-          REMOTE_SIZE=$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("Size",0))' <<<"$REMOTE_META")
           LOCAL_SIZE=$(wc -c < "$STAGE/$DEST_NAME")
+          REMOTE_SIZE=$(rclone lsl "gdrive:" \
+            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
+            | awk -v n="$DEST_NAME" '$NF==n {print $1; exit}')
+          test -n "${REMOTE_SIZE:-}"
           test "$REMOTE_SIZE" = "$LOCAL_SIZE"
           test "${DEST_NAME##*.}" = "apk"
           test "$LOCAL_SIZE" -gt 1000000
