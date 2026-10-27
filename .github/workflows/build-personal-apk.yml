@@ -292,13 +292,15 @@ jobs:
           LOCAL_SHA=$(sha256sum "$APK_PATH" | awk '{print $1}')
           test "$LOCAL_SHA" = "$EXPECT_SHA"
 
-          DEST_NAME=athar-latest.apk
+          # Google blocks Service Account *creates* into personal My Drive
+          # (storageQuotaExceeded). Replacing an existing shared file still works
+          # (proven: "Copied (replaced existing)"). Never delete-then-create.
+          PREFERRED_NAME=athar-latest.apk
           STAGE="$RUNNER_TEMP/drive-upload"
           mkdir -p "$STAGE"
-          # Upload only the extracted .apk (never the GitHub ZIP).
-          cp -f "$APK_PATH" "$STAGE/$DEST_NAME"
-          file "$STAGE/$DEST_NAME" | tee /tmp/drive-upload-type.txt
-          unzip -l "$STAGE/$DEST_NAME" | grep -q 'AndroidManifest.xml'
+          cp -f "$APK_PATH" "$STAGE/$PREFERRED_NAME"
+          file "$STAGE/$PREFERRED_NAME" | tee /tmp/drive-upload-type.txt
+          unzip -l "$STAGE/$PREFERRED_NAME" | grep -q 'AndroidManifest.xml'
 
           sudo apt-get update -qq
           sudo apt-get install -y -qq rclone
@@ -307,49 +309,71 @@ jobs:
           export RCLONE_CONFIG_GDRIVE_SCOPE=drive
           export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$SA_FILE"
 
-          EXISTING_ID=$(rclone lsf "gdrive:" \
+          echo "Drive folder listing:"
+          rclone lsf "gdrive:" --drive-root-folder-id "$GDRIVE_FOLDER_ID" --files-only --format "pi" || true
+
+          # Pick an existing APK slot to overwrite (preserve Drive file id).
+          TARGET_NAME=$(rclone lsf "gdrive:" \
             --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            --files-only --format "pi" 2>/dev/null \
-            | awk -F';' -v n="$DEST_NAME" '$1==n {print $2; exit}' || true)
-          UPDATED_EXISTING=false
-          if [ -n "${EXISTING_ID:-}" ]; then
-            UPDATED_EXISTING=true
-            echo "Replacing existing $DEST_NAME (prior id=$EXISTING_ID) to avoid duplicate names"
+            --files-only --format "p" 2>/dev/null \
+            | awk '
+              BEGIN { pref=""; rel=""; dbg=""; any="" }
+              $0=="athar-latest.apk" { pref=$0 }
+              $0=="app-personalFullSms-release.apk" { rel=$0 }
+              $0=="app-personalFullSms-debug.apk" { dbg=$0 }
+              tolower($0) ~ /\.apk$/ && any=="" { any=$0 }
+              END {
+                if (pref!="") print pref;
+                else if (rel!="") print rel;
+                else if (dbg!="") print dbg;
+                else if (any!="") print any;
+              }')
+          if [ -z "${TARGET_NAME:-}" ]; then
+            echo "::error::No existing APK in Drive folder to replace. Service Accounts cannot create new files in personal Drive. Once, as yourself, upload any stub file named athar-latest.apk into folder $GDRIVE_FOLDER_ID (Editor share with the service account), then re-run."
+            exit 1
           fi
-          # Same pattern as the previous working Drive upload: remove same-name file, then copy APK.
-          rclone delete "gdrive:" \
-            --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            --include "$DEST_NAME" \
-            --drive-use-trash=false || true
-          rclone copy "$STAGE/$DEST_NAME" "gdrive:" \
+          echo "Replacing existing Drive object: $TARGET_NAME"
+
+          rclone copyto "$STAGE/$PREFERRED_NAME" "gdrive:${TARGET_NAME}" \
             --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
             --retries 5 -v
+
+          # Best-effort rename to the stable latest name (keeps same file id).
+          FINAL_NAME="$TARGET_NAME"
+          if [ "$TARGET_NAME" != "$PREFERRED_NAME" ]; then
+            if rclone moveto "gdrive:${TARGET_NAME}" "gdrive:${PREFERRED_NAME}" \
+              --drive-root-folder-id "$GDRIVE_FOLDER_ID" -v; then
+              FINAL_NAME="$PREFERRED_NAME"
+            else
+              echo "Rename to $PREFERRED_NAME skipped (permissions); content still updated as $TARGET_NAME"
+            fi
+          fi
 
           FILE_ID=$(rclone lsf "gdrive:" \
             --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
             --files-only --format "pi" \
-            | awk -F';' -v n="$DEST_NAME" '$1==n {print $2; exit}')
+            | awk -F';' -v n="$FINAL_NAME" '$1==n {print $2; exit}')
           test -n "${FILE_ID:-}"
 
-          LOCAL_SIZE=$(wc -c < "$STAGE/$DEST_NAME")
+          LOCAL_SIZE=$(wc -c < "$STAGE/$PREFERRED_NAME")
           REMOTE_SIZE=$(rclone lsl "gdrive:" \
             --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-            | awk -v n="$DEST_NAME" '$NF==n {print $1; exit}')
+            | awk -v n="$FINAL_NAME" '$NF==n {print $1; exit}')
           test -n "${REMOTE_SIZE:-}"
           test "$REMOTE_SIZE" = "$LOCAL_SIZE"
-          test "${DEST_NAME##*.}" = "apk"
+          test "${FINAL_NAME##*.}" = "apk"
           test "$LOCAL_SIZE" -gt 1000000
 
           {
             echo "file_id=$FILE_ID"
-            echo "file_name=$DEST_NAME"
+            echo "file_name=$FINAL_NAME"
             echo "file_size=$REMOTE_SIZE"
             echo "mime_type=application/vnd.android.package-archive"
             echo "web_view_link=https://drive.google.com/file/d/${FILE_ID}/view"
-            echo "updated_existing=$UPDATED_EXISTING"
+            echo "updated_existing=true"
             echo "local_sha256=$LOCAL_SHA"
           } >> "$GITHUB_OUTPUT"
-          echo "Uploaded $DEST_NAME id=$FILE_ID size=$REMOTE_SIZE replaced_same_name=$UPDATED_EXISTING"
+          echo "Uploaded extracted APK as $FINAL_NAME id=$FILE_ID size=$REMOTE_SIZE (in-place replace)"
 
       - name: Deployment summary
         run: |
@@ -371,4 +395,8 @@ jobs:
           Drive link: ${{ steps.drive.outputs.web_view_link }}
           EOF
           test -n "${{ steps.drive.outputs.file_id }}"
-          test "${{ steps.drive.outputs.file_name }}" = "athar-latest.apk"
+          case "${{ steps.drive.outputs.file_name }}" in
+            *.apk) ;;
+            *) echo "::error::Drive object is not an APK name"; exit 1 ;;
+          esac
+          test "${{ steps.drive.outputs.updated_existing }}" = "true"
