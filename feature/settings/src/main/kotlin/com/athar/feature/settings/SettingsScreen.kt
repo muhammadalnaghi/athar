@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,6 +68,7 @@ import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.component.AtharTextField
 import com.athar.core.designsystem.display.CurrencyCatalog
 import com.athar.core.designsystem.theme.AtharTheme
+import com.athar.core.designsystem.theme.MinTouchTarget
 import java.math.BigDecimal
 import java.time.YearMonth
 import java.util.Locale
@@ -2622,6 +2624,7 @@ private fun LanguageCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = MinTouchTarget)
                         .clip(RoundedCornerShape(theme.spacing.s))
                         .background(if (isSelected) theme.colors.ember else theme.colors.parchment)
                         .clickable { onSelect(tag) }

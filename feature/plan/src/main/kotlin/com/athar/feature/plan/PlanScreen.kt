@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -679,7 +681,11 @@ private fun CompareToggleRow(enabled: Boolean, onToggle: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(theme.spacing.s))
             .background(theme.colors.surface)
-            .clickable(onClick = onToggle)
+            .toggleable(
+                value = enabled,
+                role = Role.Switch,
+                onValueChange = { onToggle() },
+            )
             .padding(theme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -689,7 +695,7 @@ private fun CompareToggleRow(enabled: Boolean, onToggle: () -> Unit) {
             color = if (enabled) theme.colors.ember else theme.colors.ink,
             modifier = Modifier.weight(1f),
         )
-        Switch(checked = enabled, onCheckedChange = { onToggle() })
+        Switch(checked = enabled, onCheckedChange = null)
     }
 }
 

@@ -118,11 +118,11 @@
     <!-- Goals -->
     <string name="plan_goals_savings_title">معدل الادخار</string>
     <string name="plan_goals_emergency_title">صندوق الطوارئ</string>
-    <string name="plan_goals_percent_value" formatted="true">%1$s%%</string>
+    <string name="plan_goals_percent_value" formatted="true">%1$s٪</string>
     <string name="plan_goals_months_value" formatted="true">%1$s شهر</string>
     <string name="plan_goals_not_available">غير متاح</string>
     <string name="plan_goals_no_monthly_burn">مكتمل</string>
-    <string name="plan_goals_savings_target" formatted="true">الهدف %1$d%%</string>
+    <string name="plan_goals_savings_target" formatted="true">الهدف %1$d٪</string>
     <string name="plan_goals_emergency_target" formatted="true">الهدف %1$d أشهر</string>
     <string name="plan_goals_monthly_income">متوسط الدخل الشهري</string>
     <string name="plan_goals_monthly_expense">متوسط المصروف الشهري</string>

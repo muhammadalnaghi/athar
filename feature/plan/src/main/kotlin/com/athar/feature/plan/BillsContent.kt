@@ -44,6 +44,8 @@ import com.athar.core.common.money.Money
 import com.athar.core.designsystem.component.AtharCard
 import com.athar.core.designsystem.component.AtharEmptyState
 import com.athar.core.designsystem.component.AtharNumber
+import com.athar.core.designsystem.display.AtharNumerals
+import com.athar.core.designsystem.display.currentUiLocale
 import com.athar.core.designsystem.component.AtharText
 import com.athar.core.designsystem.theme.AtharTheme
 import com.athar.core.designsystem.theme.MinTouchTarget
@@ -253,7 +255,7 @@ private fun BillsSummaryCard(state: BillsState) {
                 text = stringResource(
                     R.string.plan_bills_summary_subtitle,
                     state.items.size,
-                    state.horizonEnd?.toString().orEmpty(),
+                    state.horizonEnd?.let { AtharNumerals.localize(it.toString(), currentUiLocale()) }.orEmpty(),
                 ),
                 style = theme.typography.caption,
                 color = theme.colors.muted,
@@ -347,13 +349,14 @@ private fun CalendarDayChip(day: BillCalendarDay) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        // WM081: calendar digits follow the UI locale (Arabic-Indic in Arabic).
         AtharText(
-            text = day.date.dayOfMonth.toString(),
+            text = AtharNumerals.localize(day.date.dayOfMonth.toString(), currentUiLocale()),
             style = theme.typography.body,
             color = if (hasBills) theme.colors.ink else theme.colors.muted,
         )
         AtharText(
-            text = day.date.monthNumber.toString(),
+            text = AtharNumerals.localize(day.date.monthNumber.toString(), currentUiLocale()),
             style = theme.typography.caption,
             color = theme.colors.muted,
         )
@@ -560,7 +563,7 @@ private fun DateBadge(item: BillItem, today: LocalDate?) {
         verticalArrangement = Arrangement.Center,
     ) {
         AtharText(
-            text = item.dueDate.dayOfMonth.toString(),
+            text = AtharNumerals.localize(item.dueDate.dayOfMonth.toString(), currentUiLocale()),
             style = theme.typography.body,
             color = theme.colors.ink,
         )

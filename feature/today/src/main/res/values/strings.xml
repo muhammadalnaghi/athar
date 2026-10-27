@@ -139,7 +139,7 @@
     <string name="add_tx_label_quick_entry">إدخال سريع</string>
     <string name="add_tx_placeholder_quick_entry">دفعت 50 في ستاربكس، أو الصق نص الفاتورة</string>
     <string name="add_tx_quick_apply">تعبئة</string>
-    <string name="add_tx_voice">تحدث</string>
+    <string name="add_tx_voice">إدخال صوتي</string>
     <string name="add_tx_error_quick_entry">لم نقرأ المبلغ والتاجر</string>
     <string name="add_tx_error_voice_unavailable">الإدخال الصوتي غير متاح على هذا الجهاز</string>
     <string name="add_tx_label_merchant">التاجر</string>

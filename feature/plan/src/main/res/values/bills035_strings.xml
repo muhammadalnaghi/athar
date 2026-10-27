@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="plan_bills035_summary_30_days">المستحق خلال 30 يومًا</string>
+    <string name="plan_bills035_summary_30_days">المستحق خلال ٣٠ يومًا</string>
     <string name="plan_bills035_reminders_body">تذكير هادئ قبل الاستحقاق بيومين وفي يومه.</string>
 </resources>
