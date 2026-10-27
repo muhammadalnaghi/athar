@@ -52,6 +52,9 @@ class DeclinedIngestion057Test {
     private val prefs = mockk<UserPreferencesRepository> {
         every { ownAccountNumbers() } returns flowOf(emptyList())
     }
+    private val incomeSources = mockk<com.athar.core.domain.repo.IncomeSourcePreferencesRepository> {
+        every { settings() } returns flowOf(com.athar.core.domain.repo.IncomeSourceSettings())
+    }
 
     private fun pipeline(
         state: PostingState = PostingState.DECLINED,
@@ -75,6 +78,7 @@ class DeclinedIngestion057Test {
         resolver = MerchantCategoryResolver(rules, mockk<CategoryRepository>(relaxed = true), catalog),
         audit = audit,
         prefs = prefs,
+        incomeSources = incomeSources,
         clock = object : Clock { override fun now(): Instant = this@DeclinedIngestion057Test.now },
         recording = recorder,
     )

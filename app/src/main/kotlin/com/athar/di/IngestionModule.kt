@@ -2,9 +2,11 @@ package com.athar.di
 
 import com.athar.core.domain.model.RawIngestDispatcher
 import com.athar.core.domain.repo.SmsBackfillTrigger
+import com.athar.core.domain.repo.SmsImportController
 import com.athar.core.domain.repo.UserTemplateRepository
 import com.athar.ingestion.QueuedRawIngestDispatcher
 import com.athar.ingestion.SmsBackfillService
+import com.athar.ingestion.SmsImportService
 import com.athar.ingestion.smsparser.BuiltInSmsTemplateRegistry
 import com.athar.ingestion.smsparser.SmsParser
 import com.athar.ingestion.smsparser.user.HybridSmsParser
@@ -51,4 +53,7 @@ internal abstract class IngestionBindingsModule {
 
     @Binds @Singleton
     abstract fun bindSmsBackfillTrigger(impl: SmsBackfillService): SmsBackfillTrigger
+
+    @Binds @Singleton
+    abstract fun bindSmsImportController(impl: SmsImportService): SmsImportController
 }

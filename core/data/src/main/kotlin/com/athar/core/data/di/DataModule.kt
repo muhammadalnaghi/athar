@@ -188,6 +188,16 @@ internal abstract class RepositoryModule {
     abstract fun bindUserPreferencesRepository(impl: UserPreferencesRepositoryImpl): UserPreferencesRepository
 
     @Binds @Singleton
+    abstract fun bindSmsImportPreferencesRepository(
+        impl: com.athar.core.data.prefs.SmsImportPreferencesRepositoryImpl,
+    ): com.athar.core.domain.repo.SmsImportPreferencesRepository
+
+    @Binds @Singleton
+    abstract fun bindIncomeSourcePreferencesRepository(
+        impl: com.athar.core.data.prefs.IncomeSourcePreferencesRepositoryImpl,
+    ): com.athar.core.domain.repo.IncomeSourcePreferencesRepository
+
+    @Binds @Singleton
     abstract fun bindCsvImportTrigger(impl: CsvImporter): CsvImportTrigger
 
     @Binds @Singleton

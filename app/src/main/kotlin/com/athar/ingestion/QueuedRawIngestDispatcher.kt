@@ -1,13 +1,18 @@
 package com.athar.ingestion
 
+import com.athar.core.domain.model.IngestSource
 import com.athar.core.domain.model.RawIngestDispatcher
 import com.athar.core.domain.model.RawIngestEvent
+import com.athar.core.domain.repo.SmsImportPreferencesRepository
+import com.athar.core.domain.smsimport.SmsImportFilterGate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,13 +20,15 @@ import javax.inject.Singleton
 /**
  * Non-blocking receiver entry point with a single ingestion worker.
  *
- * SMS backfill can enqueue thousands of rows in a tight loop. Running each row in its own
- * coroutine overwhelms Room invalidation and makes UI flows look stale until Activity recreate.
- * The queue preserves enqueue order and guarantees only one pipeline write chain runs at a time.
+ * Live SMS (BroadcastReceiver) is gated by [SmsImportFilterSettings]: no selected
+ * senders and/or live tracking disabled means the event is dropped before parse.
+ * Historical import / explicit backfill enqueue the same events but those callers
+ * already applied their own filters (or are legacy paths).
  */
 @Singleton
 class QueuedRawIngestDispatcher private constructor(
     private val pipeline: SmsIngestionPipeline,
+    private val importPrefs: SmsImportPreferencesRepository?,
     private val scope: CoroutineScope,
     capacity: Int,
 ) : RawIngestDispatcher {
@@ -29,8 +36,10 @@ class QueuedRawIngestDispatcher private constructor(
     @Inject
     constructor(
         pipeline: SmsIngestionPipeline,
+        importPrefs: SmsImportPreferencesRepository,
     ) : this(
         pipeline = pipeline,
+        importPrefs = importPrefs,
         scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         capacity = Channel.UNLIMITED,
     )
@@ -38,8 +47,10 @@ class QueuedRawIngestDispatcher private constructor(
     internal constructor(
         pipeline: SmsIngestionPipeline,
         scope: CoroutineScope,
+        importPrefs: SmsImportPreferencesRepository? = null,
     ) : this(
         pipeline = pipeline,
+        importPrefs = importPrefs,
         scope = scope,
         capacity = Channel.UNLIMITED,
     )
@@ -68,11 +79,34 @@ class QueuedRawIngestDispatcher private constructor(
 
     private suspend fun processSafely(event: RawIngestEvent) {
         try {
+            if (event.source == IngestSource.SMS && !allowsLiveSms(event)) {
+                Timber.d(
+                    "[ingest-queue] skipped live SMS sender=%s (import filters)",
+                    event.sender,
+                )
+                return
+            }
             pipeline.process(event)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Throwable) {
             Timber.e(error, "[ingest-queue] failed rawId=%s sender=%s", event.rawId, event.sender)
         }
+    }
+
+    private suspend fun allowsLiveSms(event: RawIngestEvent): Boolean {
+        val prefs = importPrefs ?: return true
+        // Historical imports reuse rawId prefix inbox- / explicit import paths still
+        // go through the dispatcher; only BroadcastReceiver live traffic must require
+        // liveTrackingEnabled. Inbox imports set rawId = "inbox-$id".
+        val isHistoricalImport = event.rawId?.startsWith("inbox-") == true
+        val settings = prefs.settings().first()
+        return SmsImportFilterGate.allows(
+            sender = event.sender,
+            receivedAt = event.receivedAt,
+            settings = settings,
+            zone = TimeZone.currentSystemDefault(),
+            requireLiveEnabled = !isHistoricalImport,
+        )
     }
 }

@@ -48,9 +48,11 @@ import com.athar.feature.plan.PlanScreen
 import com.athar.feature.settings.AccountsScreen
 import com.athar.feature.settings.ActivityLogScreen
 import com.athar.feature.settings.CategoriesScreen
+import com.athar.feature.settings.IncomeSourcesScreen
 import com.athar.feature.settings.RecurringRulesScreen
 import com.athar.feature.settings.SettingsScreen
 import com.athar.feature.settings.SmsAuditScreen
+import com.athar.feature.settings.SmsImportScreen
 import com.athar.feature.settings.UserTemplatesScreen
 import com.athar.feature.today.HistoryCategoryFilter
 import com.athar.feature.today.HistoryScreen
@@ -181,6 +183,8 @@ fun AtharApp() {
                         onOpenUserTemplates = { navController.navigate(Routes.UserTemplates) },
                         onOpenRecurringRules = { navController.navigate(Routes.RecurringRules) },
                         onOpenAccounts = { navController.navigate(Routes.Accounts) },
+                        onOpenIncomeSources = { navController.navigate(Routes.IncomeSources) },
+                        onOpenSmsImport = { navController.navigate(Routes.SmsImport) },
                         onOpenHistory = { navController.navigate(Routes.History) },
                         onApplyLocale = { tag ->
                             LocaleHelper.persist(context, tag)
@@ -196,6 +200,12 @@ fun AtharApp() {
                 }
                 composable<Routes.Accounts> {
                     AccountsScreen(onBack = { navController.popBackStack() })
+                }
+                composable<Routes.IncomeSources> {
+                    IncomeSourcesScreen(onBack = { navController.popBackStack() })
+                }
+                composable<Routes.SmsImport> {
+                    SmsImportScreen(onBack = { navController.popBackStack() })
                 }
                 composable<Routes.History> {
                     HistoryScreen(onBack = { navController.popBackStack() })

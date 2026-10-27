@@ -81,6 +81,8 @@ fun SettingsScreen(
     onOpenUserTemplates: () -> Unit = {},
     onOpenRecurringRules: () -> Unit = {},
     onOpenAccounts: () -> Unit = {},
+    onOpenIncomeSources: () -> Unit = {},
+    onOpenSmsImport: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
     onApplyLocale: (String) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -415,6 +417,10 @@ fun SettingsScreen(
             HistoryEntryCard(onOpen = onOpenHistory)
 
             AccountsEntryCard(onOpen = onOpenAccounts)
+
+            IncomeSourcesEntryCard(onOpen = onOpenIncomeSources)
+
+            SmsImportEntryCard(onOpen = onOpenSmsImport)
 
             RecurringRulesEntryCard(onOpen = onOpenRecurringRules)
 
@@ -2677,6 +2683,42 @@ private fun AccountsEntryCard(onOpen: () -> Unit) {
             AtharText(text = stringResource(R.string.settings_entry_accounts_title), style = theme.typography.headline)
             AtharText(
                 text = stringResource(R.string.settings_entry_accounts_body),
+                style = theme.typography.body,
+                color = theme.colors.muted,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IncomeSourcesEntryCard(onOpen: () -> Unit) {
+    val theme = AtharTheme
+    AtharCard(modifier = Modifier
+        .fillMaxWidth()
+        .clickable(onClick = onOpen)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.s)) {
+            AtharText(text = stringResource(R.string.settings_entry_income_sources_title), style = theme.typography.headline)
+            AtharText(
+                text = stringResource(R.string.settings_entry_income_sources_body),
+                style = theme.typography.body,
+                color = theme.colors.muted,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SmsImportEntryCard(onOpen: () -> Unit) {
+    val theme = AtharTheme
+    AtharCard(modifier = Modifier
+        .fillMaxWidth()
+        .clickable(onClick = onOpen)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(theme.spacing.s)) {
+            AtharText(text = stringResource(R.string.settings_entry_sms_import_title), style = theme.typography.headline)
+            AtharText(
+                text = stringResource(R.string.settings_entry_sms_import_body),
                 style = theme.typography.body,
                 color = theme.colors.muted,
             )

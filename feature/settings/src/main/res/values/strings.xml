@@ -466,4 +466,35 @@
     <string name="settings_merchant_catalog_status_unsupported">هذا الإصدار من أثر لا يدعم التنزيل (بلا اتصال).</string>
     <string name="settings_merchant_catalog_offline_note">الكتالوج الذي حمّلته يبقى صالحًا للاستخدام دون اتصال حتى مع إيقاف التحديثات. إعادة الضبط تعيد قواعدك الشخصية وسجلّك كما هما.</string>
 
+    <!-- Income sources / SMS import (configurable PF) -->
+    <string name="settings_income_sources_overline">مصادر الدخل</string>
+    <string name="settings_income_sources_title">مصادر الدخل</string>
+    <string name="settings_income_sources_body">اختر معرّفات مرسل الرسائل المؤهّلة كدخل. الافتراضي: لا مصدر. التحويل بين حساباتك ليس دخلاً.</string>
+    <string name="settings_income_sources_selected">المصادر المحدّدة</string>
+    <string name="settings_income_sources_none">لا مصدر محدّد — لن يُحتسب أي دخل تلقائيًا.</string>
+    <string name="settings_income_sources_discover_hint">اكتشف المرسلين من صندوق الرسائل أو أدخل المعرّف يدويًا.</string>
+    <string name="settings_entry_income_sources_title">مصادر الدخل</string>
+    <string name="settings_entry_income_sources_body">تحديد مرسلات الرسائل المؤهّلة لاحتساب الدخل.</string>
+
+    <string name="settings_sms_import_overline">استيراد الرسائل</string>
+    <string name="settings_sms_import_title">استيراد الرسائل</string>
+    <string name="settings_sms_import_body">اختر المرسلين ونطاق التاريخ قبل الاستيراد. بلا مرسلين محدّدين لا يُستورد شيء.</string>
+    <string name="settings_sms_import_live">تتبع الرسائل الجديدة</string>
+    <string name="settings_sms_import_live_body">عند التفعيل تُقرأ فقط المرسلات المحدّدة ضمن القيود.</string>
+    <string name="settings_sms_import_senders">مرسلو الرسائل</string>
+    <string name="settings_sms_import_no_senders">لا مرسل محدّد — الاستيراد فارغ.</string>
+    <string name="settings_sms_import_discovered">مرسلون مكتشفون</string>
+    <string name="settings_sms_import_manual_label">معرّف مرسل يدوي</string>
+    <string name="settings_sms_import_manual_add">إضافة</string>
+    <string name="settings_sms_import_dates">نطاق التاريخ</string>
+    <string name="settings_sms_import_start">تاريخ البداية (YYYY-MM-DD)</string>
+    <string name="settings_sms_import_end">تاريخ النهاية (YYYY-MM-DD)</string>
+    <string name="settings_sms_import_open_ended">بدون تاريخ نهاية</string>
+    <string name="settings_sms_import_preview_action">معاينة الاستيراد</string>
+    <string name="settings_sms_import_preview_summary">مطابقة: %1$d · قابلة للتحليل: %2$d · مكررة: %3$d · متجاوزة: %4$d</string>
+    <string name="settings_sms_import_confirm">تأكيد الاستيراد</string>
+    <string name="settings_sms_import_result">نتيجة: فحص %1$d · قُبل %2$d · قابل %3$d · مكرر %4$d · متجاوز %5$d</string>
+    <string name="settings_entry_sms_import_title">استيراد الرسائل</string>
+    <string name="settings_entry_sms_import_body">مرسلون، تاريخ، معاينة، وتتبع مباشر.</string>
+
 </resources>

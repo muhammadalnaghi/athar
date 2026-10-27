@@ -18,6 +18,8 @@ object Routes {
     @Serializable data object UserTemplates
     @Serializable data object RecurringRules
     @Serializable data object Accounts
+    @Serializable data object IncomeSources
+    @Serializable data object SmsImport
     @Serializable data object History
     @Serializable data object HistoryRepeatedBacklog
 }

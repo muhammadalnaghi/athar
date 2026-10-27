@@ -10,6 +10,8 @@ import com.athar.core.domain.model.TxType
 import com.athar.core.domain.repo.AccountRepository
 import com.athar.core.domain.repo.CategoryRepository
 import com.athar.core.domain.repo.CategoryRuleRepository
+import com.athar.core.domain.repo.IncomeSourcePreferencesRepository
+import com.athar.core.domain.repo.IncomeSourceSettings
 import com.athar.core.domain.repo.SmsAuditRepository
 import com.athar.core.domain.repo.TransactionRepository
 import com.athar.core.domain.repo.UserPreferencesRepository
@@ -45,6 +47,7 @@ class SmsIngestionPipelineTest {
     private val audit = mockk<SmsAuditRepository>(relaxed = true)
     private val accounts = mockk<AccountRepository> {
         coEvery { resolveForIngest(any(), any(), any()) } returns null
+        every { observeActive() } returns flowOf(emptyList())
     }
 
     private fun pipeline(
@@ -53,9 +56,13 @@ class SmsIngestionPipelineTest {
         catalog: FakePipelineCatalog,
         ownAccounts: List<String> = emptyList(),
         parserOverride: SmsParser? = null,
+        incomeSenders: Set<String> = emptySet(),
     ): SmsIngestionPipeline {
         val prefs = mockk<UserPreferencesRepository> {
             every { ownAccountNumbers() } returns flowOf(ownAccounts)
+        }
+        val incomeSources = mockk<IncomeSourcePreferencesRepository> {
+            every { settings() } returns flowOf(IncomeSourceSettings(incomeSenders))
         }
         val resolver = MerchantCategoryResolver(rules, categories, catalog)
         return SmsIngestionPipeline(
@@ -65,6 +72,7 @@ class SmsIngestionPipelineTest {
             resolver = resolver,
             audit = audit,
             prefs = prefs,
+            incomeSources = incomeSources,
             clock = object : Clock {
                 override fun now(): Instant = this@SmsIngestionPipelineTest.now
             },

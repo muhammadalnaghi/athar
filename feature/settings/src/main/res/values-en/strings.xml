@@ -466,4 +466,35 @@
     <string name="settings_merchant_catalog_status_unsupported">This build of Athar cannot download (no network capability).</string>
     <string name="settings_merchant_catalog_offline_note">A downloaded catalog stays usable offline even with updates disabled. Reset keeps your personal rules and history exactly as they are.</string>
 
+    <!-- Income sources / SMS import (configurable PF) -->
+    <string name="settings_income_sources_overline">Income sources</string>
+    <string name="settings_income_sources_title">Income sources</string>
+    <string name="settings_income_sources_body">Choose SMS sender IDs eligible as income. Default: none. Transfers between your own accounts are not income.</string>
+    <string name="settings_income_sources_selected">Selected sources</string>
+    <string name="settings_income_sources_none">No source selected — no income is counted automatically.</string>
+    <string name="settings_income_sources_discover_hint">Discover senders from the inbox or enter an ID manually.</string>
+    <string name="settings_entry_income_sources_title">Income sources</string>
+    <string name="settings_entry_income_sources_body">Pick SMS senders eligible for income classification.</string>
+
+    <string name="settings_sms_import_overline">SMS import</string>
+    <string name="settings_sms_import_title">SMS import</string>
+    <string name="settings_sms_import_body">Choose senders and a date range before importing. With no senders selected, nothing is imported.</string>
+    <string name="settings_sms_import_live">Track new SMS</string>
+    <string name="settings_sms_import_live_body">When on, only the selected senders are ingested within your limits.</string>
+    <string name="settings_sms_import_senders">SMS senders</string>
+    <string name="settings_sms_import_no_senders">No sender selected — import is empty.</string>
+    <string name="settings_sms_import_discovered">Discovered senders</string>
+    <string name="settings_sms_import_manual_label">Manual sender ID</string>
+    <string name="settings_sms_import_manual_add">Add</string>
+    <string name="settings_sms_import_dates">Date range</string>
+    <string name="settings_sms_import_start">Start date (YYYY-MM-DD)</string>
+    <string name="settings_sms_import_end">End date (YYYY-MM-DD)</string>
+    <string name="settings_sms_import_open_ended">No end date</string>
+    <string name="settings_sms_import_preview_action">Preview import</string>
+    <string name="settings_sms_import_preview_summary">Matching: %1$d · Parseable: %2$d · Duplicates: %3$d · Skipped: %4$d</string>
+    <string name="settings_sms_import_confirm">Confirm import</string>
+    <string name="settings_sms_import_result">Result: scanned %1$d · accepted %2$d · parseable %3$d · duplicates %4$d · skipped %5$d</string>
+    <string name="settings_entry_sms_import_title">SMS import</string>
+    <string name="settings_entry_sms_import_body">Senders, dates, preview, and live tracking.</string>
+
 </resources>
