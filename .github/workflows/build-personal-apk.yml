@@ -23,17 +23,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
           cache: gradle
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # compileSdk / targetSdk are locked at 35 in gradle/libs.versions.toml
           packages: platforms;android-35 build-tools;35.0.0 platform-tools
@@ -48,7 +48,7 @@ jobs:
         run: ./gradlew :app:assemblePersonalFullSmsDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: athar-personalFullSms-debug
           path: app/build/outputs/apk/personalFullSms/debug/*.apk
